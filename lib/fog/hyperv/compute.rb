@@ -9,7 +9,12 @@ module Fog
       collection :servers
 
       request_path 'fog/hyperv/requests/compute'
+      request :get_vm_host
+      request :get_vm_host_cluster
       request :get_vm
+      request :start_vm
+      request :stop_vm
+      request :get_vm_hard_disk_drive
 
       class Real
         def initialize(options = {})
@@ -28,6 +33,35 @@ module Fog
         end
 
         private
+
+        def run_shell(command, options = {})
+          return_fields = options.delete :_return_fields
+          return_fields = "| select #{Fog::Hyperv.camelize(return_fields).join ','}" if return_fields
+          skip_json = options.delete :_skip_json
+          skip_camelize = options.delete :_skip_camelize
+          skip_uncamelize = options.delete :_skip_uncamelize
+
+          options = Fog::Hyperv.camelize(options) unless skip_camelize
+          args = options.reject { |k, v| v.nil? }.map do |k, v|
+            "-#{k} #{v}"
+          end
+
+          # TODO: Local machine communication
+          out = @connection.shell(:powershell) do |shell|
+            shell.run("#{command} #{args} #{return_fields} #{'| ConvertTo-Json -Compress' unless skip_json}")
+          end
+
+          # TODO: Map error codes in some manner
+          raise Fog::Hyperv::ServiceError, out.stderr unless out.exitcode.zero?
+
+          if skip_json
+            out.stdout
+          else
+            json = Psych.load(out.stdout)
+            Fog::Hyperv.uncamelize(json) unless skip_uncamelize
+            json
+          end
+        end
 
         def connect
           return true if is_local?
