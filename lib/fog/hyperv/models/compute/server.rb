@@ -14,7 +14,7 @@ module Fog
         attribute :processor_count
 
         # attribute :network_adapters
-        # attribute :hard_drives
+        attribute :hard_drives
 
         def initialize(attributes = {})
           super attributes

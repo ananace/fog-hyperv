@@ -7,6 +7,9 @@ module Fog
       model_path 'fog/hyperv/models/compute'
       model :server
       collection :servers
+      # TODO: Design these properly
+      # model :volume
+      # collection :volumes
 
       request_path 'fog/hyperv/requests/compute'
       request :get_vm_host
@@ -41,6 +44,10 @@ module Fog
           skip_camelize = options.delete :_skip_camelize
           skip_uncamelize = options.delete :_skip_uncamelize
 
+          # TODO: Generate an argument hash instead?
+          # 
+          # Would probably need to generate multi-line scripts in that case,
+          # though that might help with VMId and clustering
           options = Fog::Hyperv.camelize(options) unless skip_camelize
           args = options.reject { |k, v| v.nil? }.map do |k, v|
             "-#{k} #{v}"
