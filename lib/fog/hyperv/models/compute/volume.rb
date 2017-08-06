@@ -1,11 +1,23 @@
 module Fog
   module Compute
     class Hyperv
-      # FIXME? VHD? VMHardDiskDrive? VMFloppyDiskDrive? VMDvdDrive?
       class Volume < Fog::Model
         identity :id
 
-        # TODO
+        # :HDD, :FDD, :DVD
+        attribute :type
+
+        def initialize(attributes = {})
+          # TODO:
+          # switch <something>
+          # case HardDiskDrive
+          #   type = :HDD
+          # case FloppyDiskDrive
+          #   type = :FDD
+          # case DvdDrive
+          #   type = :DVD
+          # end
+        end
       end
     end
   end
