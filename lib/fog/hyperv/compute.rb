@@ -22,6 +22,7 @@ module Fog
       class Real
         def initialize(options = {})
           require 'json'
+          require 'shellwords'
           @hyperv_endpoint  = options[:hyperv_endpoint]
           @hyperv_username  = options[:hyperv_username]
           @hyperv_password  = options[:hyperv_password]
@@ -45,22 +46,37 @@ module Fog
           skip_uncamelize = options.delete :_skip_uncamelize
 
           # TODO: Generate an argument hash instead?
-          # 
+          #
           # args = @{
           #   Name = etc
           # }
           # Get-VM *args
           options = Fog::Hyperv.camelize(options) unless skip_camelize
           args = options.reject { |k, v| v.nil? }.map do |k, v|
-            "-#{k} #{v}"
+            "-#{k} #{Shellwords.escape v}"
           end
 
           commandline = "#{command} #{args} #{return_fields} #{'| ConvertTo-Json -Compress' unless skip_json}"
 
-          # TODO: Local machine communication
-          out = @connection.shell(:powershell) do |shell|
-            shell.run(commandline)
-          end unless is_local?
+          if is_local?
+            commanddata = [
+              'powershell',
+              '-NoLogo',
+              '-NoProfile',
+              '-NonInteractive',
+              commandline
+            ]
+            out = OpenStruct.new stdout: '',
+                                 stderr: '',
+                                 exitcode: -1
+
+            out.stdout, out.stderr, out.exitcode = Open3.capture3(*commanddata)
+            out.exitcode = out.exitcode.exitstatus
+          else
+            out = @connection.shell(:powershell) do |shell|
+              shell.run(commandline)
+            end
+          end
 
           # TODO: Map error codes in some manner?
           raise Fog::Hyperv::ServiceError, "Failed to execute #{commandline}" unless out
@@ -76,7 +92,11 @@ module Fog
         end
 
         def connect
-          return true if is_local?
+          if is_local?
+            require 'open3'
+            require 'ostruct'
+            return true
+          end
           require 'winrm'
 
           @connection = WinRM::Connection.new(
