@@ -6,7 +6,7 @@ module Fog
           # TODO: Handle -VMId/-Id too;
           #
           #   Get-VM -Id <guid> | Start-VM
-          run_shell('Start-VM', options)
+          run_shell('Start-VM', options.merge(_skip_json: true))
         end
       end
     end

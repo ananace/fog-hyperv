@@ -8,11 +8,15 @@ module Fog
 
         attribute :name
         attribute :computer_name
+        attribute :dynamic_memory_enabled
         attribute :generation # 1 => bios, 2 => uefi
         attribute :state
         attribute :status
         attribute :memory_assigned
+        attribute :memory_maximum
+        attribute :memory_minimum
         attribute :memory_startup
+        attribute :note
         attribute :processor_count
 
         attribute :network_adapters
@@ -24,7 +28,7 @@ module Fog
           super attributes
 
           initialize_network_adapters
-          # initialize_hard_drives
+          initialize_hard_drives
         end
 
         def start(options = {})
@@ -43,7 +47,7 @@ module Fog
           )
         end
 
-        def reboot(options = {})
+        def restart(options = {})
           requires :name, :computer_name
           service.restart_vm options.merge(
             name: self.name,
@@ -63,6 +67,12 @@ module Fog
           )
         end
 
+        def save(options = {})
+          requires :name
+
+          service.new_vm options.merge(attributes)
+        end
+
         def ready?
           state == 2
         end
@@ -75,7 +85,7 @@ module Fog
         end
 
         def initialize_hard_drives
-          self.attributes[:hard_drives].map! { |hd| hd.is_a?(Hash) ? service.volumes.new(hd) : hd } \
+          self.attributes[:hard_drives].map! { |hd| hd.is_a?(Hash) ? service.hard_disks.new(hd) : hd } \
             if attributes[:hard_drives] && attributes[:hard_drives].is_a?(Array)
         end
       end

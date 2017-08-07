@@ -16,9 +16,13 @@ module Fog
           }.merge filters)
         end
 
-        def get(name, computer = nil)
+        def get(identity, computer = nil)
           computer = computer_name if !computer && computer_name
-          new service.get_vm(name: name, computer_name: computer)
+          guid = identity =~ /\w{8}-\w{4}-\w{4}-\w{4}-\w{12}/
+          search = {}
+          search[:id] = identity if guid
+          search[:name] = identity unless guid
+          new service.get_vm(search.merge(computer_name: computer))
         end
 
         def new(options = {})

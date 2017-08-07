@@ -7,22 +7,25 @@ module Fog
                  :hyperv_debug
 
       model_path 'fog/hyperv/models/compute'
-      model :server
-      collection :servers
-      # TODO: Design these properly
-      # model :volume
-      # collection :volumes
+      model :hard_disk
+      collection :hard_disks
       model :interface
       collection :interfaces
+      model :server
+      collection :servers
 
       request_path 'fog/hyperv/requests/compute'
+      request :connect_vm_network_adapter
+      request :disconnect_vm_network_adapter
+      request :get_vm
+      request :get_vm_hard_disk_drive
       request :get_vm_host
       request :get_vm_host_cluster
-      request :get_vm
+      request :get_vm_network_adapter
       request :start_vm
       request :stop_vm
       request :remove_vm
-      request :get_vm_hard_disk_drive
+      request :restart_vm
 
       class Real
         def initialize(options = {})
@@ -50,6 +53,7 @@ module Fog
         def run_shell(command, options = {})
           return_fields = options.delete :_return_fields
           return_fields = "| select #{Fog::Hyperv.camelize([return_fields].flatten).join ','}" if return_fields
+          suffix = options.delete :_suffix
           skip_json = options.delete :_skip_json
           skip_camelize = options.delete :_skip_camelize
           skip_uncamelize = options.delete :_skip_uncamelize
@@ -62,10 +66,10 @@ module Fog
           # Get-VM *args
           options = Fog::Hyperv.camelize(options) unless skip_camelize
           args = options.reject { |k, v| v.nil? }.map do |k, v|
-            "-#{k} #{Shellwords.escape v}"
+            "-#{k} #{Shellwords.escape v unless v.is_a? TrueClass}"
           end
 
-          commandline = "#{command} #{args.join ' ' unless args.empty?} #{return_fields} #{'| ConvertTo-Json -Compress' unless skip_json}"
+          commandline = "#{command}#{suffix} #{args.join ' ' unless args.empty?} #{return_fields} #{'| ConvertTo-Json -Compress' unless skip_json}"
           puts " > #{commandline}" if @hyperv_debug
 
           out = OpenStruct.new stdout: '',

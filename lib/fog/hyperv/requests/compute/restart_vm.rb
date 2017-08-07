@@ -2,11 +2,11 @@ module Fog
   module Compute
     class Hyperv
       class Real
-        def stop_vm(options = {})
+        def restart_vm(options = {})
           # TODO: Handle -VMId/-Id too;
           #
-          #   Get-VM -Id <guid> | Stop-VM
-          run_shell('Stop-VM', options.merge(_skip_json: true))
+          #   Get-VM -Id <guid> | Start-VM
+          run_shell('Restart-VM', options.merge(_skip_json: true))
         end
       end
     end
