@@ -8,7 +8,7 @@ module Fog
 
       model_path 'fog/hyperv/models/compute'
       model :hard_drive
-      collection :hard_drive
+      collection :hard_drives
       model :network_adapter
       collection :network_adapters
       model :server

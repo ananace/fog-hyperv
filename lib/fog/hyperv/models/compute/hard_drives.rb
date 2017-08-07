@@ -10,19 +10,14 @@ module Fog
         model Fog::Compute::Hyperv::HardDrive
 
         def all(filters = {})
-          load service.get_vm_hard_disk_drive({
+          load [service.get_vm_hard_disk_drive({
             computer_name: computer_name,
             vm_name: vm_name,
             _json_depth: 1
-          }.merge(filters))
+          }.merge(filters))].flatten
         end
 
         def get(filters = {})
-          # TODO: Validation?
-          #
-          # uint ControllerNumber
-          # uint ControllerLocation
-          # enum [:IDE, :SCSI, :FLOPPY] ControllerType
           new service.get_vm_hard_disk_drive({
             computer_name: computer_name,
             vm_name: vm_name

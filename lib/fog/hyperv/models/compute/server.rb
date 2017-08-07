@@ -92,10 +92,11 @@ module Fog
         private
 
         def initialize_network_adapters
-          return unless network_adapters.is_a?(Array) &&
-                        !network_adapters.empty?
+          attributes[:network_adapters] = nil unless attributes[:network_adapters].is_a? Array
+          return unless attributes[:network_adapters] &&
+                        !attributes[:network_adapters].empty?
 
-          if network_adapters.first.is_a? String
+          if attributes[:network_adapters].first.is_a? String
             attributes[:network_adapters] = nil
           else
             attributes[:network_adapters].map! do |nic|
@@ -105,10 +106,11 @@ module Fog
         end
 
         def initialize_hard_drives
-          return unless hard_drives.is_a?(Array) &&
-                        !hard_drives.empty?
+          attributes[:hard_drives] = nil unless attributes[:hard_drives].is_a? Array
+          return unless attributes[:hard_drives] &&
+                        !attributes[:hard_drives].empty?
 
-          if hard_drives.first.is_a? String
+          if attributes[:hard_drives].first.is_a? String
             attributes[:hard_drives] = nil
           else
             attributes[:hard_drives].map! do |hd|
