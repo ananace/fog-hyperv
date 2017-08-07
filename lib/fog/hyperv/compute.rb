@@ -21,7 +21,7 @@ module Fog
 
       class Real
         def initialize(options = {})
-          require 'psych'
+          require 'json'
           @hyperv_endpoint  = options[:hyperv_endpoint]
           @hyperv_username  = options[:hyperv_username]
           @hyperv_password  = options[:hyperv_password]
@@ -46,26 +46,31 @@ module Fog
 
           # TODO: Generate an argument hash instead?
           # 
-          # Would probably need to generate multi-line scripts in that case,
-          # though that might help with VMId and clustering
+          # args = @{
+          #   Name = etc
+          # }
+          # Get-VM *args
           options = Fog::Hyperv.camelize(options) unless skip_camelize
           args = options.reject { |k, v| v.nil? }.map do |k, v|
             "-#{k} #{v}"
           end
 
+          commandline = "#{command} #{args} #{return_fields} #{'| ConvertTo-Json -Compress' unless skip_json}"
+
           # TODO: Local machine communication
           out = @connection.shell(:powershell) do |shell|
-            shell.run("#{command} #{args} #{return_fields} #{'| ConvertTo-Json -Compress' unless skip_json}")
-          end
+            shell.run(commandline)
+          end unless is_local?
 
-          # TODO: Map error codes in some manner
+          # TODO: Map error codes in some manner?
+          raise Fog::Hyperv::ServiceError, "Failed to execute #{commandline}" unless out
           raise Fog::Hyperv::ServiceError, out.stderr unless out.exitcode.zero?
 
           if skip_json
             out.stdout
           else
-            json = Psych.load(out.stdout)
-            Fog::Hyperv.uncamelize(json) unless skip_uncamelize
+            json = JSON.parse(out.stdout, symbolize_names: true)
+            json = Fog::Hyperv.uncamelize(json) unless skip_uncamelize
             json
           end
         end
@@ -83,11 +88,7 @@ module Fog
         end
 
         def verify
-          @connection.shell(:powershell) do |shell|
-            result = shell.run('get-vm')
-
-            raise Fog::Hyperv::Errors::ServiceError, result.stderr unless result.exitcode.zero?
-          end
+          run_shell('Get-VM') && true
         end
       end
     end
