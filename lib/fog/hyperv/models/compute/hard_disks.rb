@@ -23,8 +23,8 @@ module Fog
           # uint ControllerLocation
           # enum [:IDE, :SCSI, :FLOPPY] ControllerType
           new service.get_vm_hard_disk_drive({
-            vm_name: id,
-            computer_name: computer_name
+            computer_name: computer_name,
+            vm_name: vm_name
           }.merge(filters))
         end
 

@@ -53,6 +53,7 @@ module Fog
         def run_shell(command, options = {})
           return_fields = options.delete :_return_fields
           return_fields = "| select #{Fog::Hyperv.camelize([return_fields].flatten).join ','}" if return_fields
+          json_depth = options.delete :_json_depth
           suffix = options.delete :_suffix
           skip_json = options.delete :_skip_json
           skip_camelize = options.delete :_skip_camelize
@@ -69,7 +70,7 @@ module Fog
             "-#{k} #{Shellwords.escape v unless v.is_a? TrueClass}"
           end
 
-          commandline = "#{command}#{suffix} #{args.join ' ' unless args.empty?} #{return_fields} #{'| ConvertTo-Json -Compress' unless skip_json}"
+          commandline = "#{command}#{suffix} #{args.join ' ' unless args.empty?} #{return_fields} #{"| ConvertTo-Json -Compress #{"-Depth #{json_depth}" if json_depth}" unless skip_json}"
           puts " > #{commandline}" if @hyperv_debug
 
           out = OpenStruct.new stdout: '',

@@ -10,10 +10,11 @@ module Fog
         model Fog::Compute::Hyperv::Interface
 
         def all(filters = {})
-          load service.get_vm_network_adapter({
+          load [service.get_vm_network_adapter({
             computer_name: computer_name,
-            vm_name: vm_name
-          }.merge(filters))
+            vm_name: vm_name,
+            _json_depth: 1
+          }.merge(filters))].flatten
         end
 
         def get(name, filters = {})
