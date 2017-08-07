@@ -1,13 +1,13 @@
 module Fog
   module Compute
     class Hyperv
-      class Interfaces < Fog::Collection
-        autoload :Interface, File.expand_path('../interface', __FILE__)
+      class NetworkAdapters < Fog::Collection
+        autoload :NetworkAdapter, File.expand_path('../network_adapter', __FILE__)
 
         attr_accessor :computer_name
         attr_accessor :vm_name
 
-        model Fog::Compute::Hyperv::Interface
+        model Fog::Compute::Hyperv::NetworkAdapter
 
         def all(filters = {})
           load [service.get_vm_network_adapter({

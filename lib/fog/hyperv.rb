@@ -21,7 +21,7 @@ module Fog
       when Hash
         data.each_with_object({}) do |(k, v), hash|
           value = v
-          value = camelize(v) if [Hash, Array].include? v.class
+          value = camelize(v) if v.is_a?(Hash) || (v.is_a?(Array) && v.all? { |h| h.is_a?(Hash) })
           hash[camelize(k)] = value
         end
       when Symbol
@@ -40,7 +40,7 @@ module Fog
       when Hash
         data.each_with_object({}) do |(k, v), hash|
           value = v
-          value = uncamelize(v) if [Hash, Array].include? v.class
+          value = uncamelize(v) if v.is_a?(Hash) || (v.is_a?(Array) && v.all? { |h| h.is_a?(Hash) })
           hash[uncamelize(k)] = value
         end
       when Symbol

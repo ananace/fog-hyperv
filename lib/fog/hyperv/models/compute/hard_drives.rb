@@ -1,18 +1,19 @@
 module Fog
   module Compute
     class Hyperv
-      class HardDisks < Fog::Collection
-        autoload :HardDisk, File.expand_path('../hard_disk', __FILE__)
+      class HardDrives < Fog::Collection
+        autoload :HardDrive, File.expand_path('../hard_drive', __FILE__)
 
         attr_accessor :computer_name
         attr_accessor :vm_name
 
-        model Fog::Compute::Hyperv::HardDisk
+        model Fog::Compute::Hyperv::HardDrive
 
         def all(filters = {})
           load service.get_vm_hard_disk_drive({
             computer_name: computer_name,
-            vm_name: vm_name
+            vm_name: vm_name,
+            _json_depth: 1
           }.merge(filters))
         end
 

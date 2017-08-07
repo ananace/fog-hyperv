@@ -12,17 +12,21 @@ module Fog
         def all(filters = {})
           load service.get_vm({
             computer_name: computer_name,
-            cluster: cluster
+            cluster: cluster,
+            _json_depth: 1
           }.merge filters)
         end
 
         def get(identity, computer = nil)
-          computer = computer_name if !computer && computer_name
           guid = identity =~ /\w{8}-\w{4}-\w{4}-\w{4}-\w{12}/
-          search = {}
+
+          search = {
+            computer_name: computer || computer_name
+          }
           search[:id] = identity if guid
           search[:name] = identity unless guid
-          new service.get_vm(search.merge(computer_name: computer))
+
+          new service.get_vm(search)
         end
 
         def new(options = {})

@@ -77,12 +77,16 @@ module Fog
           state == 2
         end
 
-        def interfaces
-          attributes[:network_adapter] ||= service.interfaces(computer_name: computer_name, vm_name: name).all
+        def network_adapters
+          attributes[:network_adapters] ||= service.network_adapters(computer_name: computer_name, vm_name: name)
         end
 
         def hard_drives
-          attributes[:hard_drives] ||= service.hard_drives(computer_name: computer_name, vm_name: name).all
+          attributes[:hard_drives] ||= service.hard_drives(computer_name: computer_name, vm_name: name)
+        end
+
+        def mac_addresses
+          network_adapters.map { |nic| nic.mac_address }
         end
 
         private
@@ -93,18 +97,24 @@ module Fog
 
           if network_adapters.first.is_a? String
             attributes[:network_adapters] = nil
-            interfaces
           else
             attributes[:network_adapters].map! do |nic|
-              nic.is_a?(Hash) ? service.interfaces.new(nic) : nic
+              nic.is_a?(Hash) ? service.network_adapters.new(nic) : nic
             end
           end
         end
 
         def initialize_hard_drives
-          attributes[:hard_drives].map! do |hd|
-            hd.is_a?(Hash) ? service.hard_disks.new(hd) : hd
-          end if hard_drives && hard_drives.is_a?(Array)
+          return unless hard_drives.is_a?(Array) &&
+                        !hard_drives.empty?
+
+          if hard_drives.first.is_a? String
+            attributes[:hard_drives] = nil
+          else
+            attributes[:hard_drives].map! do |hd|
+              hd.is_a?(Hash) ? service.hard_drives.new(hd) : hd
+            end
+          end
         end
       end
     end

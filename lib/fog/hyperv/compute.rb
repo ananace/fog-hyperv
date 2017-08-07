@@ -7,10 +7,10 @@ module Fog
                  :hyperv_debug
 
       model_path 'fog/hyperv/models/compute'
-      model :hard_disk
-      collection :hard_disks
-      model :interface
-      collection :interfaces
+      model :hard_drive
+      collection :hard_drive
+      model :network_adapter
+      collection :network_adapters
       model :server
       collection :servers
 
@@ -34,7 +34,7 @@ module Fog
           require 'shellwords'
 
           @hyperv_endpoint  = options[:hyperv_endpoint]
-          @hyperv_endpoint  = "http://#{options[:hyperv_host]}:5985/wsman" if @hyperv_endpoint.nil? && options[:hyperv_host]
+          @hyperv_endpoint  = "http://#{options[:hyperv_host]}:5985/wsman" if !@hyperv_endpoint && options[:hyperv_host]
           @hyperv_username  = options[:hyperv_username]
           @hyperv_password  = options[:hyperv_password]
           @hyperv_transport = options[:hyperv_transport] || :negotiate
@@ -60,6 +60,7 @@ module Fog
           skip_uncamelize = options.delete :_skip_uncamelize
 
           # TODO: Generate an argument hash instead?
+          # TODO: Needs some testing for multi-line PS execution both local and remote
           #
           # args = @{
           #   Name = etc
@@ -126,7 +127,7 @@ module Fog
         end
 
         def verify
-          run_shell('Get-VM', _return_fields: 'Name') && true
+          run_shell('Get-VM | select -First 1', _return_fields: :name) && true
         end
       end
 
