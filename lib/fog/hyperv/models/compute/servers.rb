@@ -16,9 +16,9 @@ module Fog
           }.merge filters)
         end
 
-        def get(id, computer = nil)
+        def get(name, computer = nil)
           computer = computer_name if !computer && computer_name
-          new service.get_vm(id: id, computer_name: computer)
+          new service.get_vm(name: name, computer_name: computer)
         end
 
         def new(options = {})

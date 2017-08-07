@@ -2,7 +2,7 @@ require 'fog/core'
 
 module Fog
   module Compute
-    autoload :Hyperv, File.expand_path('../hyperv/compute.rb', __FILE__)
+    autoload :Hyperv, File.expand_path('../hyperv/compute', __FILE__)
   end
 
   module Hyperv
@@ -20,7 +20,9 @@ module Fog
         data.collect { |d| camelize(d) }
       when Hash
         data.each_with_object({}) do |(k, v), hash|
-          hash[camelize(k)] = camelize(v)
+          value = v
+          value = camelize(v) if [Hash, Array].include? v.class
+          hash[camelize(k)] = value
         end
       when Symbol
         camelize(data.to_s).to_sym
@@ -37,7 +39,9 @@ module Fog
         data.collect { |d| uncamelize(d) }
       when Hash
         data.each_with_object({}) do |(k, v), hash|
-          hash[uncamelize(k)] = uncamelize(v)
+          value = v
+          value = uncamelize(v) if [Hash, Array].include? v.class
+          hash[uncamelize(k)] = value
         end
       when Symbol
         uncamelize(data.to_s).to_sym

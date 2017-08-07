@@ -8,19 +8,23 @@ module Fog
 
         attribute :name
         attribute :computer_name
+        attribute :generation # 1 => bios, 2 => uefi
         attribute :state
         attribute :status
         attribute :memory_assigned
+        attribute :memory_startup
         attribute :processor_count
 
-        # attribute :network_adapters
+        attribute :network_adapters
+        attribute :dvd_drives
+        attribute :floppy_drive
         attribute :hard_drives
 
         def initialize(attributes = {})
           super attributes
 
           initialize_network_adapters
-          initialize_hard_drives
+          # initialize_hard_drives
         end
 
         def start(options = {})
@@ -45,6 +49,22 @@ module Fog
             name: self.name,
             computer_name: self.computer_name
           )
+        end
+
+        def destroy(options = {})
+          requires :name, :computer_name
+          if ready?
+            stop(options)
+            wait_for { !ready? }
+          end
+          service.remove_vm options.merge(
+            name: name,
+            computer_name: computer_name
+          )
+        end
+
+        def ready?
+          state == 2
         end
 
         private

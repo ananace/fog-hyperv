@@ -5,7 +5,7 @@ class Hyperv < Fog::Bin
       when :compute
         Fog::Compute::Hyperv
       else
-        raise ArgumentError, "Unrecognized service: #{key}"
+        raise ArgumentError, "Unsupported #{self} service: #{key}"
       end
     end
 
