@@ -58,6 +58,10 @@ module Fog
 
           commandline = "#{command} #{args} #{return_fields} #{'| ConvertTo-Json -Compress' unless skip_json}"
 
+          out = OpenStruct.new stdout: '',
+                               stderr: '',
+                               exitcode: -1
+
           if is_local?
             commanddata = [
               'powershell',
@@ -66,15 +70,11 @@ module Fog
               '-NonInteractive',
               commandline
             ]
-            out = OpenStruct.new stdout: '',
-                                 stderr: '',
-                                 exitcode: -1
-
             out.stdout, out.stderr, out.exitcode = Open3.capture3(*commanddata)
             out.exitcode = out.exitcode.exitstatus
           else
-            out = @connection.shell(:powershell) do |shell|
-              shell.run(commandline)
+            @connection.shell(:powershell) do |shell|
+              out = shell.run(commandline)
             end
           end
 
