@@ -13,6 +13,7 @@ module Fog
           load [service.get_vm_hard_disk_drive({
             computer_name: computer_name,
             vm_name: vm_name,
+            _return_fields: model.attributes,
             _json_depth: 1
           }.merge(filters))].flatten
         end
@@ -20,7 +21,9 @@ module Fog
         def get(filters = {})
           new service.get_vm_hard_disk_drive({
             computer_name: computer_name,
-            vm_name: vm_name
+            vm_name: vm_name,
+            _return_fields: model.attributes,
+            _json_depth: 1
           }.merge(filters))
         end
 

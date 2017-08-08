@@ -9,6 +9,7 @@ module Fog
         attribute :name
         attribute :computer_name
         attribute :dynamic_memory_enabled
+        attribute :floppy_drive
         attribute :generation # 1 => bios, 2 => uefi
         attribute :state
         attribute :status
@@ -16,19 +17,22 @@ module Fog
         attribute :memory_maximum
         attribute :memory_minimum
         attribute :memory_startup
-        attribute :note
+        attribute :notes
         attribute :processor_count
 
         attribute :network_adapters
         attribute :dvd_drives
-        attribute :floppy_drive
         attribute :hard_drives
 
-        def initialize(attributes = {})
-          super attributes
-
-          initialize_network_adapters
-          initialize_hard_drives
+        %i(network_adapters dvd_drives hard_drives).each do |attr|
+          define_method attr do
+            attributes[attr] = [] \
+              if attributes[attr] == ''
+            attributes[attr] = nil \
+              if !attributes[attr].is_a?(Array) ||
+                 attributes[attr].any? { |v| v.is_a?(String) && v.start_with?('Microsoft.HyperV') }
+            attributes[attr] ||= service.send(attr, computer_name: computer_name, vm_name: name)
+          end
         end
 
         def start(options = {})
@@ -70,53 +74,45 @@ module Fog
         def save(options = {})
           requires :name
 
-          service.new_vm options.merge(attributes)
+          data = if persisted?
+                   service.set_vm options.merge(
+                     computer_name: computer_name,
+                     name: name,
+                     processor_count: processor_count,
+                     dynamic_memory: dynamic_memory_enabled,
+                     static_memory: !dynamic_memory_enabled,
+                     memory_minimum_bytes: dynamic_memory_enabled && memory_minimum,
+                     memory_maximum_bytes: dynamic_memory_enabled && memory_maximum,
+                     memory_startup_bytes: memory_startup,
+                     notes: notes,
+                     passthru: true,
+                     _return_fields: self.class.attributes,
+                     _json_depth: 1
+                   )
+                 else
+                   # Name, MemoryStartupBytes, BootDevice(?), SwitchName, Generation, VHD(NoVHD/Path)
+                   service.new_vm options.merge(attributes.merge(options))
+                 end
+          merge_attributes(data)
+          self
         end
 
         def ready?
           state == 2
         end
 
-        def network_adapters
-          attributes[:network_adapters] ||= service.network_adapters(computer_name: computer_name, vm_name: name)
-        end
-
-        def hard_drives
-          attributes[:hard_drives] ||= service.hard_drives(computer_name: computer_name, vm_name: name)
-        end
-
         def mac_addresses
-          network_adapters.map { |nic| nic.mac_address }
+          network_adapters.map(&:mac_address)
         end
 
-        private
-
-        def initialize_network_adapters
-          attributes[:network_adapters] = nil unless attributes[:network_adapters].is_a? Array
-          return unless attributes[:network_adapters] &&
-                        !attributes[:network_adapters].empty?
-
-          if attributes[:network_adapters].first.is_a? String
-            attributes[:network_adapters] = nil
-          else
-            attributes[:network_adapters].map! do |nic|
-              nic.is_a?(Hash) ? service.network_adapters.new(nic) : nic
-            end
-          end
+        def ip_addresses
+          network_adapters.map(&:ip_addresses).flatten
         end
 
-        def initialize_hard_drives
-          attributes[:hard_drives] = nil unless attributes[:hard_drives].is_a? Array
-          return unless attributes[:hard_drives] &&
-                        !attributes[:hard_drives].empty?
-
-          if attributes[:hard_drives].first.is_a? String
-            attributes[:hard_drives] = nil
-          else
-            attributes[:hard_drives].map! do |hd|
-              hd.is_a?(Hash) ? service.hard_drives.new(hd) : hd
-            end
-          end
+        def public_ip_address
+          ip_addresses
+            .reject { |a| a =~ /^(169\.254|fe80)/ }
+            .first
         end
       end
     end

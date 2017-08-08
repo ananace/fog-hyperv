@@ -14,6 +14,14 @@ module Fog
 
     service(:compute, 'Compute')
 
+    def self.quoted(string)
+      if string =~ /^$||\s/
+        string.inspect
+      else
+        string
+      end
+    end
+
     def self.camelize(data)
       case data
       when Array

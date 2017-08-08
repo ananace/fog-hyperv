@@ -2,8 +2,8 @@ module Fog
   module Compute
     class Hyperv
       class Real
-        def new_vm(options = {})
-          run_shell('New-VM', options)
+        def set_vm_dvd_drive(options = {})
+          run_shell('Set-VMDvdDrive', options)
         end
       end
     end

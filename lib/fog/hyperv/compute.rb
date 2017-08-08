@@ -7,31 +7,43 @@ module Fog
                  :hyperv_debug
 
       model_path 'fog/hyperv/models/compute'
+      model :dvd_drive
+      collection :dvd_drives
       model :hard_drive
       collection :hard_drives
       model :network_adapter
       collection :network_adapters
       model :server
       collection :servers
+      model :switch
+      collection :switches
+      model :vhd
 
       request_path 'fog/hyperv/requests/compute'
       request :connect_vm_network_adapter
       request :disconnect_vm_network_adapter
+      request :get_vhd
       request :get_vm
+      request :get_vm_dvd_drive
       request :get_vm_hard_disk_drive
       request :get_vm_host
       request :get_vm_host_cluster
       request :get_vm_network_adapter
-      request :start_vm
-      request :stop_vm
+      request :get_vm_switch
+      request :new_vm
+      request :new_vm_switch
       request :remove_vm
       request :restart_vm
+      request :set_vm
+      request :set_vm_dvd_drive
+      request :set_vm_switch
+      request :start_vm
+      request :stop_vm
 
       class Real
         def initialize(options = {})
           require 'json'
           require 'ostruct'
-          require 'shellwords'
 
           @hyperv_endpoint  = options[:hyperv_endpoint]
           @hyperv_endpoint  = "http://#{options[:hyperv_host]}:5985/wsman" if !@hyperv_endpoint && options[:hyperv_host]
@@ -67,8 +79,8 @@ module Fog
           # }
           # Get-VM *args
           options = Fog::Hyperv.camelize(options) unless skip_camelize
-          args = options.reject { |k, v| v.nil? }.map do |k, v|
-            "-#{k} #{Shellwords.escape v unless v.is_a? TrueClass}"
+          args = options.reject { |_k, v| v.nil? || v.is_a?(FalseClass) }.map do |k, v|
+            "-#{k} #{Fog::Hyperv.quoted v unless v.is_a? TrueClass}"
           end
 
           commandline = "#{command}#{suffix} #{args.join ' ' unless args.empty?} #{return_fields} #{"| ConvertTo-Json -Compress #{"-Depth #{json_depth}" if json_depth}" unless skip_json}"
@@ -127,7 +139,7 @@ module Fog
         end
 
         def verify
-          run_shell('Get-VM | select -First 1', _return_fields: :name) && true
+          run_shell('Get-VMHost', _return_fields: :name) && true
         end
       end
 

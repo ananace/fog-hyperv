@@ -24,6 +24,8 @@ module Fog
         def connect(switch, options = {})
           requires :name, :computer_name, :vm_name
 
+          switch = switch.name if switch.is_a? Fog::Compute::Hyperv::Switch
+
           service.connect_vm_network_adapter options.merge(
             computer_name: computer_name,
             name: name,
@@ -40,6 +42,26 @@ module Fog
             name: name,
             vm_name: vm_name
           )
+        end
+
+        def switch
+          service.switches.get switch_name, computer_name: computer_name if switch_name
+        end
+
+        def ip_addresses
+          attributes[:ip_addresses] = [] \
+            if attributes[:ip_addresses] == ''
+          attributes[:ip_addresses]
+        end
+
+        def reload
+          data = collection.get(
+            name,
+            computer_name: computer_name,
+            vm_name: vm_name
+          )
+          merge_attributes(data.attributes)
+          self
         end
       end
     end

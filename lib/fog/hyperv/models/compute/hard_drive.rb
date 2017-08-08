@@ -17,6 +17,21 @@ module Fog
         attribute :vm_name
         # TODO? VM Snapshots?
 
+        def vhd
+          @vhd ||= Fog::Compute::Hyperv::VHD.new(service.get_vhd(computer_name: computer_name, path: path).merge(service: service))
+        end
+
+        def reload
+          data = collection.get(
+            computer_name: computer_name,
+            vm_name: vm_name,
+            controller_location: controller_location,
+            controller_number: controller_number,
+            controller_type: controller_type
+          )
+          merge_attributes(data.attributes)
+          self
+        end
       end
     end
   end

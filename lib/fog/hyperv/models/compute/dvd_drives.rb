@@ -1,16 +1,16 @@
 module Fog
   module Compute
     class Hyperv
-      class NetworkAdapters < Fog::Collection
-        autoload :NetworkAdapter, File.expand_path('../network_adapter', __FILE__)
+      class DvdDrives < Fog::Collection
+        autoload :DvdDrive, File.expand_path('../dvd_drive', __FILE__)
 
         attr_accessor :computer_name
         attr_accessor :vm_name
 
-        model Fog::Compute::Hyperv::NetworkAdapter
+        model Fog::Compute::Hyperv::DvdDrive
 
         def all(filters = {})
-          load [service.get_vm_network_adapter({
+          load [service.get_vm_dvd_drive({
             computer_name: computer_name,
             vm_name: vm_name,
             _return_fields: model.attributes,
@@ -18,11 +18,10 @@ module Fog
           }.merge(filters))].flatten
         end
 
-        def get(name, filters = {})
-          new service.get_vm_network_adapter({
+        def get(filters = {})
+          new service.get_vm_dvd_drive({
             computer_name: computer_name,
             vm_name: vm_name,
-            name: name,
             _return_fields: model.attributes,
             _json_depth: 1
           }.merge(filters))

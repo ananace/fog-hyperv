@@ -2,8 +2,8 @@ module Fog
   module Compute
     class Hyperv
       class Real
-        def new_vm(options = {})
-          run_shell('New-VM', options)
+        def get_vhd(options = {})
+          run_shell('Get-VHD', options)
         end
       end
     end

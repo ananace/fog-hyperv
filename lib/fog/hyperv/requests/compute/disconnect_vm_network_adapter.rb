@@ -3,7 +3,7 @@ module Fog
     class Hyperv
       class Real
         def disconnect_vm_network_adapter(options = {})
-          run_shell('Disconnect-VMNetworkAdapter', options.merge(_skip_json: true))
+          run_shell('Disconnect-VMNetworkAdapter', options.merge(_skip_json: true)) && true
         end
       end
     end

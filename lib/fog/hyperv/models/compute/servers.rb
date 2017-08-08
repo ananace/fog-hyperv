@@ -13,6 +13,7 @@ module Fog
           load service.get_vm({
             computer_name: computer_name,
             cluster: cluster,
+            _return_fields: model.attributes,
             _json_depth: 1
           }.merge filters)
         end
@@ -21,7 +22,9 @@ module Fog
           guid = identity =~ /\w{8}-\w{4}-\w{4}-\w{4}-\w{12}/
 
           search = {
-            computer_name: computer || computer_name
+            computer_name: computer || computer_name,
+            _return_fields: model.attributes,
+            _json_depth: 1
           }
           search[:id] = identity if guid
           search[:name] = identity unless guid
