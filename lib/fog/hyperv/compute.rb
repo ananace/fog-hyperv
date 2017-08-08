@@ -89,7 +89,7 @@ module Fog
           # }
           # Get-VM *args
           options = Fog::Hyperv.camelize(options) unless skip_camelize
-          args = options.reject { |_k, v| v.nil? || v.is_a?(FalseClass) }.map do |k, v|
+          args = options.reject { |k, v| v.nil? || v.is_a?(FalseClass) || k.to_s.start_with?('_') }.map do |k, v|
             "-#{k} #{Fog::Hyperv.shell_quoted v unless v.is_a? TrueClass}"
           end
 

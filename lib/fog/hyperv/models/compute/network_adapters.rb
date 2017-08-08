@@ -1,40 +1,19 @@
 module Fog
   module Compute
     class Hyperv
-      class NetworkAdapters < Fog::Collection
-        autoload :NetworkAdapter, File.expand_path('../network_adapter', __FILE__)
-
-        attr_accessor :computer_name
-        attr_accessor :vm_name
+      class NetworkAdapters < Fog::Hyperv::Collection
+        attribute :vm_name
 
         model Fog::Compute::Hyperv::NetworkAdapter
 
+        get_method :get_vm_network_adapter
+
         def all(filters = {})
-          load [service.get_vm_network_adapter({
-            computer_name: computer_name,
-            vm_name: vm_name,
-            all: !vm_name,
-            _return_fields: model.attributes,
-            _json_depth: 1
-          }.merge(filters))].flatten
+          super filters.merge(all: !vm_name)
         end
 
         def get(name, filters = {})
-          new service.get_vm_network_adapter({
-            computer_name: computer_name,
-            vm_name: vm_name,
-            all: !vm_name,
-            name: name,
-            _return_fields: model.attributes,
-            _json_depth: 1
-          }.merge(filters))
-        end
-
-        def new(options = {})
-          super({
-            computer_name: computer_name,
-            vm_name: vm_name
-          }.merge(options))
+          super filters.merge(name: name, all: !vm_name)
         end
       end
     end

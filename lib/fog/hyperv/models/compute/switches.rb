@@ -1,34 +1,13 @@
 module Fog
   module Compute
     class Hyperv
-      class Switches < Fog::Collection
-        autoload :Switch, File.expand_path('../switch', __FILE__)
-
-        attr_accessor :computer_name
-
+      class Switches < Fog::Hyperv::Collection
         model Fog::Compute::Hyperv::Switch
 
-        def all(filters = {})
-          load [service.get_vm_switch({
-            computer_name: computer_name,
-            _return_fields: model.attributes,
-            _json_depth: 1
-          }.merge(filters))].flatten
-        end
+        get_method :get_vm_switch
 
         def get(name, filters = {})
-          new service.get_vm_switch({
-            computer_name: computer_name,
-            name: name,
-            _return_fields: model.attributes,
-            _json_depth: 1
-          }.merge(filters))
-        end
-
-        def new(options = {})
-          super({
-            computer_name: computer_name
-          }.merge(options))
+          super filters.merge(name: name)
         end
       end
     end

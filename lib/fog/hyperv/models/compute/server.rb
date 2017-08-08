@@ -34,15 +34,12 @@ module Fog
             attributes[attr] ||= service.send(attr, computer_name: computer_name, vm_name: name)
           end
         end
+        alias interfaces :network_adapters
 
         def bios
           bios_wrapper
         end
         alias firmware :bios
-
-        def interfaces
-          network_adapters
-        end
 
         def start(options = {})
           requires :name, :computer_name
@@ -67,6 +64,7 @@ module Fog
             computer_name: self.computer_name
           )
         end
+        alias reboot :restart
 
         def destroy(options = {})
           requires :name, :computer_name
@@ -80,9 +78,14 @@ module Fog
           )
         end
 
+        def add_interface(options = {})
+          network_adapters.create options
+        end
+
         def save(options = {})
           requires :name
 
+          # TODO: Do this in two steps for newly created VMs
           data = if persisted?
                    service.set_vm options.merge(
                      computer_name: computer_name,
