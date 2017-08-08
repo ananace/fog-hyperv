@@ -40,6 +40,10 @@ module Fog
         end
         alias firmware :bios
 
+        def interfaces
+          network_adapters
+        end
+
         def start(options = {})
           requires :name, :computer_name
           service.start_vm options.merge(
