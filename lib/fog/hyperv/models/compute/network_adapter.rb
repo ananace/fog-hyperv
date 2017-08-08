@@ -11,6 +11,7 @@ module Fog
         attribute :is_deleted
         attribute :is_external_adapter
         attribute :is_legacy
+        attribute :is_management_os
         attribute :isolation_setting # Might need lazy loading
         attribute :mac_address
         attribute :name

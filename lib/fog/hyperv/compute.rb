@@ -66,6 +66,10 @@ module Fog
           @hyperv_endpoint.nil?
         end
 
+        def interfaces
+          network_adapters
+        end
+
         private
 
         def run_shell(command, options = {})

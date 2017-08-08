@@ -13,6 +13,7 @@ module Fog
           load [service.get_vm_network_adapter({
             computer_name: computer_name,
             vm_name: vm_name,
+            all: !vm_name,
             _return_fields: model.attributes,
             _json_depth: 1
           }.merge(filters))].flatten
@@ -22,6 +23,7 @@ module Fog
           new service.get_vm_network_adapter({
             computer_name: computer_name,
             vm_name: vm_name,
+            all: !vm_name,
             name: name,
             _return_fields: model.attributes,
             _json_depth: 1
