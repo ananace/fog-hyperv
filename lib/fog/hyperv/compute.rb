@@ -7,8 +7,10 @@ module Fog
                  :hyperv_debug
 
       model_path 'fog/hyperv/models/compute'
+      model :bios
       model :dvd_drive
       collection :dvd_drives
+      model :firmware
       model :hard_drive
       collection :hard_drives
       model :network_adapter
@@ -24,7 +26,9 @@ module Fog
       request :disconnect_vm_network_adapter
       request :get_vhd
       request :get_vm
+      request :get_vm_bios
       request :get_vm_dvd_drive
+      request :get_vm_firmware
       request :get_vm_hard_disk_drive
       request :get_vm_host
       request :get_vm_host_cluster
@@ -35,7 +39,9 @@ module Fog
       request :remove_vm
       request :restart_vm
       request :set_vm
+      request :set_vm_bios
       request :set_vm_dvd_drive
+      request :set_vm_firmware
       request :set_vm_switch
       request :start_vm
       request :stop_vm

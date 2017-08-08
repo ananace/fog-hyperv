@@ -35,6 +35,11 @@ module Fog
           end
         end
 
+        def bios
+          bios_wrapper
+        end
+        alias firmware :bios
+
         def start(options = {})
           requires :name, :computer_name
           service.start_vm options.merge(
@@ -113,6 +118,16 @@ module Fog
           ip_addresses
             .reject { |a| a =~ /^(169\.254|fe80)/ }
             .first
+        end
+
+        private
+
+        def bios_wrapper
+          if generation == 1
+            @bios ||= Fog::Compute::Hyperv::Bios.new(service.get_vm_bios(computer_name: computer_name, vm_name: name).merge service: service)
+          elsif generation == 2
+            @bios ||= Fog::Compute::Hyperv::Firmware.new(service.get_vm_firmware(computer_name: computer_name, vm_name: name).merge service: service)
+          end
         end
       end
     end

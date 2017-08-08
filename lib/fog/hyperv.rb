@@ -24,6 +24,8 @@ module Fog
         end
       when Array
         '@(' + data.map { |e| shell_quoted(e, true) }.join(', ') + ')'
+      else
+        shell_quoted data.to_s
       end
     end
 
