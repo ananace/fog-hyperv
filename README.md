@@ -1,6 +1,6 @@
 # Fog Hyper-V
 
-![Build Status](https://travis-ci.org/ace13/fog-hyperv.svg?branch=master)
+[![Build Status](https://travis-ci.org/ace13/fog-hyperv.svg?branch=master)](https://travis-ci.org/ace13/fog-hyperv)
 
 Manage your Hyper-V instance with the help of the Fog cloud service abstractions.
 
