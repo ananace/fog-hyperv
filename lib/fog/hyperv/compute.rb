@@ -80,7 +80,7 @@ module Fog
           # Get-VM *args
           options = Fog::Hyperv.camelize(options) unless skip_camelize
           args = options.reject { |_k, v| v.nil? || v.is_a?(FalseClass) }.map do |k, v|
-            "-#{k} #{Fog::Hyperv.quoted v unless v.is_a? TrueClass}"
+            "-#{k} #{Fog::Hyperv.shell_quoted v unless v.is_a? TrueClass}"
           end
 
           commandline = "#{command}#{suffix} #{args.join ' ' unless args.empty?} #{return_fields} #{"| ConvertTo-Json -Compress #{"-Depth #{json_depth}" if json_depth}" unless skip_json}"

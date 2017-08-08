@@ -14,11 +14,16 @@ module Fog
 
     service(:compute, 'Compute')
 
-    def self.quoted(string)
-      if string =~ /^$||\s/
-        string.inspect
-      else
-        string
+    def self.shell_quoted(data, always = false)
+      case data
+      when String
+        if data =~ /(^$)|\s/ || always
+          data.inspect.gsub(/\\([^\\])/, '`\1')
+        else
+          data
+        end
+      when Array
+        '@(' + data.map { |e| shell_quoted(e, true) }.join(', ') + ')'
       end
     end
 
