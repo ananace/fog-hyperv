@@ -4,6 +4,7 @@ module Fog
   module Compute
     class Hyperv
       class Server < Fog::Compute::Server
+        include Fog::Hyperv::ModelExtensions
         identity :id
 
         attribute :name
@@ -86,25 +87,32 @@ module Fog
           requires :name
 
           # TODO: Do this in two steps for newly created VMs
-          data = if persisted?
-                   service.set_vm options.merge(
-                     computer_name: computer_name,
-                     name: name,
-                     processor_count: processor_count,
-                     dynamic_memory: dynamic_memory_enabled,
-                     static_memory: !dynamic_memory_enabled,
-                     memory_minimum_bytes: dynamic_memory_enabled && memory_minimum,
-                     memory_maximum_bytes: dynamic_memory_enabled && memory_maximum,
-                     memory_startup_bytes: memory_startup,
-                     notes: notes,
-                     passthru: true,
-                     _return_fields: self.class.attributes,
-                     _json_depth: 1
-                   )
-                 else
-                   # Name, MemoryStartupBytes, BootDevice(?), SwitchName, Generation, VHD(NoVHD/Path)
-                   service.new_vm options.merge(attributes.merge(options))
-                 end
+          if persisted?
+            service.set_vm options.merge(
+              computer_name: old.computer_name,
+              name: old.name,
+              passthru: true,
+
+              processor_count: changed?(:processor_count) && processor_count,
+              dynamic_memory: changed?(:dynamic_memory_enabled) && dynamic_memory_enabled,
+              static_memory: changed?(:dynamic_memory_enabled) && !dynamic_memory_enabled,
+              memory_minimum_bytes: changed?(:memory_minimum) && dynamic_memory_enabled && memory_minimum,
+              memory_maximum_bytes: changed?(:memory_maximum) && dynamic_memory_enabled && memory_maximum,
+              memory_startup_bytes: changed?(:memory_startup) && memory_startup,
+              notes: changed?(:notes) && notes,
+              new_name: changed?(:name) && name,
+
+              _return_fields: self.class.attributes,
+              _json_depth: 1
+            )
+          else
+            # Name, MemoryStartupBytes, BootDevice(?), SwitchName, Generation, VHD(NoVHD/Path)
+            usable = [ :name, :memory_startup, :generation ].freeze
+            service.new_vm \
+              attributes.select { |k,v| usable.include? k }.merge(options)
+          end
+
+          @old = nil
           merge_attributes(data)
           self
         end
