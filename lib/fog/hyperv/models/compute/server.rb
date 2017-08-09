@@ -6,13 +6,13 @@ module Fog
       class Server < Fog::Compute::Server
         extend Fog::Hyperv::ModelExtends
         include Fog::Hyperv::ModelIncludes
-        identity :id
+        identity :id, type: :string
 
         attribute :name
         attribute :computer_name
         attribute :dynamic_memory_enabled
         attribute :floppy_drive
-        attribute :generation # 1 => bios, 2 => uefi
+        attribute :generation, type: :integer # 1 => bios, 2 => uefi
         attribute :state
         attribute :status
         attribute :memory_assigned
