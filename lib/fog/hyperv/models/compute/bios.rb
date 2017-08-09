@@ -2,13 +2,14 @@ module Fog
   module Compute
     class Hyperv
       class Bios < Fog::Hyperv::Model
-        identity :vm_id
+        identity :vm_id, type: :string
 
-        attribute :computer_name
-        attribute :is_deleted
-        attribute :num_lock_enabled
-        attribute :startup_order # TODO? :CD, :IDE, :LegacyNetworkAdapter, :Floppy (, :VHD, :NetworkAdapter)
-        attribute :vm_name
+        attribute :computer_name, type: :string
+        attribute :is_deleted, type: :boolean
+        attribute :num_lock_enabled, type: :boolean
+        # TODO? :CD, :IDE, :LegacyNetworkAdapter, :Floppy (, :VHD, :NetworkAdapter)
+        attribute :startup_order, type: :array
+        attribute :vm_name, type: :string
 
         def save
           data = service.set_vm_bios(

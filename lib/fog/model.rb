@@ -2,7 +2,8 @@ module Fog
   module Hyperv
     module ModelExtends
       def lazy_attributes(*attrs)
-        @lazy_attributes ||= attrs.map(&:to_s).map(&:to_sym)
+        @lazy_attributes ||= []
+        @lazy_attributes += attrs.map(&:to_s).map(&:to_sym)
       end
     end
     module ModelIncludes
