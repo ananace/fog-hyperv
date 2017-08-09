@@ -1,9 +1,7 @@
 module Fog
   module Compute
     class Hyperv
-      class HardDrives < Fog::Hyperv::Collection
-        attribute :vm_name
-
+      class HardDrives < Fog::Hyperv::VMCollection
         model Fog::Compute::Hyperv::HardDrive
 
         get_method :get_vm_hard_disk_drive

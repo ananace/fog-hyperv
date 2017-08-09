@@ -1,0 +1,33 @@
+module Fog
+  module Hyperv
+    module ModelExtends
+      def lazy_attributes(*attrs)
+        @lazy_attributes ||= attrs.map(&:to_s).map(&:to_sym)
+      end
+    end
+    module ModelIncludes
+      def lazy_attributes
+        if self.class.respond_to? :lazy_attributes
+          self.class.lazy_attributes
+        else
+          []
+        end
+      end
+
+      private
+
+      def changed?(attr)
+        attributes.reject { |k, v| old.attributes[k] == v }.key?(attr)
+      end
+
+      def old
+        @old ||= dup.reload
+      end
+    end
+
+    class Model < Fog::Model
+      extend Fog::Hyperv::ModelExtends
+      include Fog::Hyperv::ModelIncludes
+    end
+  end
+end

@@ -1,7 +1,7 @@
 module Fog
   module Compute
     class Hyperv
-      class Firmware < Fog::Model
+      class Firmware < Fog::Hyperv::Model
         identity :vm_id
 
         attribute :boot_order

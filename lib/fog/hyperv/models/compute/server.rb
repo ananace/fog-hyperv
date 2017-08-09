@@ -4,7 +4,8 @@ module Fog
   module Compute
     class Hyperv
       class Server < Fog::Compute::Server
-        include Fog::Hyperv::ModelExtensions
+        extend Fog::Hyperv::ModelExtends
+        include Fog::Hyperv::ModelIncludes
         identity :id
 
         attribute :name
@@ -21,9 +22,13 @@ module Fog
         attribute :notes
         attribute :processor_count
 
-        attribute :network_adapters
-        attribute :dvd_drives
-        attribute :hard_drives
+        attribute :network_adapters, type: :array
+        attribute :dvd_drives, type: :array
+        attribute :hard_drives, type: :array
+
+        lazy_attributes :network_adapters,
+                        :dvd_drives,
+                        :hard_drives
 
         %i(floppy_drive).each do |attr|
           define_method attr do
@@ -55,24 +60,24 @@ module Fog
         def start(options = {})
           requires :name, :computer_name
           service.start_vm options.merge(
-            name: self.name,
-            computer_name: self.computer_name
+            name: name,
+            computer_name: computer_name
           )
         end
 
         def stop(options = {})
           requires :name, :computer_name
           service.stop_vm options.merge(
-            name: self.name,
-            computer_name: self.computer_name
+            name: name,
+            computer_name: computer_name
           )
         end
 
         def restart(options = {})
           requires :name, :computer_name
           service.restart_vm options.merge(
-            name: self.name,
-            computer_name: self.computer_name
+            name: name,
+            computer_name: computer_name
           )
         end
         alias reboot :restart
@@ -116,7 +121,7 @@ module Fog
             # Name, MemoryStartupBytes, BootDevice(?), SwitchName, Generation, VHD(NoVHD/Path)
             usable = %i(name memory_startup generation).freeze
             service.new_vm \
-              attributes.select { |k,v| usable.include? k }.merge(options)
+              attributes.select { |k, _v| usable.include? k }.merge(options)
           end
 
           merge_attributes(data)
@@ -127,6 +132,9 @@ module Fog
         def reload
           data = collection.get id
 
+          dvd_drives = nil
+          hard_drives = nil
+          network_adapters = nil
           merge_attributes(data.attributes)
           @old = data
           self

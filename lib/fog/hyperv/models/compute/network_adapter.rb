@@ -1,7 +1,7 @@
 module Fog
   module Compute
     class Hyperv
-      class NetworkAdapter < Fog::Model
+      class NetworkAdapter < Fog::Hyperv::Model
         identity :id
 
         attribute :acl_list

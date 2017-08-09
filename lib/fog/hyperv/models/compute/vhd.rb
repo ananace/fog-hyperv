@@ -1,7 +1,7 @@
 module Fog
   module Compute
     class Hyperv
-      class VHD < Fog::Model
+      class VHD < Fog::Hyperv::Model
         identity :disk_identifier
 
         attribute :attached

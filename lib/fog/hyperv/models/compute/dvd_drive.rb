@@ -1,7 +1,7 @@
 module Fog
   module Compute
     class Hyperv
-      class DvdDrive < Fog::Model
+      class DvdDrive < Fog::Hyperv::Model
         identity :id
 
         attribute :computer_name

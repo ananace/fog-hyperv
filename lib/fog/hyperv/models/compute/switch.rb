@@ -1,7 +1,7 @@
 module Fog
   module Compute
     class Hyperv
-      class Switch < Fog::Model
+      class Switch < Fog::Hyperv::Model
         identity :id
 
         attribute :computer_name

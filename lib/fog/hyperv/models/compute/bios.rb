@@ -1,7 +1,7 @@
 module Fog
   module Compute
     class Hyperv
-      class Bios < Fog::Model
+      class Bios < Fog::Hyperv::Model
         identity :vm_id
 
         attribute :computer_name

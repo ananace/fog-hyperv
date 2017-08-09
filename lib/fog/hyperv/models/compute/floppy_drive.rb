@@ -1,7 +1,7 @@
 module Fog
   module Compute
     class Hyperv
-      class FloppyDrive < Fog::Model
+      class FloppyDrive < Fog::Hyperv::Model
         identity :id
 
         attribute :computer_name

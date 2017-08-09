@@ -1,8 +1,7 @@
 module Fog
   module Compute
     class Hyperv
-      class HardDrive < Fog::Model
-        include Fog::Hyperv::ModelExtensions
+      class HardDrive < Fog::Hyperv::Model
         identity :id
 
         attribute :computer_name
