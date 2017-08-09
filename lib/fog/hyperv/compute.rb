@@ -32,6 +32,7 @@ module Fog
       request :get_vm_bios
       request :get_vm_dvd_drive
       request :get_vm_firmware
+      request :get_vm_floppy_disk_drive
       request :get_vm_hard_disk_drive
       request :get_vm_host
       request :get_vm_host_cluster

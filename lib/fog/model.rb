@@ -16,6 +16,12 @@ module Fog
 
       private
 
+      def clear_lazy
+        lazy_attributes.each do |attr|
+          attributes[attr] = nil
+        end
+      end
+
       def changed?(attr)
         attributes.reject { |k, v| old.attributes[k] == v }.key?(attr)
       end

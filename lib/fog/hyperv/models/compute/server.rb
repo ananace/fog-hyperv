@@ -28,7 +28,8 @@ module Fog
 
         lazy_attributes :network_adapters,
                         :dvd_drives,
-                        :hard_drives
+                        :hard_drives,
+                        :floppy_drive
 
         %i(floppy_drive).each do |attr|
           define_method attr do
@@ -132,9 +133,7 @@ module Fog
         def reload
           data = collection.get id
 
-          dvd_drives = nil
-          hard_drives = nil
-          network_adapters = nil
+          clear_lazy
           merge_attributes(data.attributes)
           @old = data
           self
