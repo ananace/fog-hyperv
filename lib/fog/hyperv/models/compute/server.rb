@@ -25,6 +25,15 @@ module Fog
         attribute :dvd_drives
         attribute :hard_drives
 
+        %i(floppy_drive).each do |attr|
+          define_method attr do
+            attributes[attr] = nil \
+              if attributes[attr] == '' || (attributes[attr].is_a?(String) && attributes[attr].start_with?('Microsoft.HyperV'))
+            attributes[attr] = service.send("#{attr}s".to_sym).model.new(attributes[attr]) if attributes[attr].is_a?(Hash)
+            attributes[attr] ||= service.send("#{attr}s".to_sym, computer_name: computer_name, vm_name: name).first
+          end
+        end
+
         %i(network_adapters dvd_drives hard_drives).each do |attr|
           define_method attr do
             attributes[attr] = [] \
@@ -105,13 +114,21 @@ module Fog
             )
           else
             # Name, MemoryStartupBytes, BootDevice(?), SwitchName, Generation, VHD(NoVHD/Path)
-            usable = [ :name, :memory_startup, :generation ].freeze
+            usable = %i(name memory_startup generation).freeze
             service.new_vm \
               attributes.select { |k,v| usable.include? k }.merge(options)
           end
 
-          @old = nil
           merge_attributes(data)
+          @old = dup
+          self
+        end
+
+        def reload
+          data = collection.get id
+
+          merge_attributes(data.attributes)
+          @old = data
           self
         end
 

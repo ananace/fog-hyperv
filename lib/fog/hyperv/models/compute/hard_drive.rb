@@ -2,23 +2,72 @@ module Fog
   module Compute
     class Hyperv
       class HardDrive < Fog::Model
+        include Fog::Hyperv::ModelExtensions
         identity :id
 
         attribute :computer_name
-        attribute :disk
-        attribute :is_deleted
-        attribute :name
-        attribute :path
-        attribute :pool_name
         attribute :controller_location
         attribute :controller_number
         attribute :controller_type
+        attribute :disk
+        attribute :is_deleted
+        attribute :maximum_iops
+        attribute :minimum_iops
+        attribute :name
+        attribute :path
+        attribute :pool_name
+        attribute :support_persistent_reservations
         attribute :vm_id
         attribute :vm_name
         # TODO? VM Snapshots?
 
         def vhd
           @vhd ||= Fog::Compute::Hyperv::VHD.new(service.get_vhd(computer_name: computer_name, path: path).merge(service: service))
+        end
+
+        def save
+          requires :computer_name, :vm_name
+
+          if persisted?
+            data = service.set_vm_hard_disk_drive(
+              computer_name: old.computer_name,
+              vm_name: old.vm_name,
+              controller_location: old.controller_location,
+              controller_number: old.controller_number,
+              controller_type: old.controller_type,
+
+              disk_number: changed?(:disk) && disk && disk.number,
+              maximum_iops: changed?(:maximum_iops) && maximum_iops,
+              minimum_iops: changed?(:minimum_iops) && minimum_iops,
+              path: changed?(:path) && path,
+              resource_pool_name: changed?(:pool_name) && pool_name,
+              support_persistent_reservations: changed?(:support_persistent_reservations) && support_persistent_reservations,
+              to_controller_location: changed?(:controller_location) && controller_location,
+              to_controller_number: changed?(:controller_number) && controller_number,
+              to_controller_type: changed?(:controller_type) && controller_type,
+
+              passthru: true,
+              _return_fields: self.class.attributes,
+              _json_depth: 1
+            )
+            @vhd = nil if changed?(:path)
+          else
+            possible = %i(computer_name controller_location controller_number controller_type path).freeze
+            data = service.add_vm_hard_disk_drive(
+              attributes.select { |k, _v| possible.include? k }.merge(
+                disk_number: disk && disk.number,
+                resource_pool_name: pool_name,
+
+                passthru: true,
+                _return_fields: self.class.attributes,
+                _json_depth: 1
+              )
+            )
+          end
+
+          merge_attributes(data)
+          @old = dup
+          self
         end
 
         def reload
@@ -29,8 +78,23 @@ module Fog
             controller_number: controller_number,
             controller_type: controller_type
           )
+
           merge_attributes(data.attributes)
+          @old = data
           self
+        end
+
+        def destroy
+          return unless persisted?
+
+          service.remove_vm_hard_disk_drive(
+            computer_name: computer_name,
+            vm_name: vm_name,
+
+            controller_location: controller_location,
+            controller_number: controller_number,
+            controller_type: controller_type
+          )
         end
       end
     end

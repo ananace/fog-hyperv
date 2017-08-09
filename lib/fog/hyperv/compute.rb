@@ -11,6 +11,8 @@ module Fog
       model :dvd_drive
       collection :dvd_drives
       model :firmware
+      model :floppy_drive
+      collection :floppy_drives
       model :hard_drive
       collection :hard_drives
       model :network_adapter
@@ -22,6 +24,7 @@ module Fog
       model :vhd
 
       request_path 'fog/hyperv/requests/compute'
+      request :add_vm_hard_disk_drive
       request :connect_vm_network_adapter
       request :disconnect_vm_network_adapter
       request :get_vhd
@@ -37,10 +40,12 @@ module Fog
       request :new_vm
       request :new_vm_switch
       request :remove_vm
+      request :remove_vm_hard_disk_drive
       request :restart_vm
       request :set_vm
       request :set_vm_bios
       request :set_vm_dvd_drive
+      request :set_vm_hard_disk_drive
       request :set_vm_firmware
       request :set_vm_switch
       request :start_vm

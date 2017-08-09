@@ -13,6 +13,9 @@ module Fog
     end
 
     autoload :Collection, File.expand_path('../collection', __FILE__)
+    autoload :ModelExtensions, File.expand_path('../model_extensions', __FILE__)
+    autoload :VMCollection, File.expand_path('../collection', __FILE__)
+
     service(:compute, 'Compute')
 
     def self.shell_quoted(data, always = false)

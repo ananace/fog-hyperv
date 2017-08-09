@@ -18,14 +18,18 @@ module Fog
 
       def get(filters = {})
         new service.send(self.class.get_method, attributes.merge(
-            _return_fields: model.attributes,
-            _json_depth: 1
-          ).merge(filters))
+          _return_fields: model.attributes,
+          _json_depth: 1
+        ).merge(filters))
       end
 
       def new(options = {})
         super(attributes.merge(options))
       end
+    end
+
+    class VMCollection < Fog::Hyperv::Collection
+      attribute :vm_name
     end
   end
 end
