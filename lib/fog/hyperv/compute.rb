@@ -66,9 +66,9 @@ module Fog
           @hyperv_endpoint.nil?
         end
 
-        def interfaces
-          network_adapters
-        end
+        # Map common Fog concept names onto HyperV names
+        def interfaces; network_adapters end
+        def volumes; hard_drives end
 
         private
 
@@ -128,7 +128,7 @@ module Fog
           puts " < [stdout: #{out.stdout.inspect}, stderr: #{out.stderr.inspect}]" if @hyperv_debug
 
           if skip_json
-            out.stdout
+            out
           else
             json = JSON.parse(out.stdout, symbolize_names: true)
             json = Fog::Hyperv.uncamelize(json) unless skip_uncamelize

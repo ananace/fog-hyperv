@@ -36,6 +36,7 @@ module Fog
           end
         end
         alias interfaces :network_adapters
+        alias volumes :hard_drives
 
         def bios
           bios_wrapper
@@ -69,10 +70,7 @@ module Fog
 
         def destroy(options = {})
           requires :name, :computer_name
-          if ready?
-            stop(options)
-            wait_for { !ready? }
-          end
+          stop(options.merge(as_job: true)) if ready?
           service.remove_vm options.merge(
             name: name,
             computer_name: computer_name

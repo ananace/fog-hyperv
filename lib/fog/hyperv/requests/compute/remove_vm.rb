@@ -6,7 +6,7 @@ module Fog
           # TODO: Handle -VMId/-Id too;
           #
           #   Get-VM -Id <guid> | Remove-VM
-          run_shell('Remove-VM', options.merge(_skip_json: true))
+          run_shell('Remove-VM', options.merge(_skip_json: true)).exitcode.zero?
         end
       end
     end
