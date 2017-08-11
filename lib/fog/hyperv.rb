@@ -28,6 +28,10 @@ module Fog
         end
       when Array
         '@(' + data.map { |e| shell_quoted(e, true) }.join(', ') + ')'
+      when FalseClass
+        '$false'
+      when TrueClass
+        '$true'
       else
         shell_quoted data.to_s
       end

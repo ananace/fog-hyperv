@@ -77,29 +77,24 @@ module Fog
         def volumes; hard_drives end
 
         private
+  
+        def hash_to_optmap(options = {})
+          args = options.reject { |k, v| v.nil? || v.is_a?(FalseClass) || k.to_s.start_with?('_') }.map do |k, v|
+            "'#{k}'=#{Fog::Hyperv.shell_quoted(v, true)}"
+          end
+          "@{#{args.join ';'}}"
+        end
 
         def run_shell(command, options = {})
           return_fields = options.delete :_return_fields
           return_fields = "| select #{Fog::Hyperv.camelize([return_fields].flatten).join ','}" if return_fields
           json_depth = options.delete :_json_depth
-          suffix = options.delete :_suffix
           skip_json = options.delete :_skip_json
           skip_camelize = options.delete :_skip_camelize
           skip_uncamelize = options.delete :_skip_uncamelize
-
-          # TODO: Generate an argument hash instead?
-          # TODO: Needs some testing for multi-line PS execution both local and remote
-          #
-          # args = @{
-          #   Name = etc
-          # }
-          # Get-VM *args
           options = Fog::Hyperv.camelize(options) unless skip_camelize
-          args = options.reject { |k, v| v.nil? || v.is_a?(FalseClass) || k.to_s.start_with?('_') }.map do |k, v|
-            "-#{k} #{Fog::Hyperv.shell_quoted v unless v.is_a? TrueClass}"
-          end
 
-          commandline = "#{command}#{suffix} #{args.join ' ' unless args.empty?} #{return_fields} #{"| ConvertTo-Json -Compress #{"-Depth #{json_depth}" if json_depth}" unless skip_json}"
+          commandline = "$Args = #{hash_to_optmap options}\n#{command} @Args #{return_fields} #{"| ConvertTo-Json -Compress #{"-Depth #{json_depth}" if json_depth}" unless skip_json}"
           puts " > #{commandline}" if @hyperv_debug
 
           out = OpenStruct.new stdout: '',
@@ -136,6 +131,7 @@ module Fog
           if skip_json
             out
           else
+            return {} if out.stdout.empty?
             json = JSON.parse(out.stdout, symbolize_names: true)
             json = Fog::Hyperv.uncamelize(json) unless skip_uncamelize
             json
