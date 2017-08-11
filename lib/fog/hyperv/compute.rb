@@ -94,8 +94,8 @@ module Fog
           skip_uncamelize = options.delete :_skip_uncamelize
           options = Fog::Hyperv.camelize(options) unless skip_camelize
 
-          commandline = "$Args = #{hash_to_optmap options}\n#{command} @Args #{return_fields} #{"| ConvertTo-Json -Compress #{"-Depth #{json_depth}" if json_depth}" unless skip_json}"
-          puts " > #{commandline}" if @hyperv_debug
+          commandline = "$Args = #{hash_to_optmap options}\n$Ret = #{command} @Args#{"\n$Ret #{return_fields} | ConvertTo-Json -Compress #{"-Depth #{json_depth}" if json_depth}" unless skip_json}"
+          puts " > #{commandline.split("\n").join "\n > "}" if @hyperv_debug
 
           out = OpenStruct.new stdout: '',
                                stderr: '',
@@ -131,7 +131,7 @@ module Fog
           if skip_json
             out
           else
-            return {} if out.stdout.empty?
+            return nil if out.stdout.empty?
             json = JSON.parse(out.stdout, symbolize_names: true)
             json = Fog::Hyperv.uncamelize(json) unless skip_uncamelize
             json

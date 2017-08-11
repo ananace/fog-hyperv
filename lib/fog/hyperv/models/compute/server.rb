@@ -33,6 +33,7 @@ module Fog
 
         %i(floppy_drive).each do |attr|
           define_method attr do
+            return nil if attributes[:generation] == 2
             attributes[attr] = nil \
               if attributes[attr] == '' || (attributes[attr].is_a?(String) && attributes[attr].start_with?('Microsoft.HyperV'))
             attributes[attr] = service.send("#{attr}s".to_sym).model.new(attributes[attr]) if attributes[attr].is_a?(Hash)
