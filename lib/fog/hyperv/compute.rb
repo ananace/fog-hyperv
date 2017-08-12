@@ -85,6 +85,12 @@ module Fog
           "@{#{args.join ';'}}"
         end
 
+        def run_shell_with_vm(command, vm_options, options = {})
+          # $VM = Get-VM @vm_options
+          # $Result = <command> @options
+          # $Result | select <return_fields> | ConvertTo-Json
+        end
+
         def run_shell(command, options = {})
           return_fields = options.delete :_return_fields
           return_fields = "| select #{Fog::Hyperv.camelize([return_fields].flatten).join ','}" if return_fields

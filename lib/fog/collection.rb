@@ -17,10 +17,11 @@ module Fog
       end
 
       def get(filters = {})
-        new service.send(self.class.get_method, attributes.merge(
+        result = service.send(self.class.get_method, attributes.merge(
           _return_fields: model.attributes - model.lazy_attributes,
           _json_depth: 1
         ).merge(filters))
+        new result if result
       end
 
       def new(options = {})
