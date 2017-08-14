@@ -54,7 +54,6 @@ module Fog
 
       class Real
         def initialize(options = {})
-          require 'json'
           require 'ostruct'
 
           @hyperv_endpoint  = options[:hyperv_endpoint]
@@ -65,16 +64,17 @@ module Fog
           @hyperv_debug     = options[:hyperv_debug]
 
           connect
-          verify
         end
 
         def local?
           @hyperv_endpoint.nil?
         end
 
-        # Map common Fog concept names onto HyperV names
-        def interfaces; network_adapters end
-        def volumes; hard_drives end
+        def valid?
+          run_shell('Get-VMHost', _return_fields: :name) && true
+        rescue Fog::Hyperv::Errors::ServiceError
+          false
+        end
 
         private
 
@@ -136,7 +136,7 @@ module Fog
           if skip_json
             out
           else
-            json = JSON.parse(out.stdout, symbolize_names: true)
+            json = out.stdout.empty? && {} || Fog::JSON.decode(out.stdout)
             json = Fog::Hyperv.uncamelize(json) unless skip_uncamelize
             json
           end
@@ -152,10 +152,8 @@ module Fog
             password:  @hyperv_password,
             transport: @hyperv_transport
           )
-        end
-
-        def verify
-          run_shell('Get-VMHost', _return_fields: :name) && true
+          Logging.logger['WinRM::HTTP::HttpNegotiate'].level = :error
+          @connection.logger.level = :error
         end
       end
 

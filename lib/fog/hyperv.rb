@@ -14,6 +14,8 @@ module Fog
 
     autoload :Collection, File.expand_path('../collection', __FILE__)
     autoload :Model, File.expand_path('../model', __FILE__)
+    autoload :ModelExtends, File.expand_path('../model', __FILE__)
+    autoload :ModelIncludes, File.expand_path('../model', __FILE__)
     autoload :VMCollection, File.expand_path('../collection', __FILE__)
 
     service(:compute, 'Compute')

@@ -33,6 +33,7 @@ module Fog
 
         %i(floppy_drive).each do |attr|
           define_method attr do
+            return nil unless generation == 1
             attributes[attr] = nil \
               if attributes[attr] == '' || (attributes[attr].is_a?(String) && attributes[attr].start_with?('Microsoft.HyperV'))
             attributes[attr] = service.send("#{attr}s".to_sym).model.new(attributes[attr]) if attributes[attr].is_a?(Hash)
@@ -47,11 +48,9 @@ module Fog
             attributes[attr] = nil \
               if !attributes[attr].is_a?(Array) ||
                  attributes[attr].any? { |v| v.is_a?(String) && v.start_with?('Microsoft.HyperV') }
-            attributes[attr] ||= service.send(attr, computer_name: computer_name, vm_name: name)
+            attributes[attr] ||= service.send(attr, computer_name: computer_name, vm_name: name).all
           end
         end
-        alias interfaces :network_adapters
-        alias volumes :hard_drives
 
         def bios
           bios_wrapper
@@ -99,8 +98,13 @@ module Fog
         def save(options = {})
           requires :name
 
-          # TODO: Do this in two steps for newly created VMs
-          if persisted?
+          data = \
+          if !persisted?
+            # Name, MemoryStartupBytes, BootDevice(?), SwitchName, Generation, VHD(NoVHD/Path)
+            usable = %i(name memory_startup generation).freeze
+            service.new_vm \
+              attributes.select { |k, _v| usable.include? k }.merge(options)
+          else
             service.set_vm options.merge(
               computer_name: old.computer_name,
               name: old.name,
@@ -118,11 +122,6 @@ module Fog
               _return_fields: self.class.attributes,
               _json_depth: 1
             )
-          else
-            # Name, MemoryStartupBytes, BootDevice(?), SwitchName, Generation, VHD(NoVHD/Path)
-            usable = %i(name memory_startup generation).freeze
-            service.new_vm \
-              attributes.select { |k, _v| usable.include? k }.merge(options)
           end
 
           merge_attributes(data)
