@@ -10,17 +10,17 @@ module Fog
 
         attribute :name
         attribute :computer_name
-        attribute :dynamic_memory_enabled
+        attribute :dynamic_memory_enabled, type: :boolean, default: false
         attribute :floppy_drive
-        attribute :generation, type: :integer # 1 => bios, 2 => uefi
+        attribute :generation, type: :integer, default: 1 # 1 => bios, 2 => uefi
         attribute :state
         attribute :status
-        attribute :memory_assigned
-        attribute :memory_maximum
-        attribute :memory_minimum
-        attribute :memory_startup
-        attribute :notes
-        attribute :processor_count
+        attribute :memory_assigned, type: :integer
+        attribute :memory_maximum, type: :integer
+        attribute :memory_minimum, type: :integer
+        attribute :memory_startup, type: :integer, default: 536870912
+        attribute :notes, type: :string
+        attribute :processor_count, type: :integer, default: 1
 
         attribute :network_adapters, type: :array
         attribute :dvd_drives, type: :array
@@ -101,7 +101,7 @@ module Fog
           data = \
           if !persisted?
             # Name, MemoryStartupBytes, BootDevice(?), SwitchName, Generation, VHD(NoVHD/Path)
-            usable = %i(name memory_startup generation).freeze
+            usable = %i(name memory_startup generation boot_device switch_name no_vhd new_vhd_path new_vhd_size_bytes).freeze
             service.new_vm \
               attributes.select { |k, _v| usable.include? k }.merge(options)
           else

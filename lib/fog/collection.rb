@@ -26,6 +26,12 @@ module Fog
       def new(options = {})
         super(attributes.merge(options))
       end
+
+      def create(attributes = {})
+        object = new(attributes)
+        object.save
+        object
+      end
     end
 
     class VMCollection < Fog::Hyperv::Collection
