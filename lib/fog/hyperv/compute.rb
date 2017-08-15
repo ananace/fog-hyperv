@@ -40,6 +40,7 @@ module Fog
       request :get_vm_switch
       request :new_vm
       request :new_vm_switch
+      request :remove_item
       request :remove_vm
       request :remove_vm_hard_disk_drive
       request :restart_vm
@@ -164,7 +165,8 @@ module Fog
           if skip_json
             out
           else
-            json = out.stdout.empty? && {} || Fog::JSON.decode(out.stdout)
+            return nil if out.stdout.empty?
+            json = Fog::JSON.decode(out.stdout)
             json = Fog::Hyperv.uncamelize(json) unless skip_uncamelize
             json
           end

@@ -42,6 +42,15 @@ module Fog
           merge_attributes(data.attributes)
           self
         end
+
+        def destroy
+          requires :path
+          # TODO: Other computers in a cluster?
+
+          service.remove_item(
+            path: path
+          )
+        end
       end
     end
   end

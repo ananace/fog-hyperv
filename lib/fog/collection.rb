@@ -16,10 +16,13 @@ module Fog
           attrs[:computer_name] ||= vm.computer_name
           attrs.delete :vm
         end
-        load [service.send(self.class.get_method, attrs.merge(
+        data = service.send(self.class.get_method, attrs.merge(
           _return_fields: model.attributes - model.lazy_attributes,
           _json_depth: 1
-        ).merge(filters))].flatten
+        ).merge(filters))
+        data = [] unless data
+
+        load [data].flatten
       end
 
       def get(filters = {})
@@ -29,10 +32,13 @@ module Fog
           attrs[:computer_name] ||= vm.computer_name
           attrs.delete :vm
         end
-        new service.send(self.class.get_method, attrs.merge(
+        data = service.send(self.class.get_method, attrs.merge(
           _return_fields: model.attributes - model.lazy_attributes,
           _json_depth: 1
         ).merge(filters))
+        return nil unless data
+
+        new data
       end
 
       def new(options = {})
