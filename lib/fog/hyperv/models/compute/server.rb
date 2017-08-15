@@ -35,7 +35,7 @@ module Fog
           define_method attr do
             return nil unless generation == 1
             attributes[attr] = nil \
-              if attributes[attr] == '' || (attributes[attr].is_a?(String) && attributes[attr].start_with?('Microsoft.HyperV'))
+              if attributes[attr].is_a?(String)
             attributes[attr] = service.send("#{attr}s".to_sym).model.new(attributes[attr]) if attributes[attr].is_a?(Hash)
             attributes[attr] ||= service.send("#{attr}s".to_sym, vm: self).first
           end
@@ -45,7 +45,7 @@ module Fog
           define_method attr do
             attributes[attr] = nil \
               if !attributes[attr].is_a?(Array) ||
-                 attributes[attr].any? { |v| v.is_a?(String) && v.start_with?('Microsoft.HyperV') } ||
+                 attributes[attr].any? { |v| v.is_a?(String) } ||
                  attributes[attr].empty?
             attributes[attr] ||= service.send(attr, vm: self)
           end
@@ -83,7 +83,7 @@ module Fog
 
         def destroy(options = {})
           requires :name, :computer_name
-          stop(options.merge(as_job: true)) if ready?
+          stop turn_off: true if ready?
           service.remove_vm options.merge(
             name: name,
             computer_name: computer_name
