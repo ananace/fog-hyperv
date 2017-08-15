@@ -40,6 +40,7 @@ module Fog
       request :get_vm_switch
       request :new_vm
       request :new_vm_switch
+      request :remove_item
       request :remove_vm
       request :remove_vm_hard_disk_drive
       request :restart_vm
@@ -54,8 +55,8 @@ module Fog
 
       class Real
         def initialize(options = {})
-          require 'json'
           require 'ostruct'
+          require 'fog/json'
 
           @hyperv_endpoint  = options[:hyperv_endpoint]
           @hyperv_endpoint  = "http://#{options[:hyperv_host]}:5985/wsman" if !@hyperv_endpoint && options[:hyperv_host]
@@ -65,16 +66,21 @@ module Fog
           @hyperv_debug     = options[:hyperv_debug]
 
           connect
-          verify
         end
 
         def local?
           @hyperv_endpoint.nil?
         end
 
-        # Map common Fog concept names onto HyperV names
-        def interfaces; network_adapters end
-        def volumes; hard_drives end
+        def valid?
+          if local?
+            run_shell('Get-VMHost', _return_fields: :name) && true
+          else
+            run_wql('SELECT Name FROM Msvm_ComputerSystem WHERE Caption = "Hosting Computer System"') && true
+          end
+        rescue Fog::Hyperv::Errors::ServiceError
+          false
+        end
 
         private
   
@@ -91,6 +97,28 @@ module Fog
           # $Result | select <return_fields> | ConvertTo-Json
         end
 
+        def run_wql(query, options = {})
+          skip_camelize = options.delete :_skip_camelize
+          namespace = options.delete(:_namespace) || 'root/virtualization/v2/*'
+
+          options = Fog::Hyperv.camelize(options) unless skip_camelize
+          args = options.reject { |k, v| v.nil? || v.is_a?(FalseClass) || k.to_s.start_with?('_') }.map do |k, v|
+            "#{k} = #{(v.is_a?(String) || v.to_s =~ /\s/) && v.inspect || v}"
+          end
+
+          query = "#{query}#{" WHERE #{args.join ' AND '}" unless args.none?}"
+          data = \
+            if local?
+              # TODO
+            else
+              puts "< #{namespace} => #{query}"
+              @connection.run_wql(query, namespace)
+            end
+
+          puts "> #{data}"
+          data
+        end
+
         def run_shell(command, options = {})
           return_fields = options.delete :_return_fields
           return_fields = "| select #{Fog::Hyperv.camelize([return_fields].flatten).join ','}" if return_fields
@@ -100,8 +128,11 @@ module Fog
           skip_uncamelize = options.delete :_skip_uncamelize
           options = Fog::Hyperv.camelize(options) unless skip_camelize
 
-          commandline = "$Args = #{hash_to_optmap options}\n$Ret = #{command} @Args#{"\n$Ret #{return_fields} | ConvertTo-Json -Compress #{"-Depth #{json_depth}" if json_depth}" unless skip_json}"
-          puts " > #{commandline.split("\n").join "\n > "}" if @hyperv_debug
+          # commandline = "$Args = #{hash_to_optmap options}\n$Ret = #{command} @Args#{"\n$Ret #{return_fields} | ConvertTo-Json -Compress #{"-Depth #{json_depth}" if json_depth}" unless skip_json}"
+          # puts " > #{commandline.split("\n").join "\n > "}" if @hyperv_debug
+          command_args = "#{command}#{suffix} #{args.join ' ' unless args.empty?}"
+          commandline = "#{command_args} #{return_fields} #{"| ConvertTo-Json -Compress #{"-Depth #{json_depth}" if json_depth}" unless skip_json}"
+          puts " > #{commandline}" if @hyperv_debug
 
           out = OpenStruct.new stdout: '',
                                stderr: '',
@@ -130,7 +161,7 @@ module Fog
 
           # TODO: Map error codes in some manner?
           raise Fog::Hyperv::Errors::ServiceError, "Failed to execute #{commandline}" unless out
-          raise Fog::Hyperv::Errors::ServiceError, out.stderr unless out.exitcode.zero?
+          raise Fog::Hyperv::Errors::PSError.new(out, "When executing #{command_args}") unless out.exitcode.zero?
 
           puts " < [stdout: #{out.stdout.inspect}, stderr: #{out.stderr.inspect}]" if @hyperv_debug
 
@@ -138,7 +169,7 @@ module Fog
             out
           else
             return nil if out.stdout.empty?
-            json = JSON.parse(out.stdout, symbolize_names: true)
+            json = Fog::JSON.decode(out.stdout)
             json = Fog::Hyperv.uncamelize(json) unless skip_uncamelize
             json
           end
@@ -154,10 +185,8 @@ module Fog
             password:  @hyperv_password,
             transport: @hyperv_transport
           )
-        end
-
-        def verify
-          run_shell('Get-VMHost', _return_fields: :name) && true
+          Logging.logger['WinRM::HTTP::HttpNegotiate'].level = :error
+          @connection.logger.level = :error
         end
       end
 

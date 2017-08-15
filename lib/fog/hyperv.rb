@@ -10,10 +10,30 @@ module Fog
 
     module Errors
       class ServiceError < Fog::Errors::Error; end
+      class PSError < ServiceError
+        attr_reader :stdout, :stderr, :exitcode, :info
+
+        def initialize(output, info)
+          @stdout = output.stdout
+          @stderr = output.stderr
+          @exitcode = output.exitcode
+          @info = info
+
+          super @stderr.split("\n").first
+        end
+
+        def to_s
+          ret = [super]
+          ret << info unless info.nil? || info.empty?
+          ret.join "\n"
+        end
+      end
     end
 
     autoload :Collection, File.expand_path('../collection', __FILE__)
     autoload :Model, File.expand_path('../model', __FILE__)
+    autoload :ModelExtends, File.expand_path('../model', __FILE__)
+    autoload :ModelIncludes, File.expand_path('../model', __FILE__)
     autoload :VMCollection, File.expand_path('../collection', __FILE__)
 
     service(:compute, 'Compute')

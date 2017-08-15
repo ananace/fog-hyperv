@@ -10,27 +10,48 @@ module Fog
       end
 
       def all(filters = {})
-        load [service.send(self.class.get_method, attributes.merge(
-          _return_fields: model.attributes - model.lazy_attributes,
-          _json_depth: 1
-        ).merge(filters))].flatten
-      end
-
-      def get(filters = {})
-        result = service.send(self.class.get_method, attributes.merge(
+        attrs = attributes
+        if attributes[:vm]
+          attrs[:vm_name] = vm.name
+          attrs[:computer_name] ||= vm.computer_name
+          attrs.delete :vm
+        end
+        data = service.send(self.class.get_method, attrs.merge(
           _return_fields: model.attributes - model.lazy_attributes,
           _json_depth: 1
         ).merge(filters))
-        new result if result
+        data = [] unless data
+
+        load [data].flatten
+      end
+
+      def get(filters = {})
+        attrs = attributes
+        if attributes[:vm]
+          attrs[:vm_name] = vm.name
+          attrs[:computer_name] ||= vm.computer_name
+          attrs.delete :vm
+        end
+        data = service.send(self.class.get_method, attrs.merge(
+          _return_fields: model.attributes - model.lazy_attributes,
+          _json_depth: 1
+        ).merge(filters))
+        new data if data
       end
 
       def new(options = {})
         super(attributes.merge(options))
       end
+
+      def create(attributes = {})
+        object = new(attributes)
+        object.save
+        object
+      end
     end
 
     class VMCollection < Fog::Hyperv::Collection
-      attribute :vm_name
+      attribute :vm
     end
   end
 end

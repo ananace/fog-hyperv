@@ -10,17 +10,17 @@ module Fog
 
         attribute :name
         attribute :computer_name
-        attribute :dynamic_memory_enabled
+        attribute :dynamic_memory_enabled, type: :boolean, default: false
         attribute :floppy_drive
-        attribute :generation, type: :integer # 1 => bios, 2 => uefi
+        attribute :generation, type: :integer, default: 1 # 1 => bios, 2 => uefi
         attribute :state
         attribute :status
-        attribute :memory_assigned
-        attribute :memory_maximum
-        attribute :memory_minimum
-        attribute :memory_startup
-        attribute :notes
-        attribute :processor_count
+        attribute :memory_assigned, type: :integer
+        attribute :memory_maximum, type: :integer
+        attribute :memory_minimum, type: :integer
+        attribute :memory_startup, type: :integer, default: 536_870_912
+        attribute :notes, type: :string
+        attribute :processor_count, type: :integer, default: 1
 
         attribute :network_adapters, type: :array
         attribute :dvd_drives, type: :array
@@ -33,26 +33,23 @@ module Fog
 
         %i(floppy_drive).each do |attr|
           define_method attr do
-            return nil if attributes[:generation] == 2
+            return nil unless generation == 1
             attributes[attr] = nil \
               if attributes[attr] == '' || (attributes[attr].is_a?(String) && attributes[attr].start_with?('Microsoft.HyperV'))
             attributes[attr] = service.send("#{attr}s".to_sym).model.new(attributes[attr]) if attributes[attr].is_a?(Hash)
-            attributes[attr] ||= service.send("#{attr}s".to_sym, computer_name: computer_name, vm_name: name).first
+            attributes[attr] ||= service.send("#{attr}s".to_sym, vm: self).first
           end
         end
 
         %i(network_adapters dvd_drives hard_drives).each do |attr|
           define_method attr do
-            attributes[attr] = [] \
-              if attributes[attr] == ''
             attributes[attr] = nil \
               if !attributes[attr].is_a?(Array) ||
-                 attributes[attr].any? { |v| v.is_a?(String) && v.start_with?('Microsoft.HyperV') }
-            attributes[attr] ||= service.send(attr, computer_name: computer_name, vm_name: name)
+                 attributes[attr].any? { |v| v.is_a?(String) && v.start_with?('Microsoft.HyperV') } ||
+                 attributes[attr].empty?
+            attributes[attr] ||= service.send(attr, vm: self)
           end
         end
-        alias interfaces :network_adapters
-        alias volumes :hard_drives
 
         def bios
           bios_wrapper
@@ -99,9 +96,17 @@ module Fog
 
         def save(options = {})
           requires :name
+          puts "Saving server with; #{attributes}, #{options}"
 
-          # TODO: Do this in two steps for newly created VMs
-          if persisted?
+          data = \
+          if !persisted?
+            # Name, MemoryStartupBytes, BootDevice(?), SwitchName, Generation, VHD(NoVHD/Path)
+            usable = %i(name memory_startup generation boot_device switch_name no_vhd new_vhd_path new_vhd_size_bytes).freeze
+            service.new_vm \
+              attributes.select { |k, _v| usable.include? k }
+              .merge(options)
+              .merge(_return_fields: self.class.attributes, _json_depth: 1)
+          else
             service.set_vm options.merge(
               computer_name: old.computer_name,
               name: old.name,
@@ -119,11 +124,6 @@ module Fog
               _return_fields: self.class.attributes,
               _json_depth: 1
             )
-          else
-            # Name, MemoryStartupBytes, BootDevice(?), SwitchName, Generation, VHD(NoVHD/Path)
-            usable = %i(name memory_startup generation).freeze
-            service.new_vm \
-              attributes.select { |k, _v| usable.include? k }.merge(options)
           end
 
           merge_attributes(data)
