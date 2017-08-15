@@ -55,6 +55,7 @@ module Fog
       class Real
         def initialize(options = {})
           require 'ostruct'
+          require 'fog/json'
 
           @hyperv_endpoint  = options[:hyperv_endpoint]
           @hyperv_endpoint  = "http://#{options[:hyperv_host]}:5985/wsman" if !@hyperv_endpoint && options[:hyperv_host]
@@ -71,12 +72,38 @@ module Fog
         end
 
         def valid?
-          run_shell('Get-VMHost', _return_fields: :name) && true
+          if local?
+            run_shell('Get-VMHost', _return_fields: :name) && true
+          else
+            run_wql('SELECT Name FROM Msvm_ComputerSystem WHERE Caption = "Hosting Computer System"') && true
+          end
         rescue Fog::Hyperv::Errors::ServiceError
           false
         end
 
         private
+
+        def run_wql(query, options = {})
+          skip_camelize = options.delete :_skip_camelize
+          namespace = options.delete(:_namespace) || 'root/virtualization/v2/*'
+
+          options = Fog::Hyperv.camelize(options) unless skip_camelize
+          args = options.reject { |k, v| v.nil? || v.is_a?(FalseClass) || k.to_s.start_with?('_') }.map do |k, v|
+            "#{k} = #{(v.is_a?(String) || v.to_s =~ /\s/) && v.inspect || v}"
+          end
+
+          query = "#{query}#{" WHERE #{args.join ' AND '}" unless args.none?}"
+          data = \
+            if local?
+              # TODO
+            else
+              puts "< #{namespace} => #{query}"
+              @connection.run_wql(query, namespace)
+            end
+
+          puts "> #{data}"
+          data
+        end
 
         def run_shell(command, options = {})
           return_fields = options.delete :_return_fields
@@ -99,7 +126,8 @@ module Fog
             "-#{k} #{Fog::Hyperv.shell_quoted v unless v.is_a? TrueClass}"
           end
 
-          commandline = "#{command}#{suffix} #{args.join ' ' unless args.empty?} #{return_fields} #{"| ConvertTo-Json -Compress #{"-Depth #{json_depth}" if json_depth}" unless skip_json}"
+          command_args = "#{command}#{suffix} #{args.join ' ' unless args.empty?}"
+          commandline = "#{command_args} #{return_fields} #{"| ConvertTo-Json -Compress #{"-Depth #{json_depth}" if json_depth}" unless skip_json}"
           puts " > #{commandline}" if @hyperv_debug
 
           out = OpenStruct.new stdout: '',
@@ -129,7 +157,7 @@ module Fog
 
           # TODO: Map error codes in some manner?
           raise Fog::Hyperv::Errors::ServiceError, "Failed to execute #{commandline}" unless out
-          raise Fog::Hyperv::Errors::ServiceError, out.stderr unless out.exitcode.zero?
+          raise Fog::Hyperv::Errors::PSError.new(out, "When executing #{command_args}") unless out.exitcode.zero?
 
           puts " < [stdout: #{out.stdout.inspect}, stderr: #{out.stderr.inspect}]" if @hyperv_debug
 

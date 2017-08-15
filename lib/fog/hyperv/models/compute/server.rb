@@ -18,7 +18,7 @@ module Fog
         attribute :memory_assigned, type: :integer
         attribute :memory_maximum, type: :integer
         attribute :memory_minimum, type: :integer
-        attribute :memory_startup, type: :integer, default: 536870912
+        attribute :memory_startup, type: :integer, default: 536_870_912
         attribute :notes, type: :string
         attribute :processor_count, type: :integer, default: 1
 
@@ -37,18 +37,17 @@ module Fog
             attributes[attr] = nil \
               if attributes[attr] == '' || (attributes[attr].is_a?(String) && attributes[attr].start_with?('Microsoft.HyperV'))
             attributes[attr] = service.send("#{attr}s".to_sym).model.new(attributes[attr]) if attributes[attr].is_a?(Hash)
-            attributes[attr] ||= service.send("#{attr}s".to_sym, computer_name: computer_name, vm_name: name).first
+            attributes[attr] ||= service.send("#{attr}s".to_sym, vm: self).first
           end
         end
 
         %i(network_adapters dvd_drives hard_drives).each do |attr|
           define_method attr do
-            attributes[attr] = [] \
-              if attributes[attr] == ''
             attributes[attr] = nil \
               if !attributes[attr].is_a?(Array) ||
-                 attributes[attr].any? { |v| v.is_a?(String) && v.start_with?('Microsoft.HyperV') }
-            attributes[attr] ||= service.send(attr, computer_name: computer_name, vm_name: name).all
+                 attributes[attr].any? { |v| v.is_a?(String) && v.start_with?('Microsoft.HyperV') } ||
+                 attributes[attr].empty?
+            attributes[attr] ||= service.send(attr, vm: self)
           end
         end
 
@@ -97,13 +96,16 @@ module Fog
 
         def save(options = {})
           requires :name
+          puts "Saving server with; #{attributes}, #{options}"
 
           data = \
           if !persisted?
             # Name, MemoryStartupBytes, BootDevice(?), SwitchName, Generation, VHD(NoVHD/Path)
             usable = %i(name memory_startup generation boot_device switch_name no_vhd new_vhd_path new_vhd_size_bytes).freeze
             service.new_vm \
-              attributes.select { |k, _v| usable.include? k }.merge(options)
+              attributes.select { |k, _v| usable.include? k }
+              .merge(options)
+              .merge(_return_fields: self.class.attributes, _json_depth: 1)
           else
             service.set_vm options.merge(
               computer_name: old.computer_name,

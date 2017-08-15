@@ -15,6 +15,10 @@ module Fog
         end
       end
 
+      def dirty?
+        attributes.reject { |k, v| !self.class.attributes.include?(k) || lazy_attributes.include?(k) || old.attributes[k] == v }.any?
+      end
+
       private
 
       def clear_lazy
@@ -24,7 +28,7 @@ module Fog
       end
 
       def changed?(attr)
-        attributes.reject { |k, v| old.attributes[k] == v }.key?(attr)
+        attributes.reject { |k, v| !self.class.attributes.include?(k) || lazy_attributes.include?(k) || old.attributes[k] == v }.key?(attr)
       end
 
       def old
