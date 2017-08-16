@@ -25,6 +25,7 @@ module Fog
 
       request_path 'fog/hyperv/requests/compute'
       request :add_vm_hard_disk_drive
+      request :add_vm_network_adapter
       request :connect_vm_network_adapter
       request :disconnect_vm_network_adapter
       request :get_vhd
@@ -49,6 +50,7 @@ module Fog
       request :set_vm_dvd_drive
       request :set_vm_hard_disk_drive
       request :set_vm_firmware
+      request :set_vm_network_adapter
       request :set_vm_switch
       request :start_vm
       request :stop_vm
@@ -130,7 +132,10 @@ module Fog
 
           # commandline = "$Args = #{hash_to_optmap options}\n$Ret = #{command} @Args#{"\n$Ret #{return_fields} | ConvertTo-Json -Compress #{"-Depth #{json_depth}" if json_depth}" unless skip_json}"
           # puts " > #{commandline.split("\n").join "\n > "}" if @hyperv_debug
-          command_args = "#{command}#{suffix} #{args.join ' ' unless args.empty?}"
+          args = options.reject { |k, v| v.nil? || v.is_a?(FalseClass) || k.to_s.start_with?('_') || (v.is_a?(String) && v.empty?) }.map do |k, v|
+            "-#{k} #{Fog::Hyperv.shell_quoted v unless v.is_a?(TrueClass)}"
+          end
+          command_args = "#{command} #{args.join ' ' unless args.empty?}"
           commandline = "#{command_args} #{return_fields} #{"| ConvertTo-Json -Compress #{"-Depth #{json_depth}" if json_depth}" unless skip_json}"
           puts " > #{commandline}" if @hyperv_debug
 

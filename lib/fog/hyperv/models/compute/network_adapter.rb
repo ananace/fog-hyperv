@@ -7,6 +7,7 @@ module Fog
         attribute :acl_list
         attribute :computer_name
         attribute :connected
+        attribute :dynamic_mac_address_enabled, type: :boolean, default: false
         attribute :ip_addresses
         attribute :is_deleted
         attribute :is_external_adapter
@@ -53,6 +54,60 @@ module Fog
           attributes[:ip_addresses] = [] \
             if attributes[:ip_addresses] == ''
           attributes[:ip_addresses]
+        end
+
+        def save
+          requires :name, :computer_name, :vm_name
+
+          data = \
+            if !persisted?
+              service.add_vm_network_adapter(
+                computer_name: computer_name,
+                name: name,
+                vm_name: vm_name,
+                passthru: true,
+
+                dynamic_mac_address: dynamic_mac_address_enabled, 
+                static_mac_address: !dynamic_mac_address_enabled && mac_address,
+                switch_name: switch_name,
+
+                _return_fields: self.class.attributes,
+                _json_depth: 1
+              )
+            else
+              ret = service.set_vm_network_adapter(
+                computer_name: old.computer_name,
+                name: old.name,
+                vm_name: old.vm_name,
+                passthru: true,
+
+                dynamic_mac_address: changed?(:dynamic_mac_address_enabled) && dynamic_mac_address_enabled, 
+                static_mac_address: (changed?(:mac_address) || changed?(:dynamic_mac_address_enabled)) && !dynamic_mac_address_enabled && mac_address,
+
+                _return_fields: self.class.attributes,
+                _json_depth: 1
+              )
+
+              if changed?(:switch_name)
+                service.disconnect_vm_network_adapter(
+                  computer_name: ret.computer_name,
+                  name: ret.name,
+                  vm_name: ret.vm_name,
+                ) unless switch_name
+
+                service.connect_vm_network_adapter(
+                  computer_name: ret.computer_name,
+                  name: ret.name,
+                  vm_name: ret.vm_name,
+                  switch_name: switch_name,
+                ) if switch_name
+              end
+              ret
+            end
+
+          merge_attributes(data)
+          @old = dup
+          self
         end
 
         def reload
