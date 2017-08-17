@@ -12,7 +12,7 @@ module Fog
         attribute :is_deleted
         attribute :minimum_size
         attribute :name
-        attribute :path
+        attribute :path, type: :string, default: 'New disk'
         attribute :pool_name
         attribute :size, type: :integer, default: 687_194_767_36
         attribute :vhd_format
@@ -27,7 +27,7 @@ module Fog
         # end
 
         def real_path
-          requires :path
+          requires :path, :computer_name
 
           ret = path
           ret += '.vhdx' unless ret.downcase.end_with? '.vhdx'
@@ -72,10 +72,13 @@ module Fog
         end
 
         def reload
+          requires :computer_name
+          requires_one :path, :disk
+
           data = service.get_vhd(
             computer_name: computer_name,
             path: path,
-            disk_number: disk_number
+            disk_number: disk
           )
           merge_attributes(data.attributes)
           self

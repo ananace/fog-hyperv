@@ -11,48 +11,36 @@ module Fog
         attribute :name
         attribute :computer_name
         attribute :dynamic_memory_enabled, type: :boolean, default: false
-        attribute :floppy_drive
         attribute :generation, type: :integer, default: 1 # 1 => bios, 2 => uefi
         attribute :state
         attribute :status
         attribute :memory_assigned, type: :integer
-        attribute :memory_maximum, type: :integer
-        attribute :memory_minimum, type: :integer
+        attribute :memory_maximum, type: :integer, default: 171_798_691_84
+        attribute :memory_minimum, type: :integer, default: 536_870_912
         attribute :memory_startup, type: :integer, default: 536_870_912
         attribute :notes, type: :string
         attribute :processor_count, type: :integer, default: 1
-
-        attribute :network_adapters, type: :array
-        attribute :dvd_drives, type: :array
-        attribute :hard_drives, type: :array
 
         lazy_attributes :network_adapters,
                         :dvd_drives,
                         :hard_drives,
                         :floppy_drive
 
-        %i(floppy_drive).each do |attr|
+        %i(network_adapters dvd_drives floppy_drives hard_drives vhds).each do |attr|
           define_method attr do
-            return nil unless generation == 1
-            attributes[attr] = nil \
-              if attributes[attr].is_a?(String)
-            attributes[attr] = service.send("#{attr}s".to_sym).model.new(attributes[attr]) if attributes[attr].is_a?(Hash)
-            attributes[attr] ||= service.send("#{attr}s".to_sym, vm: self).first
-          end
-        end
-
-        %i(network_adapters dvd_drives hard_drives vhds).each do |attr|
-          define_method attr do
-            attributes[attr] = nil \
-              if !attributes[attr].is_a?(Array) ||
-                 attributes[attr].any? { |v| v.is_a?(String) } ||
-                 attributes[attr].empty?
+            return [] unless persisted?
             attributes[attr] ||= service.send(attr, vm: self)
           end
         end
 
         def bios
-          bios_wrapper
+          @bios ||= begin
+            if generation == 1
+              Fog::Compute::Hyperv::Bios.new(service.get_vm_bios(computer_name: computer_name, vm_name: name).merge service: service)
+            elsif generation == 2
+              Fog::Compute::Hyperv::Firmware.new(service.get_vm_firmware(computer_name: computer_name, vm_name: name).merge service: service)
+            end
+          end
         end
         alias firmware :bios
 
@@ -164,11 +152,6 @@ module Fog
         private
 
         def bios_wrapper
-          if generation == 1
-            @bios ||= Fog::Compute::Hyperv::Bios.new(service.get_vm_bios(computer_name: computer_name, vm_name: name).merge service: service)
-          elsif generation == 2
-            @bios ||= Fog::Compute::Hyperv::Firmware.new(service.get_vm_firmware(computer_name: computer_name, vm_name: name).merge service: service)
-          end
         end
       end
     end
