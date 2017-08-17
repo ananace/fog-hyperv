@@ -7,6 +7,10 @@ module Fog
         @get_method ||= method
       end
 
+      def self.requires?
+        @requires ||= []
+      end
+
       def search_attributes
         attributes.dup.merge(
           _return_fields: model.attributes - model.lazy_attributes,
@@ -15,6 +19,7 @@ module Fog
       end
 
       def all(filters = {})
+        requires(*self.class.requires?)
         data = service.send(method, search_attributes.merge(filters))
         data = [] unless data
 
@@ -22,12 +27,14 @@ module Fog
       end
 
       def get(filters = {})
+        requires(*self.class.requires?)
         data = service.send(method, search_attributes.merge(filters))
 
         new data if data
       end
 
       def new(options = {})
+        requires(*self.class.requires?)
         super(search_attributes.merge(options))
       end
 
@@ -45,14 +52,15 @@ module Fog
     end
 
     class ComputerCollection < Fog::Hyperv::Collection
-      def self.inherited(subclass)
-        subclass.attribute :computer
-        super
+      def self.requires_computer
+        requires? << :computer
       end
+
+      attr_accessor :computer
 
       def search_attributes
         attrs = super
-        attrs[:computer_name] ||= attrs.delete(:computer).name if attrs[:computer]
+        attrs[:computer_name] ||= computer.name if computer
         attrs
       end
     end
@@ -62,14 +70,14 @@ module Fog
         @match_on ||= attr
       end
 
-      def self.inherited(subclass)
-        subclass.attribute :vm
-        super
+      def self.requires_vm
+        requires? << :vm
       end
+
+      attr_accessor :vm
 
       def search_attributes
         attrs = super
-        vm = attrs.delete(:vm)
         if vm
           attrs[:computer_name] ||= vm.computer_name
           attrs[match] = vm.send(match)
