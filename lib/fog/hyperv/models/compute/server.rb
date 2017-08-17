@@ -41,7 +41,7 @@ module Fog
           end
         end
 
-        %i(network_adapters dvd_drives hard_drives).each do |attr|
+        %i(network_adapters dvd_drives hard_drives vhds).each do |attr|
           define_method attr do
             attributes[attr] = nil \
               if !attributes[attr].is_a?(Array) ||
@@ -55,6 +55,9 @@ module Fog
           bios_wrapper
         end
         alias firmware :bios
+
+        alias vm_id :id
+        alias vm_name :name
 
         def start(options = {})
           requires :name, :computer_name

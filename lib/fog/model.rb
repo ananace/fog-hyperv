@@ -6,6 +6,7 @@ module Fog
         @lazy_attributes += attrs.map(&:to_s).map(&:to_sym)
       end
     end
+
     module ModelIncludes
       def lazy_attributes
         if self.class.respond_to? :lazy_attributes
@@ -17,6 +18,17 @@ module Fog
 
       def dirty?
         attributes.reject { |k, v| !self.class.attributes.include?(k) || lazy_attributes.include?(k) || old.attributes[k] == v }.any?
+      end
+
+      def parent
+        return nil unless collection
+        return collection.vm if collection.attributes.include? :vm
+        return collection.computer if collection.attributes.include? :computer
+        @parent ||= begin
+          r = service.servers.get vm_name if attributes.include? :vm_name
+          r = service.hosts.get computer_name if attributes.include? :computer_name
+          r
+        end
       end
 
       private

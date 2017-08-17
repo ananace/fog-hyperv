@@ -15,6 +15,8 @@ module Fog
       collection :floppy_drives
       model :hard_drive
       collection :hard_drives
+      model :host
+      collection :hosts
       model :network_adapter
       collection :network_adapters
       model :server
@@ -22,6 +24,7 @@ module Fog
       model :switch
       collection :switches
       model :vhd
+      collection :vhds
 
       request_path 'fog/hyperv/requests/compute'
       request :add_vm_hard_disk_drive
@@ -39,6 +42,7 @@ module Fog
       request :get_vm_host_cluster
       request :get_vm_network_adapter
       request :get_vm_switch
+      request :new_vhd
       request :new_vm
       request :new_vm_switch
       request :remove_item

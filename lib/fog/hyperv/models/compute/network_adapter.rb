@@ -7,7 +7,7 @@ module Fog
         attribute :acl_list
         attribute :computer_name
         attribute :connected
-        attribute :dynamic_mac_address_enabled, type: :boolean, default: false
+        attribute :dynamic_mac_address_enabled, type: :boolean, default: true
         attribute :ip_addresses
         attribute :is_deleted
         attribute :is_external_adapter

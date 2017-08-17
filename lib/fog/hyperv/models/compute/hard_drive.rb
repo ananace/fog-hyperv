@@ -21,7 +21,16 @@ module Fog
         # TODO? VM Snapshots?
 
         def vhd
-          @vhd ||= Fog::Compute::Hyperv::VHD.new(service.get_vhd(computer_name: computer_name, path: path).merge(service: service))
+          return nil unless path && computer_name
+          @vhd ||= Fog::Compute::Hyperv::Vhd.new(service.get_vhd(computer_name: computer_name, path: path).merge(service: service))
+        end
+
+        def size_bytes
+          vhd && vhd.size_bytes || 0
+        end
+
+        def size_bytes=(bytes)
+          vhd.size_bytes = bytes if vhd
         end
 
         def save
