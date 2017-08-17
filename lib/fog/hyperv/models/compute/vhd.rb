@@ -35,6 +35,10 @@ module Fog
           ret
         end
 
+        def unc_path
+          "\\\\#{computer_name || '.'}\\#{real_path.gsub ':', '$'}"
+        end
+
         def host
           requires :computer_name
 
@@ -86,10 +90,9 @@ module Fog
 
         def destroy
           requires :path, :disk_identifier
-          # TODO: Other computers in a cluster?
 
           service.remove_item(
-            path: path
+            path: unc_path
           ) if path
         end
       end
