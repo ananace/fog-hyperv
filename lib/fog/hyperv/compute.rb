@@ -48,6 +48,7 @@ module Fog
       request :remove_item
       request :remove_vm
       request :remove_vm_hard_disk_drive
+      request :remove_vm_network_adapter
       request :restart_vm
       request :set_vm
       request :set_vm_bios
@@ -89,6 +90,26 @@ module Fog
         end
 
         private
+
+        def requires(opts, *args)
+          missing = args - opts.keys
+          return if missing.none?
+
+          method = caller[0][/`.*'/][1..-2]
+          if missing.length == 1
+            raise(ArgumentError, "#{missing.first} is required for #{method}")
+          elsif missing.any?
+            raise(ArgumentError, "#{missing[0...-1].join(', ')}, and #{missing[-1]} are required for #{method}")
+          end
+        end
+
+        def requires_one(opts, *args)
+          missing = args - opts.keys
+          return if missing.length < args.length
+
+          method = caller[0][/`.*'/][1..-2]
+          raise(ArgumentError, "#{missing[0...-1].join(', ')}, or #{missing[-1]} are required for #{method}")
+        end
   
         def hash_to_optmap(options = {})
           args = options.reject { |k, v| v.nil? || v.is_a?(FalseClass) || k.to_s.start_with?('_') }.map do |k, v|

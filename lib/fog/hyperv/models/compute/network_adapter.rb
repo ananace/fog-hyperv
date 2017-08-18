@@ -13,15 +13,15 @@ module Fog
         attribute :is_external_adapter
         attribute :is_legacy
         attribute :is_management_os
-        attribute :isolation_setting # Might need lazy loading
+        # attribute :isolation_setting # Might need lazy loading
         attribute :mac_address
-        attribute :name
+        attribute :name, type: :string, default: 'Network Adapter'
         attribute :status
         attribute :switch_id
-        attribute :switch_name
+        attribute :switch_name, type: :string
         attribute :vm_id
         attribute :vm_name
-        attribute :vlan_setting # Might need lazy loading
+        # attribute :vlan_setting # Might need lazy loading
 
         def connect(switch, options = {})
           requires :name, :computer_name, :vm_name
@@ -67,7 +67,7 @@ module Fog
                 vm_name: vm_name,
                 passthru: true,
 
-                dynamic_mac_address: dynamic_mac_address_enabled, 
+                dynamic_mac_address: dynamic_mac_address_enabled,
                 static_mac_address: !dynamic_mac_address_enabled && mac_address,
                 switch_name: switch_name,
 
@@ -105,9 +105,24 @@ module Fog
               ret
             end
 
+          if data.is_a? Array
+            data = data.find { |e| e.id == id } if id
+            data = data.last unless id
+          end
+
           merge_attributes(data)
           @old = dup
           self
+        end
+
+        def destroy
+          requires :vm_name, :name, :computer_name, :id
+
+          service.remove_vm_network_adapter(
+            name: name,
+            computer_name: computer_name,
+            vm_name: vm_name
+          )
         end
 
         def reload

@@ -6,6 +6,7 @@ module Fog
           # TODO: Handle -VMId/-Id too;
           #
           #   Get-VM -Id <guid> | Remove-VM
+          requires options, :name
           run_shell('Remove-VM', options.merge(force: true, _skip_json: true)).exitcode.zero?
         end
       end

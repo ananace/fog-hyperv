@@ -28,7 +28,7 @@ module Fog
 
         %i(network_adapters dvd_drives floppy_drives hard_drives vhds).each do |attr|
           define_method attr do
-            return [] unless persisted?
+            attributes[attr] ||= [] unless persisted?
             attributes[attr] ||= service.send(attr, vm: self)
           end
         end

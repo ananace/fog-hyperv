@@ -26,7 +26,7 @@ module Fog
             controller_number: controller_number,
             controller_location: controller_location,
             resource_pool_name: pool_name,
-            path: path,
+            path: path || '$null',
             to_controller_number: to_controller_number,
             to_controller_location: to_controller_location,
             vm_name: vm_name,

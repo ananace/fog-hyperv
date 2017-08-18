@@ -11,10 +11,9 @@ module Fog
         attribute :file_size
         attribute :is_deleted
         attribute :minimum_size
-        attribute :name
-        attribute :path, type: :string, default: 'New disk'
+        attribute :path, type: :string, default: 'New Disk'
         attribute :pool_name
-        attribute :size, type: :integer, default: 687_194_767_36
+        attribute :size, type: :integer, default: 343_597_383_68
         attribute :vhd_format
         attribute :vhd_type
         # TODO? VM Snapshots?

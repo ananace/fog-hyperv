@@ -3,7 +3,7 @@ module Fog
     class Hyperv
       class Real
         def get_vhd(options = {})
-          raise Fog::Hyperv::Errors::ServiceError, 'Requires vm_id, path, or disk_number' unless options[:vm_id] || options[:path] || options[:disk_number]
+          requires_one options, :vm_id, :path, :disk_number
           run_shell('Get-VHD', options)
         end
       end
