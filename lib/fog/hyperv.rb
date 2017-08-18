@@ -44,6 +44,7 @@ module Fog
         if data =~ /(^$)|\s/ || always
           data.inspect
               .gsub(/`/, '``')
+              .gsub(/\\\\/, '\\')
               .gsub(/([^\\])\\([nrtab"'0])/, '\1`\2')
         else
           data

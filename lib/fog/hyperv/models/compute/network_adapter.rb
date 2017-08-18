@@ -4,12 +4,12 @@ module Fog
       class NetworkAdapter < Fog::Hyperv::Model
         identity :id
 
-        attribute :acl_list
+        # attribute :acl_list
         attribute :computer_name
         attribute :connected
         attribute :dynamic_mac_address_enabled, type: :boolean, default: true
         attribute :ip_addresses
-        attribute :is_deleted
+        # attribute :is_deleted
         attribute :is_external_adapter
         attribute :is_legacy
         attribute :is_management_os
@@ -92,21 +92,22 @@ module Fog
                 service.disconnect_vm_network_adapter(
                   computer_name: ret.computer_name,
                   name: ret.name,
-                  vm_name: ret.vm_name,
+                  vm_name: ret.vm_name
                 ) unless switch_name
 
                 service.connect_vm_network_adapter(
                   computer_name: ret.computer_name,
                   name: ret.name,
                   vm_name: ret.vm_name,
-                  switch_name: switch_name,
+                  switch_name: switch_name
                 ) if switch_name
               end
+              ret[:switch_name] = switch_name
               ret
             end
 
           if data.is_a? Array
-            data = data.find { |e| e.id == id } if id
+            data = data.find { |e| e[:id] == id } if id
             data = data.last unless id
           end
 
