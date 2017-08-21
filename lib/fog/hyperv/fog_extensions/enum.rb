@@ -29,7 +29,11 @@ module Fog
               if self.#{name}.is_a?(Fixnum)
                 self.#{name}
               else
-                #{values}.index(self.#{name})
+                if #{values}.is_a?(Hash)
+                  #{values}.index(self.#{name})
+                else
+                  #{values}.index(self.#{name})
+                end
               end
             end
 

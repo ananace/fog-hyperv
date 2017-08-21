@@ -132,7 +132,7 @@ module Fog
         end
 
         def ready?
-          state == 2
+          state_num == 2
         end
 
         def mac_addresses
