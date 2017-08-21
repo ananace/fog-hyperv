@@ -5,13 +5,13 @@ module Fog
         identity :id
 
         attribute :computer_name
-        attribute :default_flow_minimum_bandwidth_absolute
-        attribute :default_flow_minimum_bandwidth_weight
-        attribute :is_deleted
+        # attribute :default_flow_minimum_bandwidth_absolute
+        # attribute :default_flow_minimum_bandwidth_weight
+        # attribute :is_deleted
         attribute :name
         attribute :net_adapter_interface_description
         attribute :notes
-        attribute :switch_type
+        attribute :switch_type, type: :enum, values: [ :Private, :Internal, :External ]
 
         def save
           requires :name

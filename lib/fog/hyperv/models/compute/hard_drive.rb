@@ -7,9 +7,9 @@ module Fog
         attribute :computer_name
         attribute :controller_location
         attribute :controller_number
-        attribute :controller_type
+        attribute :controller_type, type: :enum, values: [ :IDE, :SCSI ]
         attribute :disk
-        attribute :is_deleted
+        # attribute :is_deleted
         attribute :maximum_iops
         attribute :minimum_iops
         attribute :name

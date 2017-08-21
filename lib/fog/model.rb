@@ -9,15 +9,13 @@ module Fog
 
     module ModelIncludes
       def lazy_attributes
-        if self.class.respond_to? :lazy_attributes
-          self.class.lazy_attributes
-        else
-          []
-        end
+        self.class.respond_to?(:lazy_attributes) ? self.class.lazy_attributes : []
       end
 
       def dirty?
-        attributes.reject { |k, v| !self.class.attributes.include?(k) || lazy_attributes.include?(k) || old.attributes[k] == v }.any?
+        attributes.reject do |k, v|
+          !self.class.attributes.include?(k) || lazy_attributes.include?(k) || (old ? old.attributes[k] == v : false)
+        end.any?
       end
 
       def parent
@@ -40,11 +38,17 @@ module Fog
       end
 
       def changed?(attr)
-        attributes.reject { |k, v| !self.class.attributes.include?(k) || lazy_attributes.include?(k) || old.attributes[k] == v }.key?(attr)
+        attributes.reject do |k, v|
+          !self.class.attributes.include?(k) || lazy_attributes.include?(k) || (old ? old.attributes[k] == v : true)
+        end.key?(attr)
+      end
+
+      def changed!(attr)
+        changed?(attr) ? attributes[attr] : nil
       end
 
       def old
-        @old ||= dup.reload
+        @old ||= (persisted? ? dup.reload : nil)
       end
     end
 

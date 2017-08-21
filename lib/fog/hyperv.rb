@@ -1,6 +1,10 @@
 require 'fog/core'
 
 module Fog
+  module Attributes
+    autoload :Enum, File.expand_path('../hyperv/fog_extensions/enum.rb', __FILE__)
+  end
+
   module Compute
     autoload :Hyperv, File.expand_path('../hyperv/compute', __FILE__)
   end

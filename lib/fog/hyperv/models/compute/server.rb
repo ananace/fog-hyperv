@@ -12,7 +12,7 @@ module Fog
         attribute :computer_name
         attribute :dynamic_memory_enabled, type: :boolean, default: false
         attribute :generation, type: :integer, default: 1 # 1 => bios, 2 => uefi
-        attribute :state
+        attribute :state, type: :enum, values: VM_STATUS_ENUM_VALUES
         attribute :status
         attribute :memory_assigned, type: :integer
         attribute :memory_maximum, type: :integer, default: 171_798_691_84

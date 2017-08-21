@@ -88,8 +88,8 @@ module Fog
       def create(attributes = {})
         object = new(attributes)
         # Ensure both ID and Name are populated, regardless of `match_on`
-        object.vm_id = vm.id if vm && object.respond_to?(:vm_id)
-        object.vm_name = vm.name if vm && object.respond_to?(:vm_id)
+        object.vm_id ||= vm.id if vm && object.respond_to?(:vm_id)
+        object.vm_name ||= vm.name if vm && object.respond_to?(:vm_name)
         object.save
         object
       end

@@ -16,7 +16,8 @@ module Fog
         # attribute :isolation_setting # Might need lazy loading
         attribute :mac_address
         attribute :name, type: :string, default: 'Network Adapter'
-        attribute :status
+        # attribute :router_guard, type: :enum, values: [ :On, :Off ]
+        attribute :status, type: :enum, values: STATUS_ENUM_VALUES
         attribute :switch_id
         attribute :switch_name, type: :string
         attribute :vm_id

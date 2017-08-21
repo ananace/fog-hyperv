@@ -14,8 +14,8 @@ module Fog
         attribute :path, type: :string, default: 'New Disk'
         attribute :pool_name
         attribute :size, type: :integer, default: 343_597_383_68
-        attribute :vhd_format
-        attribute :vhd_type
+        attribute :vhd_format, type: :enum, values: [ :Unknown, nil, :VHD, :VHDX, :VHDSet ]
+        attribute :vhd_type, type: :enum, values: [ :Unknown, nil, :Fixed, :Dynamic, :Differencing ]
         # TODO? VM Snapshots?
         #
 
