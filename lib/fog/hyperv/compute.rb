@@ -114,6 +114,10 @@ module Fog
           false
         end
 
+        def version
+          @version ||= run_shell("(Get-Item $(if ([environment]::Is64BitProcess) { \"$($env:SystemRoot)\\System32\\vmms.exe\" } else { \"$($env:SystemRoot)\\Sysnative\\vmms.exe\" })).VersionInfo.ProductVersion", _skip_json: true).stdout.strip
+        end
+
         private
 
         def requires(opts, *args)
