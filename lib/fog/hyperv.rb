@@ -42,10 +42,11 @@ module Fog
       case data
       when String
         if data =~ /(^$)|\s/ || always
-          data.inspect
-              .gsub(/`/, '``')
-              .gsub(/\\\\/, '\\')
-              .gsub(/([^\\])\\([nrtab"'0])/, '\1`\2')
+          data.gsub(/`/, '``')
+              .gsub(/\0/, '`0')
+              .gsub(/\n/, '`n') 
+              .gsub(/\r/, '`r') 
+              .inspect
         else
           data
         end
