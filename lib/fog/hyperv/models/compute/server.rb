@@ -6,14 +6,47 @@ module Fog
       class Server < Fog::Compute::Server
         extend Fog::Hyperv::ModelExtends
         include Fog::Hyperv::ModelIncludes
+
+        VM_STATUS_ENUM_VALUES = {
+          1     => :Unknown,
+          2     => :Running,
+          3     => :Off,
+          4     => :Stopping,
+          6     => :Saved,
+          9     => :Paused,
+          10    => :Starting,
+          11    => :Reset,
+          32773 => :Saving,
+          32776 => :Pausing,
+          32777 => :Resuming,
+          32779 => :FastSaved,
+          32780 => :FastSaving,
+          32781 => :ForceShutdown,
+          32782 => :ForceReboot,
+          32783 => :RunningCritical,
+          32784 => :OffCritical,
+          32785 => :StoppingCritical,
+          32786 => :SavedCritical,
+          32787 => :PausedCritical,
+          32788 => :StartingCritical,
+          32789 => :ResetCritical,
+          32790 => :SavingCritical,
+          32791 => :PausingCritical,
+          32792 => :ResumingCritical,
+          32793 => :FastSavedCritical,
+          32794 => :FastSavingCritical,
+        }.freeze
+
         identity :id, type: :string
 
-        attribute :name
-        attribute :computer_name
+        attribute :name, type: :string
+        attribute :computer_name, type: :string
+        attribute :com_port1
+        attribute :com_port2
         attribute :dynamic_memory_enabled, type: :boolean, default: false
         attribute :generation, type: :integer, default: 1 # 1 => bios, 2 => uefi
         attribute :state, type: :enum, values: VM_STATUS_ENUM_VALUES
-        attribute :status
+        attribute :status, type: :string
         attribute :memory_assigned, type: :integer
         attribute :memory_maximum, type: :integer, default: 171_798_691_84
         attribute :memory_minimum, type: :integer, default: 536_870_912
@@ -30,6 +63,12 @@ module Fog
           define_method attr do
             attributes[attr] ||= [] unless persisted?
             attributes[attr] ||= service.send(attr, vm: self)
+          end
+        end
+
+        %i(com_port1 com_port2).each do |attr|
+          define_method "#{attr}=".to_sym do |data|
+            attributes[attr] = Fog::Compute::Hyperv::ComPort.new(data) if data.is_a?(Hash)
           end
         end
 

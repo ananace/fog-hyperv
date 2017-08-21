@@ -7,7 +7,7 @@ module Fog
         attribute :computer_name, type: :string
         # attribute :is_deleted, type: :boolean
         attribute :num_lock_enabled, type: :boolean
-        # TODO? :CD, :IDE, :LegacyNetworkAdapter, :Floppy (, :VHD, :NetworkAdapter)
+        # TODO? Enum values; :CD, :IDE, :LegacyNetworkAdapter, :Floppy (, :VHD, :NetworkAdapter)
         attribute :startup_order, type: :array
         attribute :vm_name, type: :string
 

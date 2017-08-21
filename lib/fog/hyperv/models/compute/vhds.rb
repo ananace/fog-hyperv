@@ -8,7 +8,7 @@ module Fog
         get_method :get_vhd
 
         def get(path, filters = {})
-          super search.merge(filters.merge(path: path))
+          super search_attributes.merge(filters.merge(path: path))
         end
       end
     end

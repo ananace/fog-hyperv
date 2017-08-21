@@ -1,35 +1,6 @@
 module Fog
   module Compute
     class Hyperv < Fog::Service
-      VM_STATUS_ENUM_VALUES = {
-        1     => :Unknown,
-        2     => :Running,
-        3     => :Off,
-        4     => :Stopping,
-        6     => :Saved,
-        9     => :Paused,
-        10    => :Starting,
-        11    => :Reset,
-        32773 => :Saving,
-        32776 => :Pausing,
-        32777 => :Resuming,
-        32779 => :FastSaved,
-        32780 => :FastSaving,
-        32781 => :ForceShutdown,
-        32782 => :ForceReboot,
-        32783 => :RunningCritical,
-        32784 => :OffCritical,
-        32785 => :StoppingCritical,
-        32786 => :SavedCritical,
-        32787 => :PausedCritical,
-        32788 => :StartingCritical,
-        32789 => :ResetCritical,
-        32790 => :SavingCritical,
-        32791 => :PausingCritical,
-        32792 => :ResumingCritical,
-        32793 => :FastSavedCritical,
-        32794 => :FastSavingCritical,
-      }.freeze
       STATUS_ENUM_VALUES = [
         :Unknown,              # 0
         :Other,                # 1
@@ -57,9 +28,11 @@ module Fog
                  :hyperv_transport,
                  :hyperv_username, :hyperv_password,
                  :hyperv_debug
+      secrets :hyperv_password, :connection
 
       model_path 'fog/hyperv/models/compute'
       model :bios
+      model :com_port
       model :dvd_drive
       collection :dvd_drives
       model :firmware

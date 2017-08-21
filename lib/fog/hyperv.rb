@@ -15,15 +15,15 @@ module Fog
     module Errors
       class ServiceError < Fog::Errors::Error; end
       class PSError < ServiceError
-        attr_reader :stdout, :stderr, :exitcode, :info
+        attr_reader :stdout, :stderr, :exitcode, :info, :message
 
         def initialize(output, info)
           @stdout = output.stdout
           @stderr = output.stderr
           @exitcode = output.exitcode
           @info = info
-
-          super @stderr.split("\n").first
+          @message = @stderr.split("\n").first
+          super @message
         end
 
         def to_s

@@ -27,10 +27,11 @@ module Fog
       end
 
       def get(filters = {})
-        requires(*self.class.requires?)
-        data = service.send(method, search_attributes.merge(filters))
-
-        new data if data
+        data = self.all(filters).first
+        data if data
+      rescue Fog::Hyperv::Errors::PSError => err
+        raise Fog::Errors::NotFound, err if err.message =~ /Hyper-V was unable to find|^No .* is found|/
+        raise err
       end
 
       def new(options = {})
