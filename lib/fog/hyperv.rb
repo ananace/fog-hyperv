@@ -47,6 +47,7 @@ module Fog
               .gsub(/\n/, '`n') 
               .gsub(/\r/, '`r') 
               .inspect
+              .gsub(/\\\\/, '\\')
         else
           data
         end
