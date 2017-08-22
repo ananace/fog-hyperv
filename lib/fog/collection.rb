@@ -102,6 +102,10 @@ module Fog
 
       private
 
+      def logger
+        service.logger
+      end
+
       def match
         self.class.match_on || :vm_name
       end

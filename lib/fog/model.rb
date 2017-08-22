@@ -31,6 +31,10 @@ module Fog
 
       private
 
+      def logger
+        service.logger
+      end
+
       def clear_lazy
         lazy_attributes.each do |attr|
           attributes[attr] = nil

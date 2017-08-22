@@ -126,35 +126,34 @@ module Fog
 
         def save(options = {})
           requires :name
-          puts "Saving server with; #{attributes}, #{options}"
+          logger.debug "Saving server with; #{attributes}, #{options}"
 
           data = \
-          if !persisted?
-            # Name, MemoryStartupBytes, BootDevice(?), SwitchName, Generation, VHD(NoVHD/Path)
-            usable = %i(name memory_startup generation boot_device switch_name no_vhd new_vhd_path new_vhd_size_bytes).freeze
-            service.new_vm \
-              attributes.select { |k, _v| usable.include? k }
-              .merge(options)
-              .merge(_return_fields: self.class.attributes, _json_depth: 1)
-          else
-            service.set_vm options.merge(
-              computer_name: old.computer_name,
-              name: old.name,
-              passthru: true,
+            if !persisted?
+              usable = %i(name memory_startup generation boot_device switch_name no_vhd new_vhd_path new_vhd_size_bytes).freeze
+              service.new_vm \
+                attributes.select { |k, _v| usable.include? k }
+                .merge(options)
+                .merge(_return_fields: self.class.attributes, _json_depth: 1)
+            else
+              service.set_vm options.merge(
+                computer_name: old.computer_name,
+                name: old.name,
+                passthru: true,
 
-              processor_count: changed?(:processor_count) && processor_count,
-              dynamic_memory: changed?(:dynamic_memory_enabled) && dynamic_memory_enabled,
-              static_memory: changed?(:dynamic_memory_enabled) && !dynamic_memory_enabled,
-              memory_minimum_bytes: changed?(:memory_minimum) && dynamic_memory_enabled && memory_minimum,
-              memory_maximum_bytes: changed?(:memory_maximum) && dynamic_memory_enabled && memory_maximum,
-              memory_startup_bytes: changed?(:memory_startup) && memory_startup,
-              notes: changed?(:notes) && notes,
-              new_name: changed?(:name) && name,
+                processor_count: changed!(:processor_count),
+                dynamic_memory: changed?(:dynamic_memory_enabled) && dynamic_memory_enabled,
+                static_memory: changed?(:dynamic_memory_enabled) && !dynamic_memory_enabled,
+                memory_minimum_bytes: changed?(:memory_minimum) && dynamic_memory_enabled && memory_minimum,
+                memory_maximum_bytes: changed?(:memory_maximum) && dynamic_memory_enabled && memory_maximum,
+                memory_startup_bytes: changed!(:memory_startup),
+                notes: changed!(:notes),
+                new_name: changed!(:name),
 
-              _return_fields: self.class.attributes,
-              _json_depth: 1
-            )
-          end
+                _return_fields: self.class.attributes,
+                _json_depth: 1
+              )
+            end
 
           merge_attributes(data)
           @old = dup
@@ -186,11 +185,6 @@ module Fog
           ip_addresses
             .reject { |a| a =~ /^(169\.254|fe80)/ }
             .first
-        end
-
-        private
-
-        def bios_wrapper
         end
       end
     end
