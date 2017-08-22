@@ -1,3 +1,5 @@
+require 'logger'
+
 module Fog
   module Compute
     class Hyperv < Fog::Service
@@ -24,9 +26,9 @@ module Fog
         # :ProtocolVersion     # 32775
       ].freeze
 
+      requires :hyperv_username, :hyperv_password
       recognizes :hyperv_endpoint, :hyperv_host,
                  :hyperv_transport,
-                 :hyperv_username, :hyperv_password,
                  :hyperv_debug
       secrets :hyperv_password, :connection
 
@@ -85,9 +87,11 @@ module Fog
       request :start_vm
       request :stop_vm
 
-      class Real
+      class Real < ::Logger::Application
         def initialize(options = {})
-          require 'ostruct'
+          super('fog-hyperv')
+
+          # require 'ostruct'
           require 'fog/json'
 
           @hyperv_endpoint  = options[:hyperv_endpoint]
@@ -95,13 +99,14 @@ module Fog
           @hyperv_username  = options[:hyperv_username]
           @hyperv_password  = options[:hyperv_password]
           @hyperv_transport = options[:hyperv_transport] || :negotiate
-          @hyperv_debug     = options[:hyperv_debug]
+
+          self.level = DEBUG if options[:hyperv_debug]
 
           connect
         end
 
         def local?
-          @hyperv_endpoint.nil?
+          false # @hyperv_endpoint.nil?
         end
 
         def valid?
@@ -167,11 +172,11 @@ module Fog
             if local?
               # TODO
             else
-              puts "< #{namespace} => #{query}"
+              log DEBUG, "WQL; IN #{namespace} >>> #{query}"
               @connection.run_wql(query, namespace)
             end
 
-          puts "> #{data}"
+          log DEBUG, "WQL; <<< #{data}"
           data
         end
 
@@ -191,11 +196,11 @@ module Fog
           end
           command_args = "#{command} #{args.join ' ' unless args.empty?}"
           commandline = "#{command_args} #{return_fields} #{"| ConvertTo-Json -Compress #{"-Depth #{json_depth}" if json_depth}" unless skip_json}"
-          puts " > #{commandline}" if @hyperv_debug
+          log DEBUG, "PS; >>> #{commandline}"
 
-          out = OpenStruct.new stdout: '',
-                               stderr: '',
-                               exitcode: -1
+          out = nil # OpenStruct.new stdout: '',
+          #                          stderr: '',
+          #                          exitcode: -1
 
           if local?
             commanddata = [
@@ -222,7 +227,7 @@ module Fog
           raise Fog::Hyperv::Errors::ServiceError, "Failed to execute #{commandline}" unless out
           raise Fog::Hyperv::Errors::PSError.new(out, "When executing #{command_args}") unless out.exitcode.zero?
 
-          puts " < [stdout: #{out.stdout.inspect}, stderr: #{out.stderr.inspect}]" if @hyperv_debug
+          log DEBUG, "PS; <<< OUT=[#{out.stdout.inspect}] ERR=[#{out.stderr.inspect}] EXIT=[#{out.exitcode}]"
 
           if skip_json
             out
@@ -235,7 +240,7 @@ module Fog
         end
 
         def connect
-          return require 'open3' if local?
+          # return require 'open3' if local?
 
           require 'winrm'
           @connection = WinRM::Connection.new(
