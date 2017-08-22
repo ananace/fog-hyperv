@@ -154,8 +154,7 @@ module Fog
         end
 
         def requires_version(required_version)
-          method = caller[0][/`.*'/][1..-2].split('_')
-          method = method[0].capitalize + "-" + Fog::Hyperv.camelize(method[1..-1].join('_'))
+          method = caller[0][/`.*'/][1..-2]
 
           raise Fog::Hyperv::Errors::VersionError.new(required_version, version, method) \
             unless Gem::Version.new(version) >= Gem::Version.new(required_version)
