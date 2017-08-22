@@ -34,6 +34,8 @@ module Fog
 
       model_path 'fog/hyperv/models/compute'
       model :bios
+      model :cluster
+      collection :clusters
       model :com_port
       model :dvd_drive
       collection :dvd_drives
@@ -58,6 +60,8 @@ module Fog
       request :add_vm_network_adapter
       request :connect_vm_network_adapter
       request :disconnect_vm_network_adapter
+      request :get_cluster
+      request :get_cluster_node
       request :get_vhd
       request :get_vm
       request :get_vm_bios
@@ -120,7 +124,7 @@ module Fog
         end
 
         def version
-          @version ||= run_shell("(Get-Item $(if ([environment]::Is64BitProcess) { \"$($env:SystemRoot)\\System32\\vmms.exe\" } else { \"$($env:SystemRoot)\\Sysnative\\vmms.exe\" })).VersionInfo.ProductVersion", _skip_json: true).stdout.strip
+          @version ||= run_shell('(Get-Item $(if ([environment]::Is64BitProcess) { \"$($env:SystemRoot)\\System32\\vmms.exe\" } else { \"$($env:SystemRoot)\\Sysnative\\vmms.exe\" })).VersionInfo.ProductVersion', _skip_json: true).stdout.strip
         end
 
         private
@@ -144,7 +148,7 @@ module Fog
           method = caller[0][/`.*'/][1..-2]
           raise(ArgumentError, "#{missing[0...-1].join(', ')}, or #{missing[-1]} are required for #{method}")
         end
-  
+
         def hash_to_optmap(options = {})
           args = options.reject { |k, v| v.nil? || v.is_a?(FalseClass) || k.to_s.start_with?('_') }.map do |k, v|
             "'#{k}'=#{Fog::Hyperv.shell_quoted(v, true)}"
@@ -172,7 +176,7 @@ module Fog
             if local?
               # TODO
             else
-              log DEBUG, "WQL; IN #{namespace} >>> #{query}"
+              log DEBUG, "WQL; #{namespace} >>> #{query}"
               @connection.run_wql(query, namespace)
             end
 
@@ -183,6 +187,7 @@ module Fog
         def run_shell(command, options = {})
           return_fields = options.delete :_return_fields
           return_fields = "| select #{Fog::Hyperv.camelize([return_fields].flatten).join ','}" if return_fields
+          suffix = options.delete :_suffix
           json_depth = options.delete :_json_depth
           skip_json = options.delete :_skip_json
           skip_camelize = options.delete :_skip_camelize
@@ -195,7 +200,7 @@ module Fog
             "-#{k} #{Fog::Hyperv.shell_quoted v unless v.is_a?(TrueClass)}"
           end
           command_args = "#{command} #{args.join ' ' unless args.empty?}"
-          commandline = "#{command_args} #{return_fields} #{"| ConvertTo-Json -Compress #{"-Depth #{json_depth}" if json_depth}" unless skip_json}"
+          commandline = "#{command_args} #{suffix} #{return_fields} #{"| ConvertTo-Json -Compress #{"-Depth #{json_depth}" if json_depth}" unless skip_json}"
           log DEBUG, "PS; >>> #{commandline}"
 
           out = nil # OpenStruct.new stdout: '',

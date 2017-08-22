@@ -45,7 +45,7 @@ module Fog
     def self.shell_quoted(data, always = false)
       case data
       when String
-        if data =~ /(^$)|\s/ || always
+        if !data.start_with?('$') && (data =~ /(^$)|\s/ || always)
           data.gsub(/`/, '``')
               .gsub(/\0/, '`0')
               .gsub(/\n/, '`n') 
