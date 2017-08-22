@@ -12,10 +12,11 @@ module Fog
         model.class_eval <<-EOS, __FILE__, __LINE__
             def #{name}=(new_#{name})
               if new_#{name}.is_a?(Fixnum)
+                raise Fog::Hyperv::Errors::ServiceError, "\#{new_#{name}} is not in the range (0..#{values.length})" unless new_#{name} >= 0 && new_#{name} < #{values.length}
                 attributes[:#{name}] = #{values}[new_#{name}]
-              elsif new_#{name}.is_a?(String)
-                attributes[:#{name}] = new_#{name}.to_sym
               else
+                new_#{name} = new_#{name}.to_s.to_sym unless new_#{name}.is_a? String
+                raise Fog::Hyperv::Errors::ServiceError, "\#{new_#{name}} is not one of #{values.is_a?(Hash) ? values.values : values})" unless #{(values.is_a?(Hash) ? values.values : values)}.include? new_#{name}
                 attributes[:#{name}] = new_#{name}
               end
             end
@@ -30,7 +31,7 @@ module Fog
                 self.#{name}
               else
                 if #{values}.is_a?(Hash)
-                  #{values}.index(self.#{name})
+                  #{values}.key(self.#{name})
                 else
                   #{values}.index(self.#{name})
                 end

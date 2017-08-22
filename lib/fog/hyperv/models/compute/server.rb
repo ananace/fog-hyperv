@@ -34,7 +34,7 @@ module Fog
           32791 => :PausingCritical,
           32792 => :ResumingCritical,
           32793 => :FastSavedCritical,
-          32794 => :FastSavingCritical,
+          32794 => :FastSavingCritical
         }.freeze
 
         identity :id, type: :string
