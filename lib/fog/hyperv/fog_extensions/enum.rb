@@ -12,7 +12,7 @@ module Fog
         model.class_eval <<-EOS, __FILE__, __LINE__
             def #{name}=(new_#{name})
               if new_#{name}.is_a?(Fixnum)
-                raise Fog::Hyperv::Errors::ServiceError, "\#{new_#{name}} is not in the range (0..#{values.length})" unless new_#{name} >= 0 && new_#{name} < #{values.length}
+                raise Fog::Hyperv::Errors::ServiceError, "\#{new_#{name}} is not in the range (0..#{values.length - 1})" unless new_#{name} >= 0 && new_#{name} < #{values.length}
                 attributes[:#{name}] = #{values}[new_#{name}]
               else
                 new_#{name} = new_#{name}.to_s.to_sym unless new_#{name}.is_a? String
