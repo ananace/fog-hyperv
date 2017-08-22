@@ -14,6 +14,18 @@ module Fog
 
     module Errors
       class ServiceError < Fog::Errors::Error; end
+      class VersionError < ServiceError
+        attr_reader :version, :required_version, :function
+
+        def initialize(required_version, version, function)
+          @function = function
+          @required_version = required_version
+          @version = version
+
+          super "#{function} requires at least Hyper-V v#{required_version}, you have v#{version}"
+        end
+      end
+
       class PSError < ServiceError
         attr_reader :stdout, :stderr, :exitcode, :info, :message
 

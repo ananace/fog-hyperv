@@ -66,6 +66,7 @@ module Fog
       request :get_vm_dvd_drive
       request :get_vm_firmware
       request :get_vm_floppy_disk_drive
+      request :get_vm_group
       request :get_vm_hard_disk_drive
       request :get_vm_host
       request :get_vm_host_cluster
@@ -126,7 +127,8 @@ module Fog
         end
 
         def version
-          @version ||= run_shell('(Get-Item $(if ([environment]::Is64BitProcess) { \"$($env:SystemRoot)\\System32\\vmms.exe\" } else { \"$($env:SystemRoot)\\Sysnative\\vmms.exe\" })).VersionInfo.ProductVersion', _skip_json: true).stdout.strip
+          @version ||= run_wql('SELECT Version FROM Win32_OperatingSystem', _namespace: 'root/cimv2/*')[:xml_fragment].first[:version] rescue \
+            run_shell("$VMMS = if ([environment]::Is64BitProcess) { \"$($env:SystemRoot)\\System32\\vmms.exe\" } else { \"$($env:SystemRoot)\\Sysnative\\vmms.exe\" }\n(Get-Item $VMMS).VersionInfo.ProductVersion", _skip_json: true).stdout.strip
         end
 
         private
@@ -149,6 +151,14 @@ module Fog
 
           method = caller[0][/`.*'/][1..-2]
           raise(ArgumentError, "#{missing[0...-1].join(', ')}, or #{missing[-1]} are required for #{method}")
+        end
+
+        def requires_version(required_version)
+          method = caller[0][/`.*'/][1..-2].split('_')
+          method = method[0].capitalize + "-" + Fog::Hyperv.camelize(method[1..-1].join('_'))
+
+          raise Fog::Hyperv::Errors::VersionError.new(required_version, version, method) \
+            unless Gem::Version.new(version) >= Gem::Version.new(required_version)
         end
 
         def hash_to_optmap(options = {})
