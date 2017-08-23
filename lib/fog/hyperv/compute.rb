@@ -90,7 +90,44 @@ module Fog
       request :start_vm
       request :stop_vm
 
-      class Real
+      class Shared
+        def version
+          '0.0'
+        end
+
+        protected
+
+        def requires(opts, *args)
+          missing = args - opts.keys
+          return if missing.none?
+
+          method = caller[0][/`.*'/][1..-2]
+          if missing.length == 1
+            raise(ArgumentError, "#{missing.first} is required for #{method}")
+          elsif missing.any?
+            raise(ArgumentError, "#{missing[0...-1].join(', ')}, and #{missing[-1]} are required for #{method}")
+          end
+        end
+
+        def requires_one(opts, *args)
+          missing = args - opts.keys
+          return if missing.length < args.length
+
+          method = caller[0][/`.*'/][1..-2]
+          raise(ArgumentError, "#{missing[0...-1].join(', ')}, or #{missing[-1]} are required for #{method}")
+        end
+
+        def requires_version(required_version)
+          method = caller[0][/`.*'/][1..-2].split('_')
+          method = method[0].capitalize + "-" + Fog::Hyperv.camelize(method[1..-1].join('_'))
+
+          raise Fog::Hyperv::Errors::VersionError.new(required_version, version, method) \
+            unless Gem::Version.new(version) >= Gem::Version.new(required_version)
+        end
+
+      end
+
+      class Real < Shared
         attr_reader :logger
 
         def initialize(options = {})
@@ -132,33 +169,6 @@ module Fog
         end
 
         private
-
-        def requires(opts, *args)
-          missing = args - opts.keys
-          return if missing.none?
-
-          method = caller[0][/`.*'/][1..-2]
-          if missing.length == 1
-            raise(ArgumentError, "#{missing.first} is required for #{method}")
-          elsif missing.any?
-            raise(ArgumentError, "#{missing[0...-1].join(', ')}, and #{missing[-1]} are required for #{method}")
-          end
-        end
-
-        def requires_one(opts, *args)
-          missing = args - opts.keys
-          return if missing.length < args.length
-
-          method = caller[0][/`.*'/][1..-2]
-          raise(ArgumentError, "#{missing[0...-1].join(', ')}, or #{missing[-1]} are required for #{method}")
-        end
-
-        def requires_version(required_version)
-          method = caller[0][/`.*'/][1..-2]
-
-          raise Fog::Hyperv::Errors::VersionError.new(required_version, version, method) \
-            unless Gem::Version.new(version) >= Gem::Version.new(required_version)
-        end
 
         def hash_to_optmap(options = {})
           args = options.reject { |k, v| v.nil? || v.is_a?(FalseClass) || k.to_s.start_with?('_') }.map do |k, v|
@@ -270,8 +280,47 @@ module Fog
         end
       end
 
-      class Mock
+      class Mock < Shared
+        def initialize(_options = {})
+          require 'fog/json'
+        end
 
+        def method_missing(method, *args)
+          if requests.find { |_, k| k == method }
+            handle_mock_response((args.first || {}).merge(_method: method))
+          else
+            super
+          end
+        end
+
+        def respond_to_missing?(method, include_private = false)
+          requests.find { |_, k| k == method } || super
+        end
+
+        def self.method_defined?(method)
+          Fog::Compute::Hyperv.requests.find { |_, k| k == method } || super
+        end
+
+        private
+
+        def handle_mock_response(args = {})
+          method =   args.delete :_method
+          method ||= caller[0][/`.*'/][1..-2]
+          method ||= caller[1][/`.*'/][1..-2]
+
+          path = File.join File.dirname(__FILE__), 'requests', 'compute', 'mock_files', "#{method}.json"
+          Fog::Mock.not_implemented unless File.exist? path
+          raise Fog::Errors::MockNotImplemented, 'Not implementing skipping of json' if args[:_skip_json]
+          raise Fog::Errors::MockNotImplemented, 'Not implementing skipping of uncamelize' if args[:_skip_uncamelize]
+
+          ret = Fog::JSON.decode(open(path).read)
+          ret = Fog::Hyperv.uncamelize(ret)
+
+          ret = ret.map do |obj|
+            obj.select { |k, _| args[:_return_fields].include? k }
+          end if args[:_return_fields]
+          ret
+        end
       end
     end
   end
