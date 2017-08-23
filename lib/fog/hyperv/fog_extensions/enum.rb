@@ -14,6 +14,8 @@ module Fog
               if new_#{name}.is_a?(Fixnum)
                 raise Fog::Hyperv::Errors::ServiceError, "\#{new_#{name}} is not in the range (0..#{values.length - 1})" unless new_#{name} >= 0 && new_#{name} < #{values.length}
                 attributes[:#{name}] = #{values}[new_#{name}]
+              elsif new_#{name}.nil?
+                attriubtes[:#{name}] = nil
               else
                 new_#{name} = new_#{name}.to_s.to_sym unless new_#{name}.is_a? String
                 raise Fog::Hyperv::Errors::ServiceError, "\#{new_#{name}} is not one of #{values.is_a?(Hash) ? values.values : values})" unless #{(values.is_a?(Hash) ? values.values : values)}.include? new_#{name}
