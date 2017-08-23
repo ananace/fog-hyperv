@@ -7,6 +7,14 @@ module Fog
           run_shell('Get-VMBios', options)
         end
       end
+
+      class Mock
+        def get_vm_bios(args = {})
+          requires args, :vm_name
+
+          handle_mock_response(args).find { |b| b[:vm_name].casecmp(args[:vm_name]).zero? }
+        end
+      end
     end
   end
 end

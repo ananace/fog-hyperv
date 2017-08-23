@@ -26,8 +26,7 @@ module Fog
             preferred_network_boot_protocol: changed!(:preferred_network_boot_protocol),
             console_mode: changed!(:console_mode),
 
-            _return_fields: self.class.attributes,
-            _json_depth: 1
+            _return_fields: self.class.attributes
           )
 
           merge_attributes(data)
@@ -42,8 +41,7 @@ module Fog
             computer_name: computer_name,
             vm_name: vm_name,
 
-            _return_fields: self.class.attributes,
-            _json_depth: 1
+            _return_fields: self.class.attribute
           )
           merge_attributes(data.attributes)
           self
