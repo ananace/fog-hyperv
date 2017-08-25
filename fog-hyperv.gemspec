@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ['alexander.olofsson@liu.se']
 
   spec.summary       = 'Module for the `fog` gem to support Microsoft Hyper-V.'
-  spec.description   = 'This library wraps Hyper-V VM information in the `fog` concepts.'
+  spec.description   = 'This library wraps Hyper-V in the `fog` concepts.'
   spec.homepage      = 'https://github.com/ace13/fog-hyperv'
   spec.license       = 'MIT'
 
@@ -19,11 +19,10 @@ Gem::Specification.new do |spec|
 
   spec.require_paths = ['lib']
 
-  spec.add_runtime_dependency 'fog-core'
-  spec.add_runtime_dependency 'fog-json'
-  spec.add_runtime_dependency 'winrm'
+  spec.add_runtime_dependency 'fog-core', '~> 1.44'
+  spec.add_runtime_dependency 'fog-json', '~> 1.0'
+  spec.add_runtime_dependency 'winrm', '~> 2.2'
 
-  spec.add_development_dependency 'bundler', '~> 1.13'
   spec.add_development_dependency 'rake', '~> 10.0'
   spec.add_development_dependency 'minitest', '~> 5.0'
 end
