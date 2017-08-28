@@ -1,4 +1,5 @@
 # coding: utf-8
+
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'fog/hyperv/version'
@@ -19,7 +20,7 @@ Gem::Specification.new do |spec|
 
   spec.require_paths = ['lib']
 
-  spec.add_runtime_dependency 'fog-core', '~> 1.44'
+  spec.add_runtime_dependency 'fog-core', '~> 1.42'
   spec.add_runtime_dependency 'fog-json', '~> 1.0'
   spec.add_runtime_dependency 'winrm', '~> 2.2'
 
