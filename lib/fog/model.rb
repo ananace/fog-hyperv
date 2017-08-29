@@ -59,6 +59,12 @@ module Fog
     class Model < Fog::Model
       extend Fog::Hyperv::ModelExtends
       include Fog::Hyperv::ModelIncludes
+
+      def initialize(attributes = {})
+        super
+
+        @old = dup if persisted?
+      end
     end
   end
 end
