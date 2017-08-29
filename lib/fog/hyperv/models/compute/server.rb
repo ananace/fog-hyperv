@@ -129,7 +129,6 @@ module Fog
 
         def save(options = {})
           requires :name
-          logger.debug "Saving server with; #{attributes}, #{options}"
 
           data = \
             if !persisted?
