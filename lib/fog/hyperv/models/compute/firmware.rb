@@ -13,16 +13,16 @@ module Fog
         attribute :vm_name
 
         def save
-          requires :computetr_name, :vm_name
+          requires :computer_name, :vm_name
 
           raise Fog::Hyperv::Errors::ServiceError, "Can't create Firmware instances" unless persisted?
 
-          data = service.set_firmware(
+          data = service.set_vm_firmware(
             computer_name: computer_name,
             vm_name: vm_name,
             passthru: true,
 
-            enable_secure_boot: changed?(:secure_boot) ? (secure_boot && 'On' || 'Off') : nil,
+            enable_secure_boot: changed!(:secure_boot),
             preferred_network_boot_protocol: changed!(:preferred_network_boot_protocol),
             console_mode: changed!(:console_mode),
 
@@ -37,13 +37,13 @@ module Fog
         def reload
           requires :computer_name, :vm_name
 
-          data = service.get_firmware(
+          data = service.get_vm_firmware(
             computer_name: computer_name,
             vm_name: vm_name,
 
-            _return_fields: self.class.attribute
+            _return_fields: self.class.attributes
           )
-          merge_attributes(data.attributes)
+          merge_attributes(data)
           self
         end
       end

@@ -30,6 +30,7 @@ module Fog
           )
 
           merge_attributes(data)
+          @old = dup
           self
         end
 
@@ -43,7 +44,7 @@ module Fog
             _return_fields: self.class.attributes,
             _json_depth: 1
           )
-          merge_attributes(data.attributes)
+          merge_attributes(data)
           self
         end
       end
