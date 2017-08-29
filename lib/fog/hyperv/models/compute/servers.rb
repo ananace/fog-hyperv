@@ -1,7 +1,7 @@
 module Fog
   module Compute
     class Hyperv
-      class Servers < Fog::Hyperv::Collection
+      class Servers < Fog::Hyperv::ComputerCollection
         attribute :cluster
 
         model Fog::Compute::Hyperv::Server

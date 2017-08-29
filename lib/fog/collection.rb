@@ -7,8 +7,12 @@ module Fog
         @get_method ||= method
       end
 
-      def self.requires?
+      def self.requires
         @requires ||= []
+      end
+
+      def self.requires?(req)
+        requires.include? req
       end
 
       def search_attributes
@@ -19,7 +23,7 @@ module Fog
       end
 
       def all(filters = {})
-        requires(*self.class.requires?)
+        requires(*self.class.requires)
         data = service.send(method, search_attributes.merge(filters))
         data = [] unless data
 
@@ -27,7 +31,7 @@ module Fog
       end
 
       def get(filters = {})
-        data = self.all(filters).first
+        data = all(filters).first
         data if data
       rescue Fog::Hyperv::Errors::PSError => err
         raise Fog::Errors::NotFound, err if err.message =~ /Hyper-V was unable to find|^No .* is found|/
@@ -35,7 +39,7 @@ module Fog
       end
 
       def new(options = {})
-        requires(*self.class.requires?)
+        requires(*self.class.requires)
         super(search_attributes.merge(options))
       end
 
@@ -54,13 +58,14 @@ module Fog
 
     class ComputerCollection < Fog::Hyperv::Collection
       def self.requires_computer
-        requires? << :computer
+        requires << :computer
       end
 
       attr_accessor :computer
 
       def search_attributes
         attrs = super
+        attrs.delete :computer
         attrs[:computer_name] ||= computer.name if computer
         attrs
       end
@@ -72,13 +77,14 @@ module Fog
       end
 
       def self.requires_vm
-        requires? << :vm
+        requires << :vm
       end
 
       attr_accessor :vm
 
       def search_attributes
         attrs = super
+        attrs.delete :vm
         if vm
           attrs[:computer_name] ||= vm.computer_name
           attrs[match] = vm.send(match)

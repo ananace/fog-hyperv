@@ -1,7 +1,7 @@
 module Fog
   module Compute
     class Hyperv
-      class Switches < Fog::Hyperv::Collection
+      class Switches < Fog::Hyperv::ComputerCollection
         model Fog::Compute::Hyperv::Switch
 
         get_method :get_vm_switch
