@@ -9,13 +9,15 @@ module Fog
         attribute :name, type: :string
 
         def nodes
-          [service.get_cluster_node(cluster: name, _return_fields: [:description, :name, :node_name])].flatten
+          @nodes ||= [service.get_cluster_node(cluster: name, _return_fields: [:description, :name, :node_name])].flatten
+        end
+
+        def hosts
+          @hosts ||= service.hosts computer_name: nodes.map { |n| n[:name] }
         end
 
         def servers
-          @servers ||= service.servers.class.new \
-            cluster: self,
-            service: service
+          @servers ||= service.servers cluster: self
         end
 
         def reload

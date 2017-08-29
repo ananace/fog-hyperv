@@ -61,11 +61,14 @@ module Fog
         requires << :computer
       end
 
+      attr_accessor :cluster
       attr_accessor :computer
 
       def search_attributes
         attrs = super
+        attrs.delete :cluster
         attrs.delete :computer
+        attrs[:computer_name] ||= cluster.hosts.map { |n| n.name } if cluster
         attrs[:computer_name] ||= computer.name if computer
         attrs
       end
