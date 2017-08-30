@@ -1,4 +1,4 @@
-## v0.0.3 *(unreleased)*
+## v0.0.3 2017-09-30
 
 - Fix handling of BIOS/Firmware
 - Skip unnecessary Hyper-V calls when checking dirty status
