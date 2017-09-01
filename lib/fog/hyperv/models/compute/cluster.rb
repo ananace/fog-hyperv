@@ -20,7 +20,7 @@ module Fog
         end
 
         def hosts
-          @hosts ||= nodes.map { |n| service.hosts.get(n) }
+          @hosts ||= nodes.map { |n| service.hosts.get(n[:name]) }
         end
 
         def reload
