@@ -95,12 +95,11 @@ module Fog
         attrs
       end
 
-      def create(attributes = {})
-        object = new(attributes)
+      def new(attributes = {})
+        object = super
         # Ensure both ID and Name are populated, regardless of `match_on`
         object.vm_id ||= vm.id if vm && object.respond_to?(:vm_id)
         object.vm_name ||= vm.name if vm && object.respond_to?(:vm_name)
-        object.save
         object
       end
 
@@ -110,10 +109,6 @@ module Fog
       end
 
       private
-
-      def logger
-        service.logger
-      end
 
       def match
         self.class.match_on || :vm_name

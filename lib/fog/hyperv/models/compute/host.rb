@@ -29,7 +29,7 @@ module Fog
           Fog::Compute::Hyperv.collections.each do |coll|
             coll_name = coll.to_s.split('_').map(&:capitalize).join
             klass = Fog::Compute::Hyperv.const_get(coll_name)
-            next if klass.requires? :vm
+            next if klass.requires?(:vm)
 
             define_method coll do
               @collections[coll] ||= service.send(coll, computer: self)

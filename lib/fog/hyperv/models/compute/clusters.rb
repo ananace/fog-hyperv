@@ -5,6 +5,10 @@ module Fog
         model Fog::Compute::Hyperv::Cluster
 
         get_method :get_cluster
+
+        def get(name, filters = {})
+          super(filters.merge(name: name))
+        end
       end
     end
   end
