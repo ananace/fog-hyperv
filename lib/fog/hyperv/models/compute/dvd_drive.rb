@@ -17,7 +17,6 @@ module Fog
         attribute :vm_name
         # TODO? VM Snapshots?
         #
-        attr_accessor :to_controller_number, :to_controller_location
 
         def save
           requires :computer_name, :vm_name
@@ -84,6 +83,7 @@ module Fog
             _json_depth: 1
           )
           merge_attributes(data.attributes)
+          @old = data
           self
         end
       end

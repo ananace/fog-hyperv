@@ -44,6 +44,7 @@ module Fog
             _return_fields: self.class.attributes
           )
           merge_attributes(data)
+          @old = data
           self
         end
       end

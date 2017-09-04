@@ -14,8 +14,8 @@ module Fog
         attribute :path, type: :string, default: 'New Disk'
         attribute :pool_name
         attribute :size, type: :integer, default: 343_597_383_68
-        attribute :vhd_format, type: :enum, values: [ :Unknown, nil, :VHD, :VHDX, :VHDSet ]
-        attribute :vhd_type, type: :enum, values: [ :Unknown, nil, :Fixed, :Dynamic, :Differencing ]
+        attribute :vhd_format, type: :enum, values: [:Unknown, nil, :VHD, :VHDX, :VHDSet]
+        attribute :vhd_type, type: :enum, values: [:Unknown, nil, :Fixed, :Dynamic, :Differencing]
         # TODO? VM Snapshots?
         #
 
@@ -35,7 +35,7 @@ module Fog
         end
 
         def unc_path
-          "\\\\#{computer_name || '.'}\\#{real_path.gsub ':', '$'}"
+          "\\\\#{computer_name || '.'}\\#{real_path.tr ':', '$'}"
         end
 
         def host
@@ -84,6 +84,7 @@ module Fog
             disk_number: disk
           )
           merge_attributes(data.attributes)
+          @old = data
           self
         end
 
@@ -92,7 +93,7 @@ module Fog
 
           service.remove_item(
             path: unc_path
-          ) if path
+          )
         end
       end
     end

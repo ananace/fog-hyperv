@@ -60,7 +60,7 @@ module Fog
             )
             @vhd = nil if changed?(:path)
           else
-            possible = %i(computer_name controller_location controller_number controller_type path vm_name).freeze
+            possible = %i[computer_name controller_location controller_number controller_type path vm_name].freeze
             data = service.add_vm_hard_disk_drive(
               attributes.select { |k, _v| possible.include? k }.merge(
                 disk_number: disk && disk.number,

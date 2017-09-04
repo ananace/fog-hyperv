@@ -6,7 +6,7 @@ module Fog
 
         attribute :computer_name
         attribute :disk
-        attribute :is_deleted
+        # attribute :is_deleted
         attribute :name
         attribute :path
         attribute :pool_name
@@ -16,21 +16,25 @@ module Fog
         #
 
         def save
+          raise Fog::Hyperv::Errors::ServiceError, "Can't create new floppy drives" unless persisted?
+
           requires :computer_name, :vm_name
 
-          data = service.set_vm_floppy_disk_drive(
-            computer_name: computer_name,
-            vm_name: vm_name,
-            passthru: true,
+          data = \
+            service.set_vm_floppy_disk_drive(
+              computer_name: old.computer_name,
+              vm_name: old.vm_name,
+              passthru: true,
 
-            resource_pool_name: pool_name,
-            path: path,
+              resource_pool_name: changed!(pool_name),
+              path: changed?(path) && (path || '$null'),
 
-            _return_fields: self.class.attributes,
-            _json_depth: 1
-          )
+              _return_fields: self.class.attributes,
+              _json_depth: 1
+            )
 
           merge_attributes(data)
+          @old = dup
           self
         end
 
@@ -40,6 +44,7 @@ module Fog
             vm_name: vm_name
           )
           merge_attributes(data.attributes)
+          @old = data
           self
         end
       end

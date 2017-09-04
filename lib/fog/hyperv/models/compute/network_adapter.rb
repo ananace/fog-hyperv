@@ -134,6 +134,7 @@ module Fog
             vm_name: vm_name
           )
           merge_attributes(data.attributes)
+          @old = data
           self
         end
       end
