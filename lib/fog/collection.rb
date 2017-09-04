@@ -15,13 +15,6 @@ module Fog
         requires.include? req
       end
 
-      def search_attributes
-        attributes.dup.merge(
-          _return_fields: model.attributes - model.lazy_attributes,
-          _json_depth: 1
-        )
-      end
-
       def all(filters = {})
         requires(*self.class.requires)
         data = service.send(method, search_attributes.merge(filters))
@@ -34,19 +27,32 @@ module Fog
         data = all(filters).first
         data if data
       rescue Fog::Hyperv::Errors::PSError => err
-        raise Fog::Errors::NotFound, err if err.message =~ /Hyper-V was unable to find|^No .* is found|/
+        raise Fog::Errors::NotFound, err if err.message =~ /Hyper-V was unable to find|^No .* is found/
         raise err
       end
 
       def new(options = {})
         requires(*self.class.requires)
-        super(search_attributes.merge(options))
+        super(creation_attributes.merge(options))
       end
 
       def create(attributes = {})
         object = new(attributes)
         object.save
         object
+      end
+
+      protected
+
+      def search_attributes
+        attributes.dup.merge(
+          _return_fields: model.attributes - model.lazy_attributes,
+          _json_depth: 1
+        )
+      end
+
+      def creation_attributes
+        attributes.dup
       end
 
       private
@@ -64,11 +70,20 @@ module Fog
       attr_accessor :cluster
       attr_accessor :computer
 
+      protected
+
+      def creation_attributes
+        to_add = {}
+        to_add[:cluster] = cluster if cluster
+        to_add[:computer] = computer if computer
+        super.merge(to_add)
+      end
+
       def search_attributes
         attrs = super
         attrs.delete :cluster
         attrs.delete :computer
-        attrs[:computer_name] ||= cluster.hosts.map { |n| n.name } if cluster
+        attrs[:computer_name] ||= cluster.hosts.map(&:name) if cluster
         attrs[:computer_name] ||= computer.name if computer
         attrs
       end
@@ -85,16 +100,6 @@ module Fog
 
       attr_accessor :vm
 
-      def search_attributes
-        attrs = super
-        attrs.delete :vm
-        if vm
-          attrs[:computer_name] ||= vm.computer_name
-          attrs[match] = vm.send(match)
-        end
-        attrs
-      end
-
       def new(attributes = {})
         object = super
         # Ensure both ID and Name are populated, regardless of `match_on`
@@ -106,6 +111,25 @@ module Fog
       def inspect
         # To avoid recursing on VM
         to_s
+      end
+
+      protected
+
+      def creation_attributes
+        to_add = {}
+        to_add[:vm] = vm if vm
+
+        super.merge to_add
+      end
+
+      def search_attributes
+        attrs = super
+        attrs.delete :vm
+        if vm
+          attrs[:computer_name] ||= vm.computer_name
+          attrs[match] = vm.send(match)
+        end
+        attrs
       end
 
       private

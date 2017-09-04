@@ -59,6 +59,8 @@ module Fog
                         :hard_drives,
                         :floppy_drive
 
+        attr_reader :cluster, :computer
+
         %i(network_adapters dvd_drives floppy_drives hard_drives vhds).each do |attr|
           define_method attr do
             if persisted?
