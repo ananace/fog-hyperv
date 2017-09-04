@@ -54,6 +54,7 @@ module Fog
       collection :vhds
 
       request_path 'fog/hyperv/requests/compute'
+      request :add_vm_dvd_drive
       request :add_vm_hard_disk_drive
       request :add_vm_network_adapter
       request :connect_vm_network_adapter
@@ -77,6 +78,7 @@ module Fog
       request :new_vm_switch
       request :remove_item
       request :remove_vm
+      request :remove_vm_dvd_drive
       request :remove_vm_hard_disk_drive
       request :remove_vm_network_adapter
       request :restart_vm
