@@ -6,12 +6,12 @@ module Fog
 
         attribute :computer_name
         attribute :controller_location
-        attribute :controller_number
-        attribute :controller_type, type: :enum, values: [ :IDE, :SCSI ]
+        attribute :controller_number, type: :integer
+        attribute :controller_type, type: :enum, values: %i[IDE SCSI]
         attribute :disk
         # attribute :is_deleted
-        attribute :maximum_iops
-        attribute :minimum_iops
+        attribute :maximum_iops, type: :integer
+        attribute :minimum_iops, type: :integer
         attribute :name
         attribute :path
         attribute :pool_name
@@ -22,7 +22,7 @@ module Fog
 
         def vhd
           return nil unless path && computer_name
-          @vhd ||= Fog::Compute::Hyperv::Vhd.new(service.get_vhd(computer_name: computer_name, path: path).merge(service: service))
+          @vhd ||= service.vhds.get(path, computer_name: computer_name)
         end
 
         def size_bytes
@@ -43,18 +43,18 @@ module Fog
               controller_location: old.controller_location,
               controller_number: old.controller_number,
               controller_type: old.controller_type,
+              passthru: true,
 
               disk_number: changed?(:disk) && disk && disk.number,
-              maximum_iops: changed?(:maximum_iops) && maximum_iops,
-              minimum_iops: changed?(:minimum_iops) && minimum_iops,
-              path: changed?(:path) && path,
-              resource_pool_name: changed?(:pool_name) && pool_name,
-              support_persistent_reservations: changed?(:support_persistent_reservations) && support_persistent_reservations,
-              to_controller_location: changed?(:controller_location) && controller_location,
-              to_controller_number: changed?(:controller_number) && controller_number,
-              to_controller_type: changed?(:controller_type) && controller_type,
+              maximum_iops: changed!(:maximum_iops),
+              minimum_iops: changed!(:minimum_iops),
+              path: changed!(:path),
+              resource_pool_name: changed!(:pool_name),
+              support_persistent_reservations: changed!(:support_persistent_reservations),
+              to_controller_location: changed!(:controller_location),
+              to_controller_number: changed!(:controller_number),
+              to_controller_type: changed!(:controller_type),
 
-              passthru: true,
               _return_fields: self.class.attributes,
               _json_depth: 1
             )
