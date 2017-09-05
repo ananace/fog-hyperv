@@ -77,6 +77,13 @@ module Fog
           end
         end
 
+        def initialize(attrs = {})
+          super
+
+          @cluster = attrs.delete :cluster
+          @computer = attrs.delete :computer
+        end
+
         def bios
           @bios ||= begin
             if generation == 1
