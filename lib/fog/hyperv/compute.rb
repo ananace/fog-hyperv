@@ -24,10 +24,12 @@ module Fog
         # :ProtocolVersion     # 32775
       ].freeze
 
-      requires :hyperv_username, :hyperv_password
+      requires :hyperv_username
       recognizes :hyperv_endpoint, :hyperv_host,
-                 :hyperv_transport,
+                 :hyperv_password,
+                 :hyperv_transport, :hyperv_realm,
                  :hyperv_debug
+
       secrets :hyperv_password, :connection
 
       model_path 'fog/hyperv/models/compute'
@@ -141,7 +143,10 @@ module Fog
           @hyperv_endpoint  = "http://#{options[:hyperv_host]}:5985/wsman" if !@hyperv_endpoint && options[:hyperv_host]
           @hyperv_username  = options[:hyperv_username]
           @hyperv_password  = options[:hyperv_password]
-          @hyperv_transport = options[:hyperv_transport] || :negotiate
+          @hyperv_realm     = options[:hyperv_realm]
+          @hyperv_transport = options[:hyperv_transport] || (@hyperv_realm ? :kerberos : :negotiate)
+
+          Logging.logger['WinRM::HTTP::HttpNegotiate'].level = :error
           @logger = Logging.logger['hyper-v']
           if options[:hyperv_debug]
             logger.level = :debug 
@@ -271,13 +276,16 @@ module Fog
           # return require 'open3' if local?
 
           require 'winrm'
-          @connection = WinRM::Connection.new(
+          opts = {
             endpoint:  @hyperv_endpoint,
+            transport: @hyperv_transport,
             user:      @hyperv_username,
             password:  @hyperv_password,
-            transport: @hyperv_transport
-          )
-          Logging.logger['WinRM::HTTP::HttpNegotiate'].level = :error
+            realm:     @hyperv_realm
+          }
+
+          logger.debug "Creating WinRM connection with #{opts.merge password: '<REDACTED>'}"
+          @connection = WinRM::Connection.new opts
           @connection.logger.level = :error
         end
       end
