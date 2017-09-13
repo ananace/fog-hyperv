@@ -139,6 +139,7 @@ module Fog
           require 'fog/json'
           require 'logging'
 
+          @connections = {}
           @hyperv_endpoint  = options[:hyperv_endpoint]
           @hyperv_endpoint  = "http://#{options[:hyperv_host]}:5985/wsman" if !@hyperv_endpoint && options[:hyperv_host]
           @hyperv_username  = options[:hyperv_username]
@@ -214,6 +215,7 @@ module Fog
         end
 
         def run_shell(command, options = {})
+          orig_opts = options.dup
           return_fields = options.delete :_return_fields
           return_fields = "| select #{Fog::Hyperv.camelize([return_fields].flatten).join ','}" if return_fields
           suffix = options.delete :_suffix
@@ -221,7 +223,24 @@ module Fog
           skip_json = options.delete :_skip_json
           skip_camelize = options.delete :_skip_camelize
           skip_uncamelize = options.delete :_skip_uncamelize
+          computer = options.delete(:_target_computer) || '.'
+          computers = [options.delete(:computer_name)].flatten.compact
           options = Fog::Hyperv.camelize(options) unless skip_camelize
+
+          if computers.length > 1 || (computers.length == 1 && !['.','localhost'].include?(computers.first.downcase))
+            puts "Executing multi-query for #{computers}"
+            ret = []
+            computers.each do |c|
+              out = run_shell(command, orig_opts.merge(computer_name: nil, _target_computer: c))
+              if out.is_a? Array
+                ret += out
+              else
+                ret << out
+              end
+            end
+            return ret.first if ret.length == 1
+            return ret
+          end
 
           # commandline = "$Args = #{hash_to_optmap options}\n$Ret = #{command} @Args#{"\n$Ret #{return_fields} | ConvertTo-Json -Compress #{"-Depth #{json_depth}" if json_depth}" unless skip_json}"
           # puts " > #{commandline.split("\n").join "\n > "}" if @hyperv_debug
@@ -252,7 +271,7 @@ module Fog
               out.exitcode = -1
             end
           else
-            @connection.shell(:powershell) do |shell|
+            connection(computer).shell(:powershell) do |shell|
               out = shell.run(commandline)
             end
           end
@@ -273,12 +292,13 @@ module Fog
           end
         end
 
-        def connect
-          # return require 'open3' if local?
+        def connect(endpoint = nil)
+          endpoint = @hyperv_endpoint unless endpoint
+          fqdn = URI.parse(endpoint).host
 
           require 'winrm'
           opts = {
-            endpoint:  @hyperv_endpoint,
+            endpoint:  endpoint,
             transport: @hyperv_transport,
             user:      @hyperv_username,
             password:  @hyperv_password,
@@ -286,8 +306,23 @@ module Fog
           }
 
           logger.debug "Creating WinRM connection with #{opts.merge password: '<REDACTED>'}"
-          @connection = WinRM::Connection.new opts
-          @connection.logger.level = :error
+          connection = WinRM::Connection.new opts
+          connection.logger.level = :error
+          @connections[fqdn] = connection
+          
+          if endpoint == @hyperv_endpoint
+            @connection = connection
+            @connections['.'] = connection
+            @connections['localhost'] = connection
+          end
+        end
+
+        def connection(host)
+          c = @connections.find { |k,_v| k.downcase.start_with?(host.downcase) }
+          return c[1] if c
+
+          # TODO: Ensure host is a FQDN, add a connection for it
+          raise NotImplementedError, "Can't dynamically add connections to additional computers"
         end
       end
 
