@@ -166,7 +166,8 @@ module Fog
           else
             run_wql('SELECT Name FROM Msvm_ComputerSystem WHERE Caption = "Hosting Computer System"') && true
           end
-        rescue Fog::Hyperv::Errors::ServiceError
+        rescue => e
+          logger.debug "Validation failed with #{e.class}; #{e.message}"
           false
         end
 
