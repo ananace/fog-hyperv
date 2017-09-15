@@ -228,7 +228,7 @@ module Fog
           options = Fog::Hyperv.camelize(options) unless skip_camelize
 
           if computers.length > 1 || (computers.length == 1 && !['.','localhost'].include?(computers.first.downcase))
-            puts "Executing multi-query for #{computers}"
+            logger.debug "Executing multi-query for #{computers}"
             ret = []
             computers.each do |c|
               out = run_shell(command, orig_opts.merge(computer_name: nil, _target_computer: c))
@@ -315,14 +315,20 @@ module Fog
             @connections['.'] = connection
             @connections['localhost'] = connection
           end
+          connection
         end
 
         def connection(host)
           c = @connections.find { |k,_v| k.downcase.start_with?(host.downcase) }
           return c[1] if c
 
-          # TODO: Ensure host is a FQDN, add a connection for it
-          raise NotImplementedError, "Can't dynamically add connections to additional computers"
+          # TODO: Support non-standard endpoints for additional hosts
+          unless host.include? '.'
+            host = "#{host}.#{URI.parse(@hyperv_endpoint).host.split('.').drop(1).join('.')}"
+          end
+          endpoint = "http://#{host}:5985/wsman"
+
+          connect(endpoint)
         end
       end
 
