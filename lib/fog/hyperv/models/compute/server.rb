@@ -59,6 +59,8 @@ module Fog
                         :hard_drives,
                         :floppy_drive
 
+        attr_reader :cluster, :computer
+
         %i(network_adapters dvd_drives floppy_drives hard_drives vhds).each do |attr|
           define_method attr do
             if persisted?
@@ -73,6 +75,13 @@ module Fog
           define_method "#{attr}=".to_sym do |data|
             attributes[attr] = Fog::Compute::Hyperv::ComPort.new(data) if data.is_a?(Hash)
           end
+        end
+
+        def initialize(attrs = {})
+          super
+
+          @cluster = attrs.delete :cluster
+          @computer = attrs.delete :computer
         end
 
         def bios

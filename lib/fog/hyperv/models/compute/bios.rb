@@ -10,6 +10,14 @@ module Fog
         # TODO? Enum values; :CD, :IDE, :LegacyNetworkAdapter, :Floppy (, :VHD, :NetworkAdapter)
         attribute :startup_order, type: :array
         attribute :vm_name, type: :string
+        
+        attr_reader :computer, :vm
+
+        def initialize(args = {})
+          super
+          @computer = args.delete :computer
+          @vm = args.delete :vm
+        end
 
         def save
           requires :computer_name, :vm_name

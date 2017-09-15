@@ -19,6 +19,9 @@ module Fog
       end
 
       def parent
+        return @vm if @vm
+        return @computer if @computer
+        return @cluster if @cluster
         return nil unless collection
         return collection.vm if collection.attributes.include? :vm
         return collection.computer if collection.attributes.include? :computer
