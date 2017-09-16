@@ -172,6 +172,10 @@ module Fog
           false
         end
 
+        def supports_multihop?
+          return [ :kerberos ].include? @hyperv_transport.to_s.downcase.to_sym
+        end
+
         def version
           @version ||= run_wql('SELECT Version FROM Win32_OperatingSystem', _namespace: 'root/cimv2/*')[:xml_fragment].first[:version] rescue \
             run_shell("$VMMS = if ([environment]::Is64BitProcess) { \"$($env:SystemRoot)\\System32\\vmms.exe\" } else { \"$($env:SystemRoot)\\Sysnative\\vmms.exe\" }\n(Get-Item $VMMS).VersionInfo.ProductVersion", _skip_json: true).stdout.strip
@@ -227,7 +231,10 @@ module Fog
           computers = [options.delete(:computer_name)].flatten.compact
           options = Fog::Hyperv.camelize(options) unless skip_camelize
 
-          if computers.length > 1 || (computers.length == 1 && !['.','localhost'].include?(computers.first.downcase))
+          if supports_multihop?
+            options[:computer_name] = computers
+            computer = '.'
+          elsif computers.length > 1 || (computers.length == 1 && !['.','localhost'].include?(computers.first.downcase))
             logger.debug "Executing multi-query for #{computers}"
             ret = []
             computers.each do |c|
