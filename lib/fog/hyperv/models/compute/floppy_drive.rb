@@ -26,8 +26,8 @@ module Fog
               vm_name: old.vm_name,
               passthru: true,
 
-              resource_pool_name: changed!(pool_name),
-              path: changed?(path) && (path || '$null'),
+              resource_pool_name: changed!(:pool_name),
+              path: changed?(:path) && (path || '$null'),
 
               _return_fields: self.class.attributes,
               _json_depth: 1

@@ -83,7 +83,7 @@ module Fog
                 passthru: true,
 
                 dynamic_mac_address: changed?(:dynamic_mac_address_enabled) && dynamic_mac_address_enabled, 
-                static_mac_address: (changed?(:mac_address) || changed?(:dynamic_mac_address_enabled)) && !dynamic_mac_address_enabled && mac_address,
+                static_mac_address: changed!(:mac_address) || ((changed!(:dynamic_mac_address_enabled) == false) && mac_address),
 
                 _return_fields: self.class.attributes,
                 _json_depth: 1

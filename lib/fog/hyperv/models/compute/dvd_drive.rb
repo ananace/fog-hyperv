@@ -30,10 +30,10 @@ module Fog
                 controller_location: old.controller_location,
                 passthru: true,
 
-                resource_pool_name: changed!(pool_name),
-                path: changed?(path) && (path || '$null'),
-                to_controller_number: changed!(controller_number),
-                to_controller_location: changed!(controller_location),
+                resource_pool_name: changed!(:pool_name),
+                path: changed?(:path) && (path || '$null'),
+                to_controller_number: changed!(:controller_number),
+                to_controller_location: changed!(:controller_location),
 
                 _return_fields: self.class.attributes,
                 _json_depth: 1

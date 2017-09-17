@@ -21,10 +21,9 @@ module Fog
               service.set_vm_switch(
                 computer_name: old.computer_name,
                 name: old.name,
-                passthru: true,
-
                 net_adapter_interface_description: old.net_adapter_interface_description,
                 switch_type: !old.net_adapter_interface_description && old.switch_type,
+                passthru: true,
 
                 default_flow_minimum_bandwidth_absolute: changed!(default_flow_minimum_bandwidth_absolute),
                 default_flow_minimum_bandwidth_weight: changed!(default_flow_minimum_bandwidth_weight),
@@ -37,7 +36,6 @@ module Fog
               service.new_vm_switch(
                 computer_name: computer_name,
                 name: name,
-
                 net_adapter_interface_description: net_adapter_interface_description,
                 notes: notes,
                 switch_type: !net_adapter_interface_description && switch_type,
