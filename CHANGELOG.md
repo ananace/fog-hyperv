@@ -1,3 +1,9 @@
+## v0.0.4 *unreleased*
+
+- Adds support for the Kerberos transport
+- Implements a first prototype for multi-hop when not using Kerberos/CredSSP
+- Fixes issues in the saving of a few models
+
 ## v0.0.3 2017-08-30
 
 - Fixes handling of BIOS/Firmware
