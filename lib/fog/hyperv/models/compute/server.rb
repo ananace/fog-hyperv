@@ -59,7 +59,7 @@ module Fog
                         :hard_drives,
                         :floppy_drive
 
-        attr_reader :cluster, :computer
+        attr_accessor :cluster_name
 
         %i(network_adapters dvd_drives floppy_drives hard_drives vhds).each do |attr|
           define_method attr do
@@ -94,6 +94,14 @@ module Fog
           end
         end
         alias firmware :bios
+
+        def cluster
+          @cluster ||= @service.clusters.get cluster_name if cluster_name
+        end
+
+        def computer
+          @computer ||= @service.hosts.get computer_name if computer_name
+        end
 
         alias vm_id :id
         alias vm_name :name
