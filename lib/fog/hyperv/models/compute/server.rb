@@ -95,14 +95,6 @@ module Fog
         end
         alias firmware :bios
 
-        def cluster
-          @cluster ||= @service.clusters.get cluster_name if cluster_name
-        end
-
-        def computer
-          @computer ||= @service.hosts.get computer_name if computer_name
-        end
-
         alias vm_id :id
         alias vm_name :name
 
