@@ -33,15 +33,21 @@ module Fog
       end
 
       def vm
-        @vm ||= service.servers.get vm_name if respond_to? :vm_name && vm_name
+        if respond_to?(:vm_name) && vm_name
+          @vm ||= service.servers.get vm_name
+        end
       end
 
       def computer
-        @computer ||= service.hosts.get computer_name if respond_to? :computer_name && computer_name
+        if respond_to?(:computer_name) && computer_name
+          @computer ||= service.hosts.get computer_name
+        end
       end
 
       def cluster
-        @cluster ||= service.clusters.get cluster_name if respond_to? :cluster_name && cluster_name
+        if respond_to?(:cluster_name) && cluster_name
+          @cluster ||= service.clusters.get cluster_name
+        end
       end
 
       private
