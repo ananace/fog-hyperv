@@ -45,6 +45,7 @@ module Fog
         attribute :com_port2
         attribute :dynamic_memory_enabled, type: :boolean, default: false
         attribute :generation, type: :integer, default: 1 # 1 => bios, 2 => uefi
+        attribute :is_clustered, type: :boolean, default: false
         attribute :state, type: :enum, values: VM_STATUS_ENUM_VALUES
         attribute :status, type: :string
         attribute :memory_assigned, type: :integer
