@@ -1,4 +1,4 @@
-## v0.0.4 *unreleased*
+## v0.0.4 2017-11-14
 
 - Adds support for the Kerberos transport
 - Implements a first prototype for multi-hop when not using Kerberos/CredSSP
