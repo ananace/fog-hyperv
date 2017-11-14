@@ -73,10 +73,11 @@ module Fog
       protected
 
       def creation_attributes
-        to_add = {}
-        to_add[:cluster] = cluster if cluster
-        to_add[:computer] = computer if computer
-        super.merge(to_add)
+        attrs = super
+        attrs[:cluster] = cluster if cluster
+        attrs[:computer] = computer if computer
+        attrs[:computer_name] = computer.name if computer
+        attrs
       end
 
       def search_attributes
@@ -116,10 +117,12 @@ module Fog
       protected
 
       def creation_attributes
-        to_add = {}
-        to_add[:vm] = vm if vm
+        attrs = super
+        attrs[:vm] = vm if vm
+        attrs[:computer_name] = vm.computer_name if vm && vm.computer_name
+        attrs[:cluster_name] = vm.cluster_name if vm && vm.cluster_name
 
-        super.merge to_add
+        attrs
       end
 
       def search_attributes
