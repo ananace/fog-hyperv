@@ -1,3 +1,7 @@
+## v0.0.5 2017-11-14
+
+- Remove lefover debugging outputs
+
 ## v0.0.4 2017-11-14
 
 - Adds support for the Kerberos transport

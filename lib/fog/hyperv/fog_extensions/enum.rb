@@ -25,10 +25,8 @@ module Fog
               # FIXME: Prepare a key comparison array in advance
               if new_#{name}.is_a?(Fixnum)
                 if _values.class.to_s == 'Array' # TODO: Better way to do class comparison in generated code
-                  puts "\#{_values} (\#{_values.class}) Is array"
                   raise Fog::Hyperv::Errors::ServiceError, "\#{new_#{name}} is not in the range (0..\#{_values.length - 1})" unless new_#{name} >= 0 && new_#{name} < _values.length
                 else
-                  puts "\#{_values} (\#{_values.class}) Is not array"
                   raise Fog::Hyperv::Errors::ServiceError, "\#{new_#{name}} is not one of \#{_values.is_a?(Hash) ? _values.keys : _values})" unless (_values.is_a?(Hash) ? _values.keys : _values).include? new_#{name}
                 end
 
@@ -36,7 +34,6 @@ module Fog
               elsif new_#{name}.nil?
                 attributes[:#{name}] = nil
               else
-                puts "Is string"
                 new_#{name} = new_#{name}.to_s.to_sym unless new_#{name}.is_a? String
                 raise Fog::Hyperv::Errors::ServiceError, "\#{new_#{name}} is not one of \#{_values.is_a?(Hash) ? _values.keys : _values})" unless (_values.is_a?(Hash) ? _values.keys : _values).include? new_#{name}
                 attributes[:#{name}] = new_#{name}
