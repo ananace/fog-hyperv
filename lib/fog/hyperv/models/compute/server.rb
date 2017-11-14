@@ -8,33 +8,33 @@ module Fog
         include Fog::Hyperv::ModelIncludes
 
         VM_STATUS_ENUM_VALUES = {
-          1     => :Unknown,
-          2     => :Running,
-          3     => :Off,
-          4     => :Stopping,
-          6     => :Saved,
-          9     => :Paused,
-          10    => :Starting,
-          11    => :Reset,
-          32773 => :Saving,
-          32776 => :Pausing,
-          32777 => :Resuming,
-          32779 => :FastSaved,
-          32780 => :FastSaving,
-          32781 => :ForceShutdown,
-          32782 => :ForceReboot,
-          32783 => :RunningCritical,
-          32784 => :OffCritical,
-          32785 => :StoppingCritical,
-          32786 => :SavedCritical,
-          32787 => :PausedCritical,
-          32788 => :StartingCritical,
-          32789 => :ResetCritical,
-          32790 => :SavingCritical,
-          32791 => :PausingCritical,
-          32792 => :ResumingCritical,
-          32793 => :FastSavedCritical,
-          32794 => :FastSavingCritical
+          :Unknown => 1,
+          :Running => 2,
+          :Off => 3,
+          :Stopping => 4,
+          :Saved => 6,
+          :Paused => 9,
+          :Starting => 10,
+          :Reset => 11,
+          :Saving => 32773,
+          :Pausing => 32776,
+          :Resuming => 32777,
+          :FastSaved => 32779,
+          :FastSaving => 32780,
+          :ForceShutdown => 32781,
+          :ForceReboot => 32782,
+          :RunningCritical => 32783,
+          :OffCritical => 32784,
+          :StoppingCritical => 32785,
+          :SavedCritical => 32786,
+          :PausedCritical => 32787,
+          :StartingCritical => 32788,
+          :ResetCritical => 32789,
+          :SavingCritical => 32790,
+          :PausingCritical => 32791,
+          :ResumingCritical => 32792,
+          :FastSavedCritical => 32793,
+          :FastSavingCritical => 32794,
         }.freeze
 
         identity :id, type: :string
@@ -56,9 +56,9 @@ module Fog
         attribute :processor_count, type: :integer, default: 1
 
         lazy_attributes :network_adapters,
-                        :dvd_drives,
-                        :hard_drives,
-                        :floppy_drive
+          :dvd_drives,
+          :hard_drives,
+          :floppy_drive
 
         attr_accessor :cluster_name
 
@@ -87,12 +87,12 @@ module Fog
 
         def bios
           @bios ||= begin
-            if generation == 1
-              Fog::Compute::Hyperv::Bios.new(service.get_vm_bios(computer_name: computer_name, vm_name: name).merge service: service)
-            elsif generation == 2
-              Fog::Compute::Hyperv::Firmware.new(service.get_vm_firmware(computer_name: computer_name, vm_name: name).merge service: service)
-            end
-          end
+                      if generation == 1
+                        Fog::Compute::Hyperv::Bios.new(service.get_vm_bios(computer_name: computer_name, vm_name: name).merge service: service)
+                      elsif generation == 2
+                        Fog::Compute::Hyperv::Firmware.new(service.get_vm_firmware(computer_name: computer_name, vm_name: name).merge service: service)
+                      end
+                    end
         end
         alias firmware :bios
 
@@ -147,25 +147,25 @@ module Fog
                 attributes.select { |k, _v| usable.include? k }
                 .merge(options)
                 .merge(_return_fields: self.class.attributes, _json_depth: 1)
-            else
-              service.set_vm options.merge(
-                computer_name: old.computer_name,
-                name: old.name,
-                passthru: true,
+          else
+            service.set_vm options.merge(
+              computer_name: old.computer_name,
+              name: old.name,
+              passthru: true,
 
-                processor_count: changed!(:processor_count),
-                dynamic_memory: changed?(:dynamic_memory_enabled) && dynamic_memory_enabled,
-                static_memory: changed?(:dynamic_memory_enabled) && !dynamic_memory_enabled,
-                memory_minimum_bytes: changed?(:memory_minimum) && dynamic_memory_enabled && memory_minimum,
-                memory_maximum_bytes: changed?(:memory_maximum) && dynamic_memory_enabled && memory_maximum,
-                memory_startup_bytes: changed!(:memory_startup),
-                notes: changed!(:notes),
-                new_name: changed!(:name),
+              processor_count: changed!(:processor_count),
+              dynamic_memory: changed?(:dynamic_memory_enabled) && dynamic_memory_enabled,
+              static_memory: changed?(:dynamic_memory_enabled) && !dynamic_memory_enabled,
+              memory_minimum_bytes: changed?(:memory_minimum) && dynamic_memory_enabled && memory_minimum,
+              memory_maximum_bytes: changed?(:memory_maximum) && dynamic_memory_enabled && memory_maximum,
+              memory_startup_bytes: changed!(:memory_startup),
+              notes: changed!(:notes),
+              new_name: changed!(:name),
 
-                _return_fields: self.class.attributes,
-                _json_depth: 1
-              )
-            end
+              _return_fields: self.class.attributes,
+              _json_depth: 1
+            )
+          end
 
           merge_attributes(data)
           @old = dup
