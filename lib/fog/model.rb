@@ -39,13 +39,13 @@ module Fog
       end
 
       def computer
-        if respond_to?(:computer_name) && computer_name
+        if @computer || (respond_to?(:computer_name) && computer_name)
           @computer ||= service.hosts.get computer_name
         end
       end
 
       def cluster
-        if respond_to?(:cluster_name) && cluster_name
+        if @cluster || (respond_to?(:cluster_name) && cluster_name)
           @cluster ||= service.clusters.get cluster_name
         end
       end
