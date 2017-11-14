@@ -12,13 +12,18 @@ module Fog
         model.class_eval <<-EOS, __FILE__, __LINE__
             def #{name}=(new_#{name})
               if new_#{name}.is_a?(Fixnum)
-                raise Fog::Hyperv::Errors::ServiceError, "\#{new_#{name}} is not in the range (0..#{values.length - 1})" unless new_#{name} >= 0 && new_#{name} < #{values.length}
+                if #{values}.is_a?(Array)
+                  raise Fog::Hyperv::Errors::ServiceError, "\#{new_#{name}} is not in the range (0..#{values.length - 1})" unless new_#{name} >= 0 && new_#{name} < #{values.length}
+                else
+                  raise Fog::Hyperv::Errors::ServiceError, "\#{new_#{name}} is not one of #{values.is_a?(Hash) ? values.keys : values})" unless #{(values.is_a?(Hash) ? values.keys : values)}.include? new_#{name}
+                end
+
                 attributes[:#{name}] = #{values}[new_#{name}]
               elsif new_#{name}.nil?
                 attributes[:#{name}] = nil
               else
                 new_#{name} = new_#{name}.to_s.to_sym unless new_#{name}.is_a? String
-                raise Fog::Hyperv::Errors::ServiceError, "\#{new_#{name}} is not one of #{values.is_a?(Hash) ? values.values : values})" unless #{(values.is_a?(Hash) ? values.values : values)}.include? new_#{name}
+                raise Fog::Hyperv::Errors::ServiceError, "\#{new_#{name}} is not one of #{values.is_a?(Hash) ? values.keys : values})" unless #{(values.is_a?(Hash) ? values.keys : values)}.include? new_#{name}
                 attributes[:#{name}] = new_#{name}
               end
             end
