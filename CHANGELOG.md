@@ -3,6 +3,8 @@
 - Adds support for the Kerberos transport
 - Implements a first prototype for multi-hop when not using Kerberos/CredSSP
 - Fixes issues in the saving of a few models
+- Fixes a major issue when a VM ends up in a state with a large numerical value
+  - Due to an issue in the enum lookup where input validity checking assumed hashes where arrays
 
 ## v0.0.3 2017-08-30
 
