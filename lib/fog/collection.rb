@@ -70,6 +70,12 @@ module Fog
       attr_accessor :cluster
       attr_accessor :computer
 
+      def new(attributes = {})
+        object = super
+        object.computer_name ||= computer.name if computer && object.respond_to?(:computer_name)
+        object
+      end
+
       protected
 
       def creation_attributes
@@ -103,6 +109,7 @@ module Fog
 
       def new(attributes = {})
         object = super
+        object.computer_name ||= vm.computer_name if vm && object.respond_to?(:computer_name)
         # Ensure both ID and Name are populated, regardless of `match_on`
         object.vm_id ||= vm.id if vm && object.respond_to?(:vm_id)
         object.vm_name ||= vm.name if vm && object.respond_to?(:vm_name)
