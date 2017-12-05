@@ -178,6 +178,9 @@ module Fog
 
         def supports_clusters?
           run_wql('SELECT Name FROM MSCluster_ResourceGroup', _namespace: 'root/mscluster/*')[:xml_fragment] && true
+        rescue => e
+          logger.debug "Cluster support checking failed with #{e.class}: #{e.message}"
+          false
         end
 
         def version
