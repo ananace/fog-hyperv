@@ -176,6 +176,10 @@ module Fog
           return [ :kerberos ].include? @hyperv_transport.to_s.downcase.to_sym
         end
 
+        def supports_clusters?
+          run_wql('SELECT Name FROM MSCluster_ResourceGroup', _namespace: 'root/mscluster/*')[:xml_fragment] && true
+        end
+
         def version
           @version ||= run_wql('SELECT Version FROM Win32_OperatingSystem', _namespace: 'root/cimv2/*')[:xml_fragment].first[:version] rescue \
             run_shell("$VMMS = if ([environment]::Is64BitProcess) { \"$($env:SystemRoot)\\System32\\vmms.exe\" } else { \"$($env:SystemRoot)\\Sysnative\\vmms.exe\" }\n(Get-Item $VMMS).VersionInfo.ProductVersion", _skip_json: true).stdout.strip
