@@ -3,6 +3,7 @@
 - Ensure that computer and cluster names are always present in collections
 - Allow caching direct assignment of computer/cluster
 - More enum fixes to standardise key and value types
+- Add a check for cluster support
 
 ## v0.0.5 2017-11-14
 
