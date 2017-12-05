@@ -165,7 +165,7 @@ module Fog
           if local?
             run_shell('Get-VMHost', _return_fields: :name) && true
           else
-            run_wql('SELECT Name FROM Msvm_ComputerSystem WHERE Caption = "Hosting Computer System"') && true
+            run_wql('SELECT Name FROM Msvm_ComputerSystem WHERE Caption = "Hosting Computer System"')[:xml_fragment] && true
           end
         rescue => e
           logger.debug "Validation failed with #{e.class}; #{e.message}"
