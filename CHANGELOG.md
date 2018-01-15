@@ -1,4 +1,4 @@
-## v0.0.6 **Unreleased**
+## v0.0.6 2018-01-15
 
 - Ensure that computer and cluster names are always present in collections
 - Allow caching direct assignment of computer/cluster
