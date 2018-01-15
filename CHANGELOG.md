@@ -4,6 +4,7 @@
 - Allow caching direct assignment of computer/cluster
 - More enum fixes to standardise key and value types
 - Add a check for cluster support
+- Make sure to not pass along internal variables to the PSRemoting shell
 
 ## v0.0.5 2017-11-14
 
