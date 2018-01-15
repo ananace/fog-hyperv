@@ -90,6 +90,7 @@ module Fog
       request :set_vm_hard_disk_drive
       request :set_vm_firmware
       request :set_vm_network_adapter
+      request :set_vm_network_adapter_vlan
       request :set_vm_switch
       request :start_vm
       request :stop_vm

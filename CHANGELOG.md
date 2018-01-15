@@ -1,3 +1,7 @@
+## v0.0.7 **Unreleased**
+
+- Add a temporary VM-wide VLAN assignment method
+
 ## v0.0.6 2018-01-15
 
 - Ensure that computer and cluster names are always present in collections

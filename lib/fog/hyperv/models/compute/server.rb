@@ -99,6 +99,22 @@ module Fog
         alias vm_id :id
         alias vm_name :name
 
+        # TODO: Do this properly
+        def set_vlan(vlan_id, options = {})
+          requires :name, :computer_name
+          if vlan_id
+            options[:access] = true
+            options[:vlan_id] = vlan_id
+          else
+            options[:untagged] = true
+          end
+
+          service.set_vm_network_adapter_vlan options.merge(
+            vm_name: name,
+            computer_name: computer_name
+          )
+        end
+
         def start(options = {})
           requires :name, :computer_name
           service.start_vm options.merge(
