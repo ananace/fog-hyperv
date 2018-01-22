@@ -1,4 +1,4 @@
-## v0.0.7 **Unreleased**
+## v0.0.7 2018-01-22
 
 - Add a temporary VM-wide VLAN assignment method
 - Add the missing SetVM-NetworkAdapterVlan file
