@@ -237,7 +237,7 @@ module Fog
           skip_uncamelize = options.delete :_skip_uncamelize
           computer = options.delete(:_target_computer) || '.'
           computers = [options.delete(:computer_name)].flatten.compact
-          options.delete_if { |o| o.start_with? '_' }
+          options.delete_if { |o| o.to_s.start_with? '_' }
           options = Fog::Hyperv.camelize(options) unless skip_camelize
 
           if supports_multihop?
