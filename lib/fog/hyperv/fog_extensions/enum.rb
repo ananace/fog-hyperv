@@ -26,11 +26,11 @@ module Fog
               if new_#{name}.is_a?(Fixnum)
                 if _values.class.to_s == 'Array' # TODO: Better way to do class comparison in generated code
                   raise Fog::Hyperv::Errors::ServiceError, "\#{new_#{name}} is not in the range (0..\#{_values.length - 1})" unless new_#{name} >= 0 && new_#{name} < _values.length
+                  attributes[:#{name}] = _values[new_#{name}]
                 else
                   raise Fog::Hyperv::Errors::ServiceError, "\#{new_#{name}} is not one of \#{_values.is_a?(Hash) ? _values.values : _values})" unless (_values.is_a?(Hash) ? _values.values : _values).include? new_#{name}
+                  attributes[:#{name}] = _values.key(new_#{name})
                 end
-
-                attributes[:#{name}] = _values[new_#{name}]
               elsif new_#{name}.nil?
                 attributes[:#{name}] = nil
               else
