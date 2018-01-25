@@ -1,3 +1,9 @@
+## v0.0.8 **Unreleased**
+
+- Fix issues due to a lost `to_s` call
+- Fix enum handling
+- Improve Ruby 2.4 support
+
 ## v0.0.7 2018-01-22
 
 - Add a temporary VM-wide VLAN assignment method
