@@ -47,14 +47,16 @@ module Fog
         model.class_eval <<-EOS, __FILE__, __LINE__
             def #{name}_num
               _values = #{name}_values
-              return nil if self.#{name}.nil?
-              if self.#{name}.is_a?(Numeric)
-                self.#{name}
+              _attrib = attributes[:#{name}]
+
+              return nil if _attrib.nil?
+              if _attrib.is_a?(Numeric)
+                _attrib
               else
                 if _values.is_a?(Hash)
-                  _values.key(self.#{name})
+                  _values.send(:[],_attrib)
                 else
-                  _values.index(self.#{name})
+                  _values.index(_attrib)
                 end
               end
             end
