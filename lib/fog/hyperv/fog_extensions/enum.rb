@@ -23,7 +23,7 @@ module Fog
             def #{name}=(new_#{name})
               _values = #{name}_values
               # FIXME: Prepare a key comparison array in advance
-              if new_#{name}.is_a?(Integer)
+              if new_#{name}.is_a?(Numeric)
                 if _values.class.to_s == 'Array' # TODO: Better way to do class comparison in generated code
                   raise Fog::Hyperv::Errors::ServiceError, "\#{new_#{name}} is not in the range (0..\#{_values.length - 1})" unless new_#{name} >= 0 && new_#{name} < _values.length
                   attributes[:#{name}] = _values[new_#{name}]
@@ -48,7 +48,7 @@ module Fog
             def #{name}_num
               _values = #{name}_values
               return nil if self.#{name}.nil?
-              if self.#{name}.is_a?(Fixnum)
+              if self.#{name}.is_a?(Numeric)
                 self.#{name}
               else
                 if _values.is_a?(Hash)
