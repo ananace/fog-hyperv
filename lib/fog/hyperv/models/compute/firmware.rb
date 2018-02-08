@@ -6,10 +6,10 @@ module Fog
 
         attribute :boot_order
         attribute :computer_name
-        attribute :console_mode, type: :enum, values: [ :Default, :COM1, :COM2, :None ]
+        attribute :console_mode, type: :enum, values: %i[Default COM1 COM2 None]
         # attribute :is_deleted
-        attribute :preferred_network_boot_protocol, type: :enum, values: [ :IPv4, :IPv6 ]
-        attribute :secure_boot, type: :enum, values: [ :On, :Off ]
+        attribute :preferred_network_boot_protocol, type: :enum, values: %i[IPv4 IPv6]
+        attribute :secure_boot, type: :enum, values: %i[On Off]
         attribute :vm_name
 
         def save

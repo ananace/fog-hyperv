@@ -2,26 +2,26 @@ module Fog
   module Compute
     class Hyperv < Fog::Service
       STATUS_ENUM_VALUES = [
-        :Unknown,              # 0
-        :Other,                # 1
-        :Ok,                   # 2
-        :Degraded,             # 3
-        :Stressed,             # 4
-        :PredictiveFailure,    # 5
-        :Error,                # 6
-        :NonRecoverableError,  # 7
-        :Starting,             # 8
-        :Stopping,             # 9
-        :Stopped,              # 10
-        :InService,            # 11
-        :NoContact,            # 12
-        :LostCommunication,    # 13
-        :Aborted,              # 14
-        :Dormant,              # 15
-        :SupportingEntity,     # 16
-        :Completed,            # 17
-        :PowerMode             # 18
-        # :ProtocolVersion     # 32775
+        Unknown: 0,
+        Other: 1,
+        Ok: 2,
+        Degraded: 3,
+        Stressed: 4,
+        PredictiveFailure: 5,
+        Error: 6,
+        NonRecoverableError: 7,
+        Starting: 8,
+        Stopping: 9,
+        Stopped: 0,
+        InService: 1,
+        NoContact: 2,
+        LostCommunication: 3,
+        Aborted: 4,
+        Dormant: 5,
+        SupportingEntity: 6,
+        Completed: 7,
+        PowerMode: 8,
+        ProtocolVersion: 32775,
       ].freeze
 
       requires :hyperv_username

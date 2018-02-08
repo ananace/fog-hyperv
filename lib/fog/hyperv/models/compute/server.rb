@@ -8,33 +8,33 @@ module Fog
         include Fog::Hyperv::ModelIncludes
 
         VM_STATUS_ENUM_VALUES = {
-          :Unknown => 1,
-          :Running => 2,
-          :Off => 3,
-          :Stopping => 4,
-          :Saved => 6,
-          :Paused => 9,
-          :Starting => 10,
-          :Reset => 11,
-          :Saving => 32773,
-          :Pausing => 32776,
-          :Resuming => 32777,
-          :FastSaved => 32779,
-          :FastSaving => 32780,
-          :ForceShutdown => 32781,
-          :ForceReboot => 32782,
-          :RunningCritical => 32783,
-          :OffCritical => 32784,
-          :StoppingCritical => 32785,
-          :SavedCritical => 32786,
-          :PausedCritical => 32787,
-          :StartingCritical => 32788,
-          :ResetCritical => 32789,
-          :SavingCritical => 32790,
-          :PausingCritical => 32791,
-          :ResumingCritical => 32792,
-          :FastSavedCritical => 32793,
-          :FastSavingCritical => 32794,
+          Unknown: 1,
+          Running: 2,
+          Off: 3,
+          Stopping: 4,
+          Saved: 6,
+          Paused: 9,
+          Starting: 10,
+          Reset: 11,
+          Saving: 32773,
+          Pausing: 32776,
+          Resuming: 32777,
+          FastSaved: 32779,
+          FastSaving: 32780,
+          ForceShutdown: 32781,
+          ForceReboot: 32782,
+          RunningCritical: 32783,
+          OffCritical: 32784,
+          StoppingCritical: 32785,
+          SavedCritical: 32786,
+          PausedCritical: 32787,
+          StartingCritical: 32788,
+          ResetCritical: 32789,
+          SavingCritical: 32790,
+          PausingCritical: 32791,
+          ResumingCritical: 32792,
+          FastSavedCritical: 32793,
+          FastSavingCritical: 32794,
         }.freeze
 
         identity :id, type: :string
@@ -49,7 +49,7 @@ module Fog
         attribute :state, type: :enum, values: VM_STATUS_ENUM_VALUES
         attribute :status, type: :string
         attribute :memory_assigned, type: :integer
-        attribute :memory_maximum, type: :integer, default: 171_798_691_84
+        attribute :memory_maximum, type: :integer, default: 17_179_869_184
         attribute :memory_minimum, type: :integer, default: 536_870_912
         attribute :memory_startup, type: :integer, default: 536_870_912
         attribute :notes, type: :string
