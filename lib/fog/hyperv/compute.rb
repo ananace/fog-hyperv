@@ -267,10 +267,7 @@ module Fog
           commandline = "#{command_args} #{suffix} #{return_fields} #{"| ConvertTo-Json -Compress #{"-Depth #{json_depth}" if json_depth}" unless skip_json}"
           logger.debug "PS; >>> #{commandline}"
 
-          out = nil # OpenStruct.new stdout: '',
-          #                          stderr: '',
-          #                          exitcode: -1
-
+          out = nil
           if local?
             commanddata = [
               'powershell',
@@ -280,6 +277,9 @@ module Fog
               commandline
             ]
             begin
+              out = OpenStruct.new stdout: '',
+                                   stderr: '',
+                                   exitcode: -1
               out.stdout, out.stderr, out.exitcode = Open3.capture3(*commanddata)
               out.exitcode = out.exitcode.exitstatus
             rescue StandardError => ex
@@ -288,6 +288,8 @@ module Fog
             end
           else
             connection(computer).shell(:powershell) do |shell|
+              # TODO: Reuse shell?
+              # XXX   Multiple commands in one invokation?
               out = shell.run(commandline)
             end
           end
@@ -339,6 +341,7 @@ module Fog
           return c[1] if c
 
           # TODO: Support non-standard endpoints for additional hosts
+          # TODO: Get Windows to provide FQDN for all other hosts
           unless host.include? '.'
             host = "#{host}.#{URI.parse(@hyperv_endpoint).host.split('.').drop(1).join('.')}"
           end
