@@ -7,10 +7,7 @@ module Fog
         @values = options.fetch(:values, [])
 
         raise Fog::Hyperv::Errors::ServiceError, "#{values} is not a valid array or hash" \
-          unless values.is_a?(Array) || \
-            (values.is_a?(Hash) && \
-             values.keys.all? { |k| k.is_a? Symbol } && \
-             values.values.all? { |v| v.is_a? Numeric })
+          unless values.class.to_s == 'Array' || values.class.to_s == 'Hash'
 
         super
       end
