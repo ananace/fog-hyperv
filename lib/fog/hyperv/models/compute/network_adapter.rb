@@ -131,7 +131,8 @@ module Fog
           data = collection.get(
             name,
             computer_name: computer_name,
-            vm_name: vm_name
+            vm_name: vm_name,
+            _suffix: "| Where Id -Eq '#{id}'"
           )
           merge_attributes(data.attributes)
           @old = data
