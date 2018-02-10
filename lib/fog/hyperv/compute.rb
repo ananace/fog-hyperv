@@ -232,7 +232,7 @@ module Fog
           skip_json = options.delete :_skip_json
           skip_camelize = options.delete :_skip_camelize
           skip_uncamelize = options.delete :_skip_uncamelize
-          bake_optmap = options.delete(:_bake_optmap) || true
+          bake_optmap = options.delete(:_bake_optmap) {|_| true }
           computer = options.delete(:_target_computer) || '.'
           computers = [options.delete(:computer_name)].flatten.compact
           options.delete_if { |o| o.to_s.start_with? '_' }
