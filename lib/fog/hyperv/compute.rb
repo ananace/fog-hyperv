@@ -192,10 +192,7 @@ module Fog
         private
 
         def hash_to_optmap(options = {})
-          args = options.reject { |k, v| v.nil? || v.is_a?(FalseClass) || k.to_s.start_with?('_') }.map do |k, v|
-            "'#{k}'=#{Fog::Hyperv.shell_quoted(v, true)}"
-          end
-          "@{#{args.join ';'}}"
+          "echo '#{options.to_json}' | ConvertFrom-Json"
         end
 
         def run_shell_with_vm(command, vm_options, options = {})
@@ -235,7 +232,7 @@ module Fog
           skip_json = options.delete :_skip_json
           skip_camelize = options.delete :_skip_camelize
           skip_uncamelize = options.delete :_skip_uncamelize
-          bake_optmap = options.delete :_bake_optmap
+          bake_optmap = options.delete(:_bake_optmap) || true
           computer = options.delete(:_target_computer) || '.'
           computers = [options.delete(:computer_name)].flatten.compact
           options.delete_if { |o| o.to_s.start_with? '_' }
