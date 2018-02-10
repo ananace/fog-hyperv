@@ -191,6 +191,8 @@ module Fog
 
         def ps_version
           @ps_version ||= run_shell('$PSVersionTable.PSVersion')
+        end
+
         private
 
         def hash_to_optmap(options = {})
@@ -214,9 +216,9 @@ module Fog
           else
             args = options.reject { |k, v| v.nil? || v.is_a?(FalseClass) || k.to_s.start_with?('_') }.map do |k, v|
               "'#{k}'=#{Fog::Hyperv.shell_quoted(v, true)}"
-             end
+            end
 
-             "@{#{args.join ';'}}"
+            "@{#{args.join ';'}}"
           end
         end
 
