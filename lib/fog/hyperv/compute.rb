@@ -199,15 +199,16 @@ module Fog
             if ps_version[:major] >= 6
               "$Args = ConvertFrom-Json -AsHashtable '#{Fog::JSON.encode options}'"
             else
-              <<-EOS
-$JsonParameters = ConvertFrom-Json '#{Fog::JSON.encode options}'
-$oDataHash = @{}
-$JsonParameters.parameters | Get-Member -MemberType NoteProperty | ForEach-Object{
-    $oDataHash += @{
-        $_.name = $JsonParameters.parameters."$($_.name)" | Select -ExpandProperty Value
-    }
-}
-$Args = $oDataHash
+              <<~EOS
+                $JsonParameters = ConvertFrom-Json '#{Fog::JSON.encode options}'
+                $oDataHash = @{}
+                $JsonParameters.parameters | Get-Member -MemberType NoteProperty | ForEach-Object{
+                  $oDataHash += @{
+                    $_.name = $JsonParameters.parameters."$($_.name)" | Select -ExpandProperty Value
+                  }
+                }
+
+                $Args = $oDataHash
               EOS
             end
           else
