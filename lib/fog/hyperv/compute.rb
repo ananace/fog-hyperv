@@ -189,12 +189,27 @@ module Fog
             run_shell("$VMMS = if ([environment]::Is64BitProcess) { \"$($env:SystemRoot)\\System32\\vmms.exe\" } else { \"$($env:SystemRoot)\\Sysnative\\vmms.exe\" }\n(Get-Item $VMMS).VersionInfo.ProductVersion", _skip_json: true).stdout.strip
         end
 
+        def ps_version
+          @ps_version ||= run_shell('$PSVersionTable.PSVersion')
         private
 
         def hash_to_optmap(options = {})
           bake_json = options.delete :_bake_json
           if bake_json
-            "(echo '#{Fog::JSON.encode options}' | ConvertFrom-Json)"
+            if ps_version[:major] >= 6
+              "$Args = ConvertFrom-Json -AsHashtable '#{Fog::JSON.encode options}'"
+            else
+              <<-EOS
+$JsonParameters = ConvertFrom-Json '#{Fog::JSON.encode options}'
+$oDataHash = @{}
+$JsonParameters.parameters | Get-Member -MemberType NoteProperty | ForEach-Object{
+    $oDataHash += @{
+        $_.name = $JsonParameters.parameters."$($_.name)" | Select -ExpandProperty Value
+    }
+}
+$Args = $oDataHash
+              EOS
+            end
           else
             args = options.reject { |k, v| v.nil? || v.is_a?(FalseClass) || k.to_s.start_with?('_') }.map do |k, v|
               "'#{k}'=#{Fog::Hyperv.shell_quoted(v, true)}"
@@ -271,7 +286,7 @@ module Fog
           end
 
           if bake_optmap
-            command_args = "$Args = #{hash_to_optmap options.merge(_bake_json: bake_json)}\n#{command} @Args"
+            command_args = "#{hash_to_optmap options.merge(_bake_json: bake_json)}\n#{command} @Args"
           else
             command_args = "#{command} #{args.join ' ' unless args.empty?}"
           end
