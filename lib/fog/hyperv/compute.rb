@@ -192,7 +192,7 @@ module Fog
         private
 
         def hash_to_optmap(options = {})
-          "echo '#{Fog::JSON.encode options}' | ConvertFrom-Json"
+          "(echo '#{Fog::JSON.encode options}' | ConvertFrom-Json)"
         end
 
         def run_shell_with_vm(command, vm_options, options = {})
