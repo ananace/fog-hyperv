@@ -212,7 +212,7 @@ module Fog
               "'#{k}'=#{Fog::Hyperv.shell_quoted(v, true)}"
             end
 
-            "@{#{args.join ';'}}"
+            "$Args = @{#{args.join ';'}}"
           end
         end
 
