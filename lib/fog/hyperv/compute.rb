@@ -192,7 +192,7 @@ module Fog
         end
 
         def ps_version
-          @ps_version ||= run_shell('$PSVersionTable.PSVersion')
+          @ps_version ||= run_shell('$PSVersionTable.PSVersion', _bake_optmap: false, _bake_json: false)
         end
 
         private
