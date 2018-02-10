@@ -27,6 +27,9 @@ module Fog
           @collections = true
 
           Fog::Compute::Hyperv.collections.each do |coll|
+            # Hosts don't have host collections
+            next if coll == :hosts
+
             coll_name = coll.to_s.split('_').map(&:capitalize).join
             klass = Fog::Compute::Hyperv.const_get(coll_name)
             next if klass.requires?(:vm)
