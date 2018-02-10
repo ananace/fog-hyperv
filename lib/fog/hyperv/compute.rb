@@ -235,6 +235,7 @@ module Fog
           skip_json = options.delete :_skip_json
           skip_camelize = options.delete :_skip_camelize
           skip_uncamelize = options.delete :_skip_uncamelize
+          bake_optmap = options.delete :_bake_optmap
           computer = options.delete(:_target_computer) || '.'
           computers = [options.delete(:computer_name)].flatten.compact
           options.delete_if { |o| o.to_s.start_with? '_' }
@@ -258,12 +259,15 @@ module Fog
             return ret
           end
 
-          # commandline = "$Args = #{hash_to_optmap options}\n$Ret = #{command} @Args#{"\n$Ret #{return_fields} | ConvertTo-Json -Compress #{"-Depth #{json_depth}" if json_depth}" unless skip_json}"
-          # puts " > #{commandline.split("\n").join "\n > "}" if @hyperv_debug
           args = options.reject { |k, v| v.nil? || v.is_a?(FalseClass) || k.to_s.start_with?('_') || (v.is_a?(String) && v.empty?) }.map do |k, v|
             "-#{k} #{Fog::Hyperv.shell_quoted v unless v.is_a?(TrueClass)}"
           end
-          command_args = "#{command} #{args.join ' ' unless args.empty?}"
+
+          if bake_optmap
+            command_args = "$Args = #{hash_to_optmap options}\n#{command} @Args"
+          else
+            command_args = "#{command} #{args.join ' ' unless args.empty?}"
+          end
           commandline = "#{command_args} #{suffix} #{return_fields} #{"| ConvertTo-Json -Compress #{"-Depth #{json_depth}" if json_depth}" unless skip_json}"
           logger.debug "PS; >>> #{commandline}"
 
