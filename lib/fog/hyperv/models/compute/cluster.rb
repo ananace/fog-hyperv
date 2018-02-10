@@ -33,6 +33,10 @@ module Fog
             _return_fields: self.class.attributes,
             _json_depth: 1
           )
+
+          @nodes = nil
+          @hosts = nil
+
           merge_attributes(data.attributes)
           self
         end
