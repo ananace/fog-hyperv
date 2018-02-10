@@ -135,6 +135,8 @@ module Fog
       class Real < Shared
         attr_reader :logger
 
+        attr_accessor :bake_optmap, :bake_json
+
         def initialize(options = {})
           # require 'ostruct'
           require 'fog/json'
@@ -253,8 +255,8 @@ module Fog
           skip_json = options.delete :_skip_json
           skip_camelize = options.delete :_skip_camelize
           skip_uncamelize = options.delete :_skip_uncamelize
-          bake_optmap = options.delete(:_bake_optmap) {|_| false }
-          bake_json = options.delete :_bake_json
+          bake_optmap = options.delete(:_bake_optmap) {|_| @bake_optmap }
+          bake_json = options.delete(:_bake_json) {|_| @bake_json }
           computer = options.delete(:_target_computer) || '.'
           computers = [options.delete(:computer_name)].flatten.compact
           options.delete_if { |o| o.to_s.start_with? '_' }
