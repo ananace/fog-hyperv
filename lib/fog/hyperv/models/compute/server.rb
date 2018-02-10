@@ -163,25 +163,25 @@ module Fog
                 attributes.select { |k, _v| usable.include? k }
                 .merge(options)
                 .merge(_return_fields: self.class.attributes, _json_depth: 1)
-          else
-            service.set_vm options.merge(
-              computer_name: old.computer_name,
-              name: old.name,
-              passthru: true,
+            else
+              service.set_vm options.merge(
+                computer_name: old.computer_name,
+                name: old.name,
+                passthru: true,
 
-              processor_count: changed!(:processor_count),
-              dynamic_memory: changed?(:dynamic_memory_enabled) && dynamic_memory_enabled,
-              static_memory: changed?(:dynamic_memory_enabled) && !dynamic_memory_enabled,
-              memory_minimum_bytes: changed?(:memory_minimum) && dynamic_memory_enabled && memory_minimum,
-              memory_maximum_bytes: changed?(:memory_maximum) && dynamic_memory_enabled && memory_maximum,
-              memory_startup_bytes: changed!(:memory_startup),
-              notes: changed!(:notes),
-              new_name: changed!(:name),
+                processor_count: changed!(:processor_count),
+                dynamic_memory: changed?(:dynamic_memory_enabled) && dynamic_memory_enabled,
+                static_memory: changed?(:dynamic_memory_enabled) && !dynamic_memory_enabled,
+                memory_minimum_bytes: changed?(:memory_minimum) && dynamic_memory_enabled && memory_minimum,
+                memory_maximum_bytes: changed?(:memory_maximum) && dynamic_memory_enabled && memory_maximum,
+                memory_startup_bytes: changed!(:memory_startup),
+                notes: changed!(:notes),
+                new_name: changed!(:name),
 
-              _return_fields: self.class.attributes,
-              _json_depth: 1
-            )
-          end
+                _return_fields: self.class.attributes,
+                _json_depth: 1
+              )
+            end
 
           merge_attributes(data)
           @old = dup
