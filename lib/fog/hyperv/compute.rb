@@ -192,7 +192,16 @@ module Fog
         private
 
         def hash_to_optmap(options = {})
-          "(echo '#{Fog::JSON.encode options}' | ConvertFrom-Json)"
+          bake_json = options.delete :_bake_json
+          if bake_json
+            "(echo '#{Fog::JSON.encode options}' | ConvertFrom-Json)"
+          else
+            args = options.reject { |k, v| v.nil? || v.is_a?(FalseClass) || k.to_s.start_with?('_') }.map do |k, v|
+              "'#{k}'=#{Fog::Hyperv.shell_quoted(v, true)}"
+             end
+
+             "@{#{args.join ';'}}"
+          end
         end
 
         def run_shell_with_vm(command, vm_options, options = {})
@@ -233,6 +242,7 @@ module Fog
           skip_camelize = options.delete :_skip_camelize
           skip_uncamelize = options.delete :_skip_uncamelize
           bake_optmap = options.delete(:_bake_optmap) {|_| false }
+          bake_json = options.delete :_bake_json
           computer = options.delete(:_target_computer) || '.'
           computers = [options.delete(:computer_name)].flatten.compact
           options.delete_if { |o| o.to_s.start_with? '_' }
@@ -261,7 +271,7 @@ module Fog
           end
 
           if bake_optmap
-            command_args = "$Args = #{hash_to_optmap options}\n#{command} @Args"
+            command_args = "$Args = #{hash_to_optmap options.merge(_bake_json: bake_json)}\n#{command} @Args"
           else
             command_args = "#{command} #{args.join ' ' unless args.empty?}"
           end
