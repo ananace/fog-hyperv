@@ -202,15 +202,9 @@ module Fog
               "$Args = ConvertFrom-Json -AsHashtable '#{Fog::JSON.encode options}'"
             else
               <<~EOS
-                $JsonParameters = ConvertFrom-Json '#{Fog::JSON.encode options}'
-                $oDataHash = @{}
-                $JsonParameters.parameters | Get-Member -MemberType NoteProperty | ForEach-Object{
-                  $oDataHash += @{
-                    $_.name = $JsonParameters.parameters."$($_.name)" | Select -ExpandProperty Value
-                  }
-                }
-
-                $Args = $oDataHash
+              $JsonObject = '#{Fog::JSON.encode options}'
+              $JsonParameters = ConvertFrom-Json -InputObject $JsonObject
+              $Args = $JsonParameters.psobject.properties | foreach -begin {$h=@{}} -process {$h."$($_.Name)" = $_.Value} -end {$h}
               EOS
             end
           else
