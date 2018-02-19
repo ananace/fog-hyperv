@@ -203,7 +203,7 @@ module Fog
             if ps_version[:major] >= 6
               "$Args = ConvertFrom-Json -AsHashtable '#{Fog::JSON.encode options}'"
             else
-              <<~EOS
+              <<-EOS
               $JsonObject = '#{Fog::JSON.encode options}'
               $JsonParameters = ConvertFrom-Json -InputObject $JsonObject
               $Args = $JsonParameters.psobject.properties | foreach -begin {$h=@{}} -process {$h."$($_.Name)" = $_.Value} -end {$h}
