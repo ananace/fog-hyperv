@@ -4,6 +4,7 @@
 - Fix enum handling
 - Improve Ruby 2.4 support
 - Add support for baking PS option maps in commands
+- Default to using the cluster if one, and only one, is available
 
 ## v0.0.7 2018-01-22
 
