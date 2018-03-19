@@ -69,6 +69,7 @@ module Fog
                 passthru: true,
 
                 dynamic_mac_address: dynamic_mac_address_enabled,
+                is_legacy: !!is_legacy,
                 static_mac_address: !dynamic_mac_address_enabled && mac_address,
                 switch_name: switch_name,
 

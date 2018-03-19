@@ -255,11 +255,14 @@ module Fog
           skip_json = options.delete :_skip_json
           skip_camelize = options.delete :_skip_camelize
           skip_uncamelize = options.delete :_skip_uncamelize
+          always_include = options.delete(:_always_include) {|_| []}
           bake_optmap = options.delete(:_bake_optmap) {|_| @bake_optmap }
           bake_json = options.delete(:_bake_json) {|_| @bake_json }
           computer = options.delete(:_target_computer) || '.'
           computers = [options.delete(:computer_name)].flatten.compact
-          options.delete_if { |o| o.to_s.start_with? '_' }
+          options.delete_if { |o| o.to_s.start_with?('_') }
+
+          always_include = Fog::Hyperv.camelize(always_include) unless skip_camelize
           options = Fog::Hyperv.camelize(options) unless skip_camelize
 
           if supports_multihop?
@@ -280,8 +283,8 @@ module Fog
             return ret
           end
 
-          args = options.reject { |k, v| v.nil? || v.is_a?(FalseClass) || k.to_s.start_with?('_') || (v.is_a?(String) && v.empty?) }.map do |k, v|
-            "-#{k} #{Fog::Hyperv.shell_quoted v unless v.is_a?(TrueClass)}"
+          args = options.reject { |k, v| !always_include.include?(k) && (v.nil? || v.is_a?(FalseClass) || k.to_s.start_with?('_') || (v.is_a?(String) && v.empty?)) }.map do |k, v|
+            "-#{k} #{Fog::Hyperv.shell_quoted v if !v.is_a?(TrueClass) || always_include.include?(k)}"
           end
 
           if bake_optmap
