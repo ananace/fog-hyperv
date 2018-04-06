@@ -1,4 +1,4 @@
-## v0.0.8 **Unreleased**
+## v0.0.8 2018-04-06
 
 - Fix issues due to a lost `to_s` call
 - Fix enum handling
