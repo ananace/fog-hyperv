@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
 
   spec.summary       = 'Module for the `fog` gem to support Microsoft Hyper-V.'
   spec.description   = 'This library wraps Hyper-V in the `fog` concepts.'
-  spec.homepage      = 'https://github.com/ace13/fog-hyperv'
+  spec.homepage      = 'https://github.com/ananace/fog-hyperv'
   spec.license       = 'MIT'
 
   spec.files         = `git ls-files -z`.split("\x0")
