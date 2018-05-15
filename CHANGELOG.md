@@ -1,3 +1,7 @@
+## v0.0.9 2018-05-15
+
+- Add support for Fog-Core v2.0+
+
 ## v0.0.8 2018-04-06
 
 - Fix issues due to a lost `to_s` call
