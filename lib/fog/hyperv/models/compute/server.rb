@@ -213,7 +213,7 @@ module Fog
 
         def public_ip_address
           ip_addresses
-            .reject { |a| a =~ /^(169\.254|fe80)/ }
+            .reject { |a| a =~ /^(169\.254|fe[89ab][0-9a-f])/ }
             .first
         end
       end
