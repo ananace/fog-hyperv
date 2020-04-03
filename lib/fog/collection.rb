@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'fog/core/collection'
 
 module Fog

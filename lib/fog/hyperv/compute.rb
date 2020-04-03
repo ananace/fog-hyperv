@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Fog
   module Compute
     class Hyperv < Fog::Service
@@ -347,6 +349,7 @@ module Fog
           fqdn = URI.parse(endpoint).host
 
           require 'winrm'
+
           opts = {
             endpoint: endpoint,
             transport: @hyperv_transport,

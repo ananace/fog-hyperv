@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Hyperv < Fog::Bin
   class << self
     def class_for(key)
