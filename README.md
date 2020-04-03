@@ -43,11 +43,21 @@ compute.servers.all
 #=>   ...
 ```
 
+## Troubleshooting
+
+If you're getting `WinRM::AuthorizationErrors` from the negotiate transport
+even when using a valid user, make sure that the WinRM service is configured
+for Negotiate auth.
+
+If you're using a local (non-domain) user, you may also need to set the DWORD
+registry value `LocalAccountTokenFilterPolicy` at `HKLM\software\Microsoft\Windows\CurrentVersion\Policies\system`
+to `1`.
+
 ## Development
 
 After checking out the repo, run `bundle install` to install dependencies. Then, run `rake test` to run the tests. You can also run `bundle exec irb` for an interactive prompt that will allow you to experiment.
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/ananace/fog-hyperv.
+Bug reports and pull requests are welcome on GitHub at https://github.com/ananace/fog-hyperv
 
