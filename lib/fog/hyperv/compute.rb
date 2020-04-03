@@ -29,7 +29,7 @@ module Fog
         SupportingEntity: 6,
         Completed: 7,
         PowerMode: 8,
-        ProtocolVersion: 32775,
+        ProtocolVersion: 32_775
       ].freeze
 
       requires :hyperv_username
@@ -115,11 +115,8 @@ module Fog
           return if missing.none?
 
           method = caller[0][/`.*'/][1..-2]
-          if missing.length == 1
-            raise(ArgumentError, "#{missing.first} is required for #{method}")
-          elsif missing.any?
-            raise(ArgumentError, "#{missing[0...-1].join(', ')}, and #{missing[-1]} are required for #{method}")
-          end
+          raise(ArgumentError, "#{missing.first} is required for #{method}") if missing.length == 1
+          raise(ArgumentError, "#{missing[0...-1].join(', ')}, and #{missing[-1]} are required for #{method}") if missing.any?
         end
 
         def requires_one(opts, *args)
@@ -132,7 +129,7 @@ module Fog
 
         def requires_version(required_version)
           method = caller[0][/`.*'/][1..-2].split('_')
-          method = method[0].capitalize + "-" + Fog::Hyperv.camelize(method[1..-1].join('_'))
+          method = method[0].capitalize + '-' + Fog::Hyperv.camelize(method[1..-1].join('_'))
 
           raise Fog::Hyperv::Errors::VersionError.new(required_version, version, method) \
             unless Gem::Version.new(version) >= Gem::Version.new(required_version)
@@ -197,7 +194,7 @@ module Fog
         def version
           @version ||= begin
             run_wql('SELECT Version FROM Win32_OperatingSystem', _namespace: 'root/cimv2/*')[:xml_fragment].first[:version]
-          rescue 
+          rescue
             run_shell("$VMMS = if ([environment]::Is64BitProcess) { \"$($env:SystemRoot)\\System32\\vmms.exe\" } else { \"$($env:SystemRoot)\\Sysnative\\vmms.exe\" }\n(Get-Item $VMMS).VersionInfo.ProductVersion", _skip_json: true).stdout.strip
           end
         end
@@ -212,13 +209,13 @@ module Fog
           bake_json = options.delete :_bake_json
           if bake_json
             if ps_version[:major] >= 6
-              "$Args = ConvertFrom-Json -AsHashtable '#{Fog::JSON.encode options}'"
+              "$Args = ConvertFrom-Json -AsHashtable '#{Fog::JSON.encode options.reject(&:nil?)}'"
             else
-              <<-EOS
-              $JsonObject = '#{Fog::JSON.encode options}'
-              $JsonParameters = ConvertFrom-Json -InputObject $JsonObject
-              $Args = $JsonParameters.psobject.properties | foreach -begin {$h=@{}} -process {$h."$($_.Name)" = $_.Value} -end {$h}
-              EOS
+              <<~CMD
+                $JsonObject = '#{Fog::JSON.encode options.reject(&:nil?)}'
+                $JsonParameters = ConvertFrom-Json -InputObject $JsonObject
+                $Args = $JsonParameters.psobject.properties | foreach -begin {$h=@{}} -process {$h."$($_.Name)" = $_.Value} -end {$h}
+              CMD
             end
           else
             args = options.reject { |k, v| v.nil? || v.is_a?(FalseClass) || k.to_s.start_with?('_') }.map do |k, v|
@@ -299,7 +296,7 @@ module Fog
           end
 
           if bake_optmap
-            command_args = "#{hash_to_optmap options.merge(_bake_json: bake_json)}\n#{command} @Args"
+            command_args = "#{hash_to_optmap options.merge(_bake_json: bake_json)}\n\n#{command} @Args"
           else
             command_args = "#{command} #{args.join ' ' unless args.empty?}"
           end

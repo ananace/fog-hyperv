@@ -18,25 +18,25 @@ module Fog
           Paused: 9,
           Starting: 10,
           Reset: 11,
-          Saving: 32773,
-          Pausing: 32776,
-          Resuming: 32777,
-          FastSaved: 32779,
-          FastSaving: 32780,
-          ForceShutdown: 32781,
-          ForceReboot: 32782,
-          RunningCritical: 32783,
-          OffCritical: 32784,
-          StoppingCritical: 32785,
-          SavedCritical: 32786,
-          PausedCritical: 32787,
-          StartingCritical: 32788,
-          ResetCritical: 32789,
-          SavingCritical: 32790,
-          PausingCritical: 32791,
-          ResumingCritical: 32792,
-          FastSavedCritical: 32793,
-          FastSavingCritical: 32794,
+          Saving: 32_773,
+          Pausing: 32_776,
+          Resuming: 32_777,
+          FastSaved: 32_779,
+          FastSaving: 32_780,
+          ForceShutdown: 32_781,
+          ForceReboot: 32_782,
+          RunningCritical: 32_783,
+          OffCritical: 32_784,
+          StoppingCritical: 32_785,
+          SavedCritical: 32_786,
+          PausedCritical: 32_787,
+          StartingCritical: 32_788,
+          ResetCritical: 32_789,
+          SavingCritical: 32_790,
+          PausingCritical: 32_791,
+          ResumingCritical: 32_792,
+          FastSavedCritical: 32_793,
+          FastSavingCritical: 32_794
         }.freeze
 
         identity :id, type: :string
@@ -58,13 +58,13 @@ module Fog
         attribute :processor_count, type: :integer, default: 1
 
         lazy_attributes :network_adapters,
-          :dvd_drives,
-          :hard_drives,
-          :floppy_drive
+                        :dvd_drives,
+                        :hard_drives,
+                        :floppy_drive
 
         attr_accessor :cluster_name
 
-        %i(network_adapters dvd_drives floppy_drives hard_drives vhds).each do |attr|
+        %i[network_adapters dvd_drives floppy_drives hard_drives vhds].each do |attr|
           define_method attr do
             if persisted?
               attributes[attr] ||= service.send(attr, vm: self)
@@ -74,7 +74,7 @@ module Fog
           end
         end
 
-        %i(com_port1 com_port2).each do |attr|
+        %i[com_port1 com_port2].each do |attr|
           define_method "#{attr}=".to_sym do |data|
             attributes[attr] = Fog::Compute::Hyperv::ComPort.new(data) if data.is_a?(Hash)
           end
@@ -90,9 +90,13 @@ module Fog
         def bios
           @bios ||= begin
                       if generation == 1
-                        Fog::Compute::Hyperv::Bios.new(service.get_vm_bios(computer_name: computer_name, vm_name: name).merge service: service)
+                        Fog::Compute::Hyperv::Bios.new(
+                          service.get_vm_bios(computer_name: computer_name, vm_name: name).merge(service: service)
+                        )
                       elsif generation == 2
-                        Fog::Compute::Hyperv::Firmware.new(service.get_vm_firmware(computer_name: computer_name, vm_name: name).merge service: service)
+                        Fog::Compute::Hyperv::Firmware.new(
+                          service.get_vm_firmware(computer_name: computer_name, vm_name: name).merge(service: service)
+                        )
                       end
                     end
         end
@@ -160,7 +164,7 @@ module Fog
 
           data = \
             if !persisted?
-              usable = %i(name memory_startup generation boot_device switch_name no_vhd new_vhd_path new_vhd_size_bytes).freeze
+              usable = %i[name memory_startup generation boot_device switch_name no_vhd new_vhd_path new_vhd_size_bytes].freeze
               service.new_vm \
                 attributes.select { |k, _v| usable.include? k }
                 .merge(options)

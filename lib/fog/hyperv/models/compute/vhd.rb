@@ -30,9 +30,11 @@ module Fog
         def real_path
           requires :path, :computer_name
 
+          basepath = host.virtual_hard_disk_path + '\\'
+
           ret = path
           ret += '.vhdx' unless ret.downcase.end_with? '.vhdx'
-          ret = host.virtual_hard_disk_path + '\\' + ret unless ret.downcase.start_with? host.virtual_hard_disk_path.downcase
+          ret = basepath + ret unless ret.downcase.start_with? basepath.downcase
           ret
         end
 
@@ -44,8 +46,7 @@ module Fog
           requires :computer_name
 
           @host ||= begin
-            ret = parent
-            ret = service.hosts.get computer_name unless ret
+            ret = parent || service.hosts.get(computer_name)
             ret = ret.parent unless ret.is_a?(Host)
             ret
           end
