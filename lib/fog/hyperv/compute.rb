@@ -1,5 +1,11 @@
 # frozen_string_literal: true
 
+# Temporarily disable debug output, will be removed before release
+require 'winrm'
+class WinRM::HTTP::HttpTransport
+  def log_soap_message(_); end
+end
+
 module Fog
   module Compute
     class Hyperv < Fog::Service
