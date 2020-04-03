@@ -143,17 +143,17 @@ module Fog
           require 'logging'
 
           @connections = {}
-          @hyperv_endpoint  = options[:hyperv_endpoint]
-          @hyperv_endpoint  = "http://#{options[:hyperv_host]}:5985/wsman" if !@hyperv_endpoint && options[:hyperv_host]
-          @hyperv_username  = options[:hyperv_username]
-          @hyperv_password  = options[:hyperv_password]
-          @hyperv_realm     = options[:hyperv_realm]
+          @hyperv_endpoint = options[:hyperv_endpoint]
+          @hyperv_endpoint ||= "http://#{options[:hyperv_host]}:5985/wsman" if options[:hyperv_host]
+          @hyperv_username = options[:hyperv_username]
+          @hyperv_password = options[:hyperv_password]
+          @hyperv_realm = options[:hyperv_realm]
           @hyperv_transport = options[:hyperv_transport] || (@hyperv_realm ? :kerberos : :negotiate)
 
-          Logging.logger['WinRM::HTTP::HttpNegotiate'].level = :error
+          # Logging.logger['WinRM::HTTP::HttpNegotiate'].level = :error
           @logger = Logging.logger['hyper-v']
           if options[:hyperv_debug]
-            logger.level = :debug 
+            logger.level = :debug
             logger.add_appenders Logging.appenders.stdout
           end
 
@@ -176,7 +176,7 @@ module Fog
         end
 
         def supports_multihop?
-          return [ :kerberos ].include? @hyperv_transport.to_s.downcase.to_sym
+          [:kerberos].include? @hyperv_transport.to_s.downcase.to_sym
         end
 
         def supports_clusters?
@@ -187,8 +187,11 @@ module Fog
         end
 
         def version
-          @version ||= run_wql('SELECT Version FROM Win32_OperatingSystem', _namespace: 'root/cimv2/*')[:xml_fragment].first[:version] rescue \
+          @version ||= begin
+            run_wql('SELECT Version FROM Win32_OperatingSystem', _namespace: 'root/cimv2/*')[:xml_fragment].first[:version]
+          rescue 
             run_shell("$VMMS = if ([environment]::Is64BitProcess) { \"$($env:SystemRoot)\\System32\\vmms.exe\" } else { \"$($env:SystemRoot)\\Sysnative\\vmms.exe\" }\n(Get-Item $VMMS).VersionInfo.ProductVersion", _skip_json: true).stdout.strip
+          end
         end
 
         def ps_version
@@ -268,7 +271,7 @@ module Fog
           if supports_multihop?
             options[:computer_name] = computers
             computer = '.'
-          elsif computers.length > 1 || (computers.length == 1 && !['.','localhost'].include?(computers.first.downcase))
+          elsif computers.length > 1 || (computers.length == 1 && !['.', 'localhost', @local_hostname].include?(computers.first.downcase))
             logger.debug "Executing multi-query for #{computers}"
             ret = []
             computers.each do |c|
@@ -332,6 +335,7 @@ module Fog
             out
           else
             return nil if out.stdout.empty?
+
             json = Fog::JSON.decode(out.stdout)
             json = Fog::Hyperv.uncamelize(json) unless skip_uncamelize
             json
@@ -339,41 +343,71 @@ module Fog
         end
 
         def connect(endpoint = nil)
-          endpoint = @hyperv_endpoint unless endpoint
+          endpoint ||= @hyperv_endpoint
           fqdn = URI.parse(endpoint).host
 
           require 'winrm'
           opts = {
-            endpoint:  endpoint,
+            endpoint: endpoint,
             transport: @hyperv_transport,
-            user:      @hyperv_username,
-            password:  @hyperv_password,
-            realm:     @hyperv_realm
+            user: @hyperv_username,
+            password: @hyperv_password,
+            realm: @hyperv_realm,
+            no_ssl_peer_verification: true
           }
 
           logger.debug "Creating WinRM connection with #{opts.merge password: '<REDACTED>'}"
           connection = WinRM::Connection.new opts
           connection.logger.level = :error
           @connections[fqdn] = connection
-          
+
+          # Add the local host's names to the connection
+          begin
+            hostname = run_shell('$env:computerName', _skip_uncamelize: true, _target_computer: fqdn).downcase
+            @connections[hostname] ||= connection
+            fqdn = run_shell('[System.Net.Dns]::GetHostByName(($env:computerName)).Hostname', _skip_uncamelize: true, _target_computer: fqdn).downcase
+            @connections[fqdn] ||= connection
+          end
+
           if endpoint == @hyperv_endpoint
             @connection = connection
             @connections['.'] = connection
             @connections['localhost'] = connection
+            @local_hostname = hostname
           end
+
           connection
         end
 
         def connection(host)
-          c = @connections.find { |k,_v| k.downcase.start_with?(host.downcase) }
-          return c[1] if c
-
-          # TODO: Support non-standard endpoints for additional hosts
-          # TODO: Get Windows to provide FQDN for all other hosts
-          unless host.include? '.'
-            host = "#{host}.#{URI.parse(@hyperv_endpoint).host.split('.').drop(1).join('.')}"
+          existing = @connections.find do |c_host, c_connection|
+            c_host.downcase.start_with?(host.downcase) ||
+              URI(c_connection.instance_variable_get(:@connection_opts)[:endpoint]).host.downcase.start_with?(host.downcase)
           end
-          endpoint = "http://#{host}:5985/wsman"
+
+          if existing
+            @connections[host] = existing unless @connections.key? host
+            return existing.last
+          end
+
+          if %w[. localhost].include? host
+            endpoint = @hyperv_endpoint
+          else
+            # TODO: Support non-standard endpoints for additional hosts
+            unless host.include? '.'
+              host = run_shell("[System.Net.Dns]::GetHostByName(#{host.inspect})", _return_fields: :host_name)[:host_name]
+            end
+            endpoint = "http://#{host}:5985/wsman"
+          end
+
+          existing = @connections.find do |_, c_connection|
+            c_connection.instance_variable_get(:@connection_opts)[:endpoint] == endpoint
+          end
+
+          if existing
+            @connections[host] = existing unless @connections.key? host
+            return existing.last
+          end
 
           connect(endpoint)
         end
