@@ -24,7 +24,24 @@ module Fog
         attribute :switch_name, type: :string
         attribute :vm_id
         attribute :vm_name
-        # attribute :vlan_setting # Might need lazy loading
+
+        lazy_attributes :vlan_setting
+
+        def vlan_setting
+          return unless persisted?
+
+          attributes[:vlan_setting] ||= Fog::Compute::Hyperv::NetworkAdapterVlan.new(
+            service.get_vm_network_adapter_vlan(
+              computer_name: computer_name,
+              vm_name: vm_name,
+              vm_network_adapter_name: name,
+
+              _return_fields: Fog::Compute::Hyperv::NetworkAdapterVlan.attributes + %i[parent_adapter]
+            ).merge(
+              service: service
+            )
+          )
+        end
 
         def connect(switch, options = {})
           requires :name, :computer_name, :vm_name

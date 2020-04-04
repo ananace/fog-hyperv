@@ -55,6 +55,7 @@ module Fog
       model :host
       collection :hosts
       model :network_adapter
+      model :network_adapter_vlan
       collection :network_adapters
       model :server
       collection :servers
@@ -82,6 +83,7 @@ module Fog
       request :get_vm_host
       request :get_vm_host_cluster
       request :get_vm_network_adapter
+      request :get_vm_network_adapter_vlan
       request :get_vm_switch
       request :new_vhd
       request :new_vm

@@ -9,11 +9,13 @@ module Fog
         get_method :get_vm_network_adapter
 
         def all(filters = {})
-          super filters.merge(all: !vm)
+          all = !(vm || filters.keys.any? { |k| k.to_s.start_with? 'vm_' })
+          super filters.merge(all: all)
         end
 
         def get(name, filters = {})
-          super filters.merge(name: name, all: !vm)
+          all = !(vm || filters.keys.any? { |k| k.to_s.start_with? 'vm_' })
+          super filters.merge(name: name, all: all)
         end
       end
     end

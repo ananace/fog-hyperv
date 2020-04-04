@@ -20,17 +20,17 @@ module Fog
       def all(filters = {})
         requires(*self.class.requires)
         data = service.send(method, search_attributes.merge(filters))
-        data = [] unless data
+        data ||= []
 
         load [data].flatten
       end
 
       def get(filters = {})
-        data = all(filters).first
-        data if data
-      rescue Fog::Hyperv::Errors::PSError => err
-        raise Fog::Errors::NotFound, err if err.message =~ /Hyper-V was unable to find|^No .* is found/
-        raise err
+        all(filters).first
+      rescue Fog::Hyperv::Errors::PSError => e
+        raise Fog::Errors::NotFound, e if e.message =~ /Hyper-V was unable to find|^No .* is found/
+
+        raise
       end
 
       def new(options = {})
