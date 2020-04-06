@@ -89,16 +89,24 @@ module Fog
 
         def bios
           @bios ||= begin
-                      if generation == 1
-                        Fog::Compute::Hyperv::Bios.new(
-                          service.get_vm_bios(computer_name: computer_name, vm_name: name).merge(service: service)
-                        )
-                      elsif generation == 2
-                        Fog::Compute::Hyperv::Firmware.new(
-                          service.get_vm_firmware(computer_name: computer_name, vm_name: name).merge(service: service)
-                        )
-                      end
-                    end
+            if generation == 1
+              klass = Fog::Compute::Hyperv::Bios
+              method = :get_vm_bios
+            else
+              klass = Fog::Compute::Hyperv::Firmware
+              method = :get_vm_firmware
+            end
+
+            klass.new(
+              service.public_send(
+                method,
+                computer_name: computer_name,
+                vm_name: name,
+
+                _return_fields: klass.attributes
+              ).merge(service: service)
+            )
+          end
         end
         alias firmware :bios
 
