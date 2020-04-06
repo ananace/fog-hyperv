@@ -7,7 +7,7 @@ module Fog
         identity :vm_network_adapter_name
 
         attribute :computer_name
-        attribute :operation_mode, type: :enum, values: %i[
+        attribute :operation_mode, type: :enum, default: :Untagged, values: %i[
           Untagged Access Trunk Isolated Promiscuous
         ]
         attribute :access_vlan_id
@@ -20,8 +20,14 @@ module Fog
 
         def initialize(**attributes)
           parent = attributes.delete :parent_adapter
-          attributes[:vm_network_adapter_name] = parent[:name]
-          attributes[:vm_name] = parent[:vm_name]
+          if parent.is_a? Fog::Compute::Hyperv::NetworkAdapter
+            @interface = parent
+            attributes[:vm_network_adapter_name] = parent.name
+            attributes[:vm_name] = parent.vm_name
+          else
+            attributes[:vm_network_adapter_name] = parent[:name]
+            attributes[:vm_name] = parent[:vm_name]
+          end
 
           super
         end
@@ -67,10 +73,12 @@ module Fog
         end
 
         def reload
-          data = service.get_vm_network_adapter_vlan(
+          data = self.class.new service.get_vm_network_adapter_vlan(
             computer_name: computer_name,
             vm_name: vm_name,
-            vm_network_adapter_name: vm_network_adapter_name
+            vm_network_adapter_name: vm_network_adapter_name,
+
+            _return_fields: self.class.attributes + %i[parent_adapter]
           )
 
           merge_attributes(data.attributes)

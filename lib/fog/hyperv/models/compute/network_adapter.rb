@@ -28,16 +28,28 @@ module Fog
         lazy_attributes :vlan_setting
 
         def vlan_setting
-          return unless persisted?
-
           attributes[:vlan_setting] ||= Fog::Compute::Hyperv::NetworkAdapterVlan.new(
-            service.get_vm_network_adapter_vlan(
-              computer_name: computer_name,
-              vm_name: vm_name,
-              vm_network_adapter_name: name,
+            (
+              if persisted?
+                service.get_vm_network_adapter_vlan(
+                  computer_name: computer_name,
+                  vm_name: vm_name,
+                  vm_network_adapter_name: name,
 
-              _return_fields: Fog::Compute::Hyperv::NetworkAdapterVlan.attributes + %i[parent_adapter]
+                  _return_fields: Fog::Compute::Hyperv::NetworkAdapterVlan.attributes + %i[parent_adapter]
+                )
+              else
+                {
+                  computer_name: computer_name,
+                  parent_adapter: {
+                    computer_name: computer_name,
+                    vm_name: vm_name,
+                    name: name
+                  }
+                }
+              end
             ).merge(
+              parent_adapter: self,
               service: service
             )
           )
@@ -126,6 +138,10 @@ module Fog
               ret[:switch_name] = switch_name
               ret
             end
+
+          if attributes[:vlan_setting] && (!persisted? || vlan_setting.dirty?)
+            vlan_setting.save
+          end
 
           if data.is_a? Array
             data = data.find { |e| e[:id] == id } if id

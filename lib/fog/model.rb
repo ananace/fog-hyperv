@@ -21,6 +21,7 @@ module Fog
       end
 
       def parent
+        return @interface if @interface
         return @vm if @vm
         return @computer if @computer
         return @cluster if @cluster
@@ -34,22 +35,29 @@ module Fog
         end
       end
 
+      def interface
+        return unless @interface || respond_to?(:vm_network_adapter_name) && vm_network_adapter_name
+
+        @interface ||= service.network_adapters.get vm_network_adapter_name, vm_name: vm_name
+      end
+      alias network_adapter interface
+
       def vm
-        if respond_to?(:vm_name) && vm_name
-          @vm ||= service.servers.get vm_name
-        end
+        return unless respond_to?(:vm_name) && vm_name
+
+        @vm ||= service.servers.get vm_name
       end
 
       def computer
-        if @computer || (respond_to?(:computer_name) && computer_name)
-          @computer ||= service.hosts.get computer_name
-        end
+        return unless @computer || (respond_to?(:computer_name) && computer_name)
+
+        @computer ||= service.hosts.get computer_name
       end
 
       def cluster
-        if @cluster || (respond_to?(:cluster_name) && cluster_name)
-          @cluster ||= service.clusters.get cluster_name
-        end
+        return unless @cluster || (respond_to?(:cluster_name) && cluster_name)
+
+        @cluster ||= service.clusters.get cluster_name
       end
 
       private
