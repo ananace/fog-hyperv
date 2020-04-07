@@ -35,6 +35,7 @@ module Fog
 
       def new(options = {})
         requires(*self.class.requires)
+        options = options.attributes if options.is_a? Fog::Model
         super(creation_attributes.merge(options))
       end
 
