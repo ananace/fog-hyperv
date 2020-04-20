@@ -26,8 +26,8 @@ module Fog
 
         def self.ensure_collections!
           return if @collections
-          @collections = true
 
+          @collections = true
           Fog::Compute::Hyperv.collections.each do |coll|
             # Hosts don't have host collections
             next if coll == :hosts

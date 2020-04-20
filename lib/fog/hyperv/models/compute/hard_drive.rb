@@ -24,11 +24,16 @@ module Fog
 
         def vhd
           return nil unless path && computer_name
+
           @vhd ||= service.vhds.get(path, computer_name: computer_name)
         end
 
+        def vhd?
+          !vhd.nil?
+        end
+
         def size_bytes
-          vhd && vhd.size_bytes || 0
+          vhd&.size_bytes || 0
         end
 
         def size_bytes=(bytes)
@@ -94,7 +99,7 @@ module Fog
           self
         end
 
-        def destroy
+        def destroy(underlying = false)
           return unless persisted?
 
           service.remove_vm_hard_disk_drive(
@@ -105,6 +110,10 @@ module Fog
             controller_number: controller_number,
             controller_type: controller_type
           )
+
+          return unless underlying && vhd?
+
+          vhd.destroy
         end
       end
     end

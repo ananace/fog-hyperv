@@ -122,18 +122,20 @@ module Fog
               )
 
               if changed?(:switch_name)
-                service.disconnect_vm_network_adapter(
-                  computer_name: ret.computer_name,
-                  name: ret.name,
-                  vm_name: ret.vm_name
-                ) unless switch_name
-
-                service.connect_vm_network_adapter(
-                  computer_name: ret.computer_name,
-                  name: ret.name,
-                  vm_name: ret.vm_name,
-                  switch_name: switch_name
-                ) if switch_name
+                if switch_name
+                  service.connect_vm_network_adapter(
+                    computer_name: ret.computer_name,
+                    name: ret.name,
+                    vm_name: ret.vm_name,
+                    switch_name: switch_name
+                  )
+                else
+                  service.disconnect_vm_network_adapter(
+                    computer_name: ret.computer_name,
+                    name: ret.name,
+                    vm_name: ret.vm_name
+                  )
+                end
               end
               ret[:switch_name] = switch_name
               ret

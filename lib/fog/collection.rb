@@ -129,8 +129,8 @@ module Fog
       def creation_attributes
         attrs = super
         attrs[:vm] = vm if vm
-        attrs[:computer_name] = vm.computer_name if vm && vm.computer_name
-        attrs[:cluster_name] = vm.cluster_name if vm && vm.cluster_name
+        attrs[:computer_name] = vm.computer_name if vm&.computer_name
+        attrs[:cluster_name] = vm.cluster_name if vm&.cluster_name
 
         attrs
       end

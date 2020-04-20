@@ -113,22 +113,6 @@ module Fog
         alias vm_id :id
         alias vm_name :name
 
-        # TODO: Do this properly
-        def set_vlan(vlan_id, options = {})
-          requires :name, :computer_name
-          if vlan_id
-            options[:access] = true
-            options[:vlan_id] = vlan_id
-          else
-            options[:untagged] = true
-          end
-
-          service.set_vm_network_adapter_vlan options.merge(
-            vm_name: name,
-            computer_name: computer_name
-          )
-        end
-
         def start(options = {})
           requires :name, :computer_name
           service.start_vm options.merge(
@@ -172,11 +156,12 @@ module Fog
 
           data = \
             if !persisted?
+              # TODO: Apply predefined config onto created VM
               usable = %i[name memory_startup generation boot_device switch_name no_vhd new_vhd_path new_vhd_size_bytes].freeze
               service.new_vm \
                 attributes.select { |k, _v| usable.include? k }
-                .merge(options)
-                .merge(_return_fields: self.class.attributes, _json_depth: 1)
+                          .merge(options)
+                          .merge(_return_fields: self.class.attributes, _json_depth: 1)
             else
               service.set_vm options.merge(
                 computer_name: old.computer_name,
@@ -223,10 +208,9 @@ module Fog
           network_adapters.map(&:ip_addresses).flatten
         end
 
-        def public_ip_address
+        def public_ip_addresses
           ip_addresses
             .reject { |a| a =~ /^(169\.254|fe[89ab][0-9a-f])/ }
-            .first
         end
       end
     end

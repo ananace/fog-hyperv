@@ -10,13 +10,6 @@ module Fog
         attribute :domain, type: :string
         attribute :name, type: :string
 
-        # def initialize(attrs = {})
-        #   super
-
-          # @collections = {}
-          # self.class.ensure_collections!
-        # end
-
         def nodes
           attributes[:nodes] ||= id.nil? ? [] : [service.get_cluster_node(cluster: name, _return_fields: [:description, :name, :node_name])].flatten
         end
@@ -42,24 +35,6 @@ module Fog
           merge_attributes(data.attributes)
           self
         end
-
-        # def self.ensure_collections!
-        #   return if @collections
-        #   @collections = true
-
-        #   Fog::Compute::Hyperv.collections.each do |coll|
-        #     # Don't recurse on hosts
-        #     next if coll == :hosts
-
-        #     coll_name = coll.to_s.split('_').map(&:capitalize).join
-        #     klass = Fog::Compute::Hyperv.const_get(coll_name)
-        #     next if klass.requires?(:vm)
-
-        #     define_method coll do
-        #       @collections[coll] ||= service.send(coll, cluster: self)
-        #     end
-        #   end
-        # end
       end
     end
   end
