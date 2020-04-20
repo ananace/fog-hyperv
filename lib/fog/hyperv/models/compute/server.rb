@@ -69,7 +69,26 @@ module Fog
             if persisted?
               attributes[attr] ||= service.send(attr, vm: self)
             else
-              attributes[attr] ||= [] unless persisted?
+              attributes[attr] ||= [].tap do |arr|
+                arr.instance_variable_set :@klass, Fog::Compute::Hyperv.const_get(
+                  Fog::Hyperv.camelize(attr.to_s.chop).to_sym
+                )
+                arr.instance_variable_set :@vm, self
+                arr.instance_variable_set :@service, service
+
+                arr.instance_eval do
+                  def new(**attributes)
+                    self << @klass.new(
+                      attributes.merge(
+                        computer_name: @vm.computer_name,
+                        vm_name: @vm.name,
+                        vm: @vm,
+                        service: @service
+                      )
+                    )
+                  end
+                end
+              end
             end
           end
         end
@@ -82,6 +101,14 @@ module Fog
 
         def initialize(attrs = {})
           super
+
+          %i[network_adapters dvd_drives floppy_drives hard_drives vhds].each do |attr|
+            next unless attrs.key? attr
+
+            attributes[attr] = attrs.delete(attr).map do |data|
+              service.public_send(attr, vm: self).new(data)
+            end
+          end
 
           @cluster = attrs.delete :cluster
           @computer = attrs.delete :computer
@@ -154,35 +181,46 @@ module Fog
         def save(options = {})
           requires :name
 
-          data = \
-            if !persisted?
-              # TODO: Apply predefined config onto created VM
-              usable = %i[name memory_startup generation boot_device switch_name no_vhd new_vhd_path new_vhd_size_bytes].freeze
-              service.new_vm \
-                attributes.select { |k, _v| usable.include? k }
-                          .merge(options)
-                          .merge(_return_fields: self.class.attributes, _json_depth: 1)
-            else
-              service.set_vm options.merge(
-                computer_name: old.computer_name,
-                name: old.name,
-                passthru: true,
+          if !persisted?
+            # TODO: Apply predefined config onto created VM
+            usable = %i[name memory_startup generation boot_device switch_name no_vhd new_vhd_path new_vhd_size_bytes].freeze
+            data = service.new_vm \
+              attributes.select { |k, _v| usable.include? k }
+                        .merge(options)
+                        .merge(_return_fields: self.class.attributes, _json_depth: 1)
+          else
+            data = service.set_vm options.merge(
+              computer_name: old.computer_name,
+              name: old.name,
+              passthru: true,
 
-                processor_count: changed!(:processor_count),
-                dynamic_memory: changed?(:dynamic_memory_enabled) && dynamic_memory_enabled,
-                static_memory: changed?(:dynamic_memory_enabled) && !dynamic_memory_enabled,
-                memory_minimum_bytes: changed?(:memory_minimum) && dynamic_memory_enabled && memory_minimum,
-                memory_maximum_bytes: changed?(:memory_maximum) && dynamic_memory_enabled && memory_maximum,
-                memory_startup_bytes: changed!(:memory_startup),
-                notes: changed!(:notes),
-                new_name: changed!(:name),
+              processor_count: changed!(:processor_count),
+              dynamic_memory: changed?(:dynamic_memory_enabled) && dynamic_memory_enabled,
+              static_memory: changed?(:dynamic_memory_enabled) && !dynamic_memory_enabled,
+              memory_minimum_bytes: changed?(:memory_minimum) && dynamic_memory_enabled && memory_minimum,
+              memory_maximum_bytes: changed?(:memory_maximum) && dynamic_memory_enabled && memory_maximum,
+              memory_startup_bytes: changed!(:memory_startup),
+              notes: changed!(:notes),
+              new_name: changed!(:name),
 
-                _return_fields: self.class.attributes,
-                _json_depth: 1
-              )
-            end
+              _return_fields: self.class.attributes,
+              _json_depth: 1
+            )
+          end
 
           merge_attributes(data)
+
+          %i[network_adapters dvd_drives floppy_drives hard_drives vhds].each do |attr|
+            attributes[attr]&.select(&:dirty?)&.each(&:save)
+
+            if attr == :vhds && attributes[attr]
+              attributes[attr].each { |vhd| hard_drives.new(path: vhd.path).save }
+            end
+
+            # Reset pre-persist lazy attributes to become true collections
+            attributes[attr] = nil if attributes[attr].class == Array
+          end
+
           @old = dup
           self
         end

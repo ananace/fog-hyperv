@@ -16,8 +16,8 @@ module Fog
         attribute :path, type: :string, default: 'New Disk'
         attribute :pool_name
         attribute :size, type: :integer, default: 343_597_383_68
-        attribute :vhd_format, type: :enum, values: %i[Unknown Invalid VHD VHDX VHDSet]
-        attribute :vhd_type, type: :enum, values: %i[Unknown Invalid Fixed Dynamic Differencing]
+        attribute :vhd_format, type: :enum, default: :VHDX, values: %i[Unknown Invalid VHD VHDX VHDSet]
+        attribute :vhd_type, type: :enum, default: :Dynamic, values: %i[Unknown Invalid Fixed Dynamic Differencing]
         # TODO? VM Snapshots?
         #
 
