@@ -12,7 +12,7 @@ class Hyperv < Fog::Bin
     end
 
     def [](service)
-      @@connections ||= Hash.new do |h, k|
+      @connections ||= Hash.new do |h, k|
         h[k] = case key
                when :compute
                  Fog::Compute.new(provider: 'Hyperv')
@@ -20,7 +20,7 @@ class Hyperv < Fog::Bin
                  raise ArgumentError, "Unrecognized service: #{key.inspect}"
                end
       end
-      @@connections[service]
+      @connections[service]
     end
 
     def services

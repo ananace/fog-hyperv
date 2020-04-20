@@ -28,6 +28,7 @@ module Fog
         return nil unless collection
         return collection.vm if collection.attributes.include? :vm
         return collection.computer if collection.attributes.include? :computer
+
         @parent ||= begin
           r = service.servers.get vm_name if attributes.include? :vm_name
           r = service.hosts.get computer_name if attributes.include? :computer_name

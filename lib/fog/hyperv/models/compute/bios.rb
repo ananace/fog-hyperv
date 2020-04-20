@@ -12,7 +12,7 @@ module Fog
         # TODO? Enum values; :CD, :IDE, :LegacyNetworkAdapter, :Floppy (, :VHD, :NetworkAdapter)
         attribute :startup_order, type: :array
         attribute :vm_name, type: :string
-        
+
         attr_reader :computer, :vm
 
         def initialize(args = {})

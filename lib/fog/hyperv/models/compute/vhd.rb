@@ -16,8 +16,8 @@ module Fog
         attribute :path, type: :string, default: 'New Disk'
         attribute :pool_name
         attribute :size, type: :integer, default: 343_597_383_68
-        attribute :vhd_format, type: :enum, values: [:Unknown, nil, :VHD, :VHDX, :VHDSet]
-        attribute :vhd_type, type: :enum, values: [:Unknown, nil, :Fixed, :Dynamic, :Differencing]
+        attribute :vhd_format, type: :enum, values: %i[Unknown Invalid VHD VHDX VHDSet]
+        attribute :vhd_type, type: :enum, values: %i[Unknown Invalid Fixed Dynamic Differencing]
         # TODO? VM Snapshots?
         #
 
@@ -33,7 +33,8 @@ module Fog
           basepath = host.virtual_hard_disk_path + '\\'
 
           ret = path
-          ret += '.vhdx' unless ret.downcase.end_with? '.vhdx'
+          ext = vhd_format&.downcase || 'vhdx'
+          ret += '.' + ext unless ret.downcase.end_with? '.' + ext
           ret = basepath + ret unless ret.downcase.start_with? basepath.downcase
           ret
         end
