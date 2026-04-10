@@ -3,6 +3,7 @@
 module Fog
   module Hyperv
     module Utils
+      # rubocop:disable Metrics/ModuleLength
       module Winrm
         LocalExecOutput = Struct.new(:stdout, :stderr, :exitcode)
 
@@ -78,6 +79,7 @@ module Fog
           data
         end
 
+        # rubocop:disable Metrics/MethodLength -- TODO: separate out arg building, cluster handling
         def run_shell(command, _always_include: [], _target_computer: '.', **options)
           orig_opts = options.dup
           return_fields = options.delete :_return_fields
@@ -177,6 +179,7 @@ module Fog
             json
           end
         end
+        # rubocop:enable Metrics/MethodLength
 
         def connect(endpoint = nil)
           endpoint ||= @hyperv_endpoint
@@ -251,6 +254,7 @@ module Fog
           connect(endpoint)
         end
       end
+      # rubocop:enable Metrics/ModuleLength
     end
   end
 end

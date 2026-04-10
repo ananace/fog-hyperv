@@ -19,7 +19,7 @@ module Fog
 
       def all(**filters)
         requires(*self.class.requires)
-        data = service.send(method, **search_attributes.merge(filters))
+        data = service.send(method, **search_attributes, **filters)
         data ||= []
 
         load [data].flatten

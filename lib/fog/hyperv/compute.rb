@@ -125,7 +125,7 @@ module Fog
 
         attr_accessor :bake_optmap, :bake_json
 
-        def initialize(options = {}) # rubocop:disable Lint/MissingSuper -- No super method
+        def initialize(options = {}) # rubocop:disable Style/OptionHash, Lint/MissingSuper -- No super method
           require 'fog/json'
           require 'logging'
 

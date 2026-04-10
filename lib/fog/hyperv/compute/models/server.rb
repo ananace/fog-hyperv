@@ -6,6 +6,7 @@ require 'fog/hyperv/model'
 module Fog
   module Hyperv
     class Compute
+      # rubocop:disable Metrics/ClassLength
       class Server < Fog::Compute::Server
         extend Fog::Hyperv::ModelExtends
         include Fog::Hyperv::ModelIncludes
@@ -324,7 +325,7 @@ module Fog
             if comport.is_a? Hash
               new_attributes[attr] = Fog::Hyperv::Compute::ComPort.new(comport)
             elsif comport.is_a? String
-              attrs = comport.scan(%r{(\w+) = '([^']+)'}).to_h { |k, v| [Fog::Hyperv.uncamelize(k), v]}
+              attrs = comport.scan(/(\w+) = '([^']+)'/).to_h { |k, v| [Fog::Hyperv.uncamelize(k), v] }
               new_attributes[attr] = Fog::Hyperv::Compute::ComPort.new(attrs)
             end
           end
@@ -332,6 +333,7 @@ module Fog
           super
         end
       end
+      # rubocop:enable Metrics/ClassLength
     end
   end
 end
