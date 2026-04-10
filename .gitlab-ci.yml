@@ -8,7 +8,7 @@ cache:
 
 before_script:
   - gem install bundler -N
-  - bundle set path vendor
+  - bundle config set path vendor
   - bundle install -j $(nproc)
 
 rubocop:
