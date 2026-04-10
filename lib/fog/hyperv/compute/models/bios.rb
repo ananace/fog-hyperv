@@ -4,15 +4,28 @@ module Fog
   module Hyperv
     class Compute
       class Bios < Fog::Hyperv::Model
+        # @!attribute [r] vm_id
+        #   @return [String] The GUID of the VM this BIOS configuration is attached to
         identity :vm_id, type: :string
 
+        # @!attribute [r] computer_name
+        #   @return [String] The name of the computer running the VM that this BIOS configuration is attached to
         attribute :computer_name, type: :string
-        # attribute :is_deleted, type: :boolean
-        attribute :num_lock_enabled, type: :boolean
-        # TODO? Enum values; :CD, :IDE, :LegacyNetworkAdapter, :Floppy (, :VHD, :NetworkAdapter)
-        attribute :startup_order, type: :array
+        # @!attribute [r] vm_name
+        #   @return [String] The name of the VM this BIOS configuration is attached to
         attribute :vm_name, type: :string
 
+        # attribute :is_deleted, type: :boolean
+        # @!attribute num_lock_enabled
+        #   @return [Boolean] Should num-lock be enabled on boot
+        attribute :num_lock_enabled, type: :boolean
+        # TODO? Enum values; :CD, :IDE, :LegacyNetworkAdapter, :Floppy (, :VHD, :NetworkAdapter)
+        # @!attribute startup_order
+        #   @return [Array<String>] The boot order of the VM
+        attribute :startup_order, type: :array
+
+        # @!attribute [r] vm
+        # @return [Server] The VM this BIOS configuration is attached to
         attr_reader :computer, :vm
 
         def initialize(args = {})

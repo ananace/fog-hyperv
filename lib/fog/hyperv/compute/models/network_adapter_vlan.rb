@@ -6,19 +6,40 @@ module Fog
   module Hyperv
     class Compute
       class NetworkAdapterVlan < Fog::Hyperv::Model
+        # @!attribute [r] vm_network_adapter_name
+        #   @return [String] the name of the network adapter this VLAN configuration is attached to
         identity :vm_network_adapter_name
 
+        # @!attribute [r] computer_name
+        #   @return [String] the name of the computer running the VM that this VLAN configuration is attached to
         attribute :computer_name
+        # @!attribute [r] vm_name
+        #   @return [String] the name of the VM this VLAN configuration is attached to
+        attribute :vm_name
+
+        # @!attribute operation_mode
+        #   @return [:Untagged, :Access, :Trun, :Isolated, :Promiscuous] the active VLAN mode
         attribute :operation_mode, type: :enum, default: :Untagged, values: %i[
           Untagged Access Trunk Isolated Promiscuous
         ]
-        attribute :access_vlan_id
+        # @!attribute access_vlan_id
+        #   @return [Integer] the VLAN ID to use for operation_mode +:Access+
+        attribute :access_vlan_id, type: :integer
+        # @!attribute allowed_vlan_id_list
+        #   @return [Array<Integer>] the list of allowed VLAN IDs to use for operation_mode +:Trunk+
         attribute :allowed_vlan_id_list
-        attribute :native_vlan_id
-        attribute :primary_vlan_id
-        attribute :secondary_vlan_id
+        # @!attribute native_vlan_id
+        #   @return [Integer] the native VLAN ID to use for operation_mode +:Trunk+
+        attribute :native_vlan_id, type: :integer
+        # @!attribute primary_vlan_id
+        #   @return [Integer] the primary VLAN ID to use for operation_mode +:Isolated+ or +:Promiscuous+
+        attribute :primary_vlan_id, type: :integer
+        # @!attribute secondary_vlan_id
+        #   @return [Integer] the secondary VLAN ID to use for operation_mode +:Isolated+
+        attribute :secondary_vlan_id, type: :integer
+        # @!attribute secondary_vlan_id_list
+        #   @return [Array<Integer>] the list of secondary VLAN IDs to use for operation_mode +:Promiscuous+
         attribute :secondary_vlan_id_list
-        attribute :vm_name
 
         def initialize(**attributes)
           parent = attributes.delete :parent_adapter
@@ -34,6 +55,8 @@ module Fog
           super
         end
 
+        # @!attribute [r] network_adapter
+        # @return [NetworkAdapter] the network adapter this VLAN configuration is attached to
         def network_adapter
           service.network_adapters.get vm_network_adapter_name, vm_name: vm_name
         end

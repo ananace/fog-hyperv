@@ -6,16 +6,33 @@ module Fog
   module Hyperv
     class Compute
       class FloppyDrive < Fog::Hyperv::Model
+        # @!attribute [r] id
+        #   @return [String] The GUID of this floppy drive
         identity :id
 
+        # @!attribute [r] computer_name
+        #   @return [String] The name of the computer running the VM that this floppy drive is attached to
         attribute :computer_name
+        # @!attribute [r] vm_id
+        #   @return [String] The GUID of the VM this floppy drive is attached to
+        attribute :vm_id
+        # @!attribute [r] vm_name
+        #   @return [String] The name of the VM this floppy drive is attached to
+        attribute :vm_name
+
+        # @!attribute [r] disk
+        #   @return [String] The disk in this floppy drive
         attribute :disk
         # attribute :is_deleted
+        # @!attribute [r] name
+        #   @return [String] The name of this floppy drive
         attribute :name
+        # @!attribute path
+        #   @return [String] The path of the underlying image inserted into this floppy drive
         attribute :path
+        # @!attribute pool_name
+        #   @return [String] The pool storing this floppy drive's image
         attribute :pool_name
-        attribute :vm_id
-        attribute :vm_name
         # TODO? VM Snapshots?
         #
 

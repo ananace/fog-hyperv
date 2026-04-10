@@ -7,12 +7,15 @@ module Fog
   module Hyperv
     class Compute
       # rubocop:disable Metrics/ClassLength
+
+      # A Hyper-V VM
       class Server < Fog::Compute::Server
         extend Fog::Hyperv::ModelExtends
         include Fog::Hyperv::ModelIncludes
 
         # rubocop:disable Layout/HashAlignment
-        # Microsoft.HyperV.PowerShell.VMState
+
+        # @note Defined by Microsoft.HyperV.PowerShell.VMState
         VM_STATE_ENUM_VALUES = {
           Other:              1,
           Running:            2,
@@ -45,7 +48,7 @@ module Fog
           FastSavingCritical: 32_796
         }.freeze
 
-        # Microsoft.HyperV.PowerShell.VMOperationalStatus
+        # @note Defined by Microsoft.HyperV.PowerShell.VMOperationalStatus
         VM_STATUS_ENUM_VALUES = {
           Ok:                        2,
           Degraded:                  3,
@@ -79,29 +82,72 @@ module Fog
         }.freeze
         # rubocop:enable Layout/HashAlignment
 
+        # @!attribute [r] id
+        #   @return [String] The GUID of the VM
         identity :id, type: :string
 
+        # @!attribute name
+        #   @return [String] The name of the VM
         attribute :name, type: :string
+        # @!attribute [r] computer_name
+        #   @return [String] The name of the host running the VM
         attribute :computer_name, type: :string
+        # @!attribute [r] com_port1
+        #   @return [ComPort] The first COM port on the VM
         attribute :com_port1
+        # @!attribute [r] com_port2
+        #   @return [ComPort] The second COM port on the VM
         attribute :com_port2
+        # @!attribute dynamic_memory_enabled
+        #   @return [Boolean] Is memory dynamically allocated
         attribute :dynamic_memory_enabled, type: :boolean, default: false
+        # @!attribute [r] generation
+        #   @return [1,2] The generation of the VM - 1 => BIOS, 2 => UEFI
         attribute :generation, type: :integer, default: 1 # 1 => bios, 2 => uefi
+        # @!attribute [r] is_clustered
+        #   @return [Boolean] Is the VM clustered
         attribute :is_clustered, type: :boolean, default: false
+        # @!attribute [r] state
+        #   @return [Symbol] The state of the VM
+        #   @see VM_STATE_ENUM_VALUES
         attribute :state, type: :enum, values: VM_STATE_ENUM_VALUES
+        # @!attribute [r] status
+        #   @return [Symbol] The status of the VM
+        #   @see VM_STATUS_ENUM_VALUES
         attribute :status, type: :string # :enum, values: VM_STATUS_ENUM_VALUES
+        # @!attribute [r] memory_assigned
+        #   @return [Integer] The assigned memory of the VM
         attribute :memory_assigned, type: :integer
+        # @!attribute memory_maximum
+        #   @return [Integer] The maximum amount of memory the VM can assign
         attribute :memory_maximum, type: :integer, default: 17_179_869_184
+        # @!attribute memory_minimum
+        #   @return [Integer] The minimum amount of memory the VM can assign
         attribute :memory_minimum, type: :integer, default: 536_870_912
+        # @!attribute memory_startup
+        #   @return [Integer] The starting amount of memory the VM will assign
         attribute :memory_startup, type: :integer, default: 536_870_912
+        # @!attribute notes
+        #   @return [String] User-specified notes on the VM
         attribute :notes, type: :string
+        # @!attribute processor_count
+        #   @return [Integer] The number of processors in the VM
         attribute :processor_count, type: :integer, default: 1
 
+        # @!attribute [r] network_adapters
+        #   @return [Array<NetworkAdapter>] The network adapters attached to the VM
+        # @!attribute [r] dvd_drives
+        #   @return [Array<DvdDrive>] The DVD drives attached to the VM
+        # @!attribute [r] hard_drives
+        #   @return [Array<HardDrive>] The hard drives attached to the VM
+        # @!attribute [r] floppy_drives
+        #   @return [Array<FloppyDrive>] The floppy drives attached to the VM
         lazy_attributes :network_adapters,
                         :dvd_drives,
                         :hard_drives,
                         :floppy_drive
 
+        # @return [String] The name of the cluster the VM is part of
         attr_accessor :cluster_name
 
         %i[network_adapters dvd_drives floppy_drives hard_drives vhds].each do |attr|
@@ -148,6 +194,8 @@ module Fog
           @computer = attrs.delete :computer
         end
 
+        # @!attribute [r] bios
+        # @return [Bios,Firmware] BIOS/UEFI configuration depending on generation
         def bios
           @bios ||= begin
             if generation == 1
@@ -171,7 +219,11 @@ module Fog
         end
         alias firmware :bios
 
+        # @!attribute [r] security
+        # @return [Security] UEFI security configuration, if #generation is 2
         def security
+          return nil unless generation == 2
+
           @security ||= begin
             security = Fog::Hyperv::Compute::Security.new(
               service.get_vm_security(
@@ -188,20 +240,23 @@ module Fog
           end
         end
 
+        # @!attribute [r] tpm_enabled
+        # @return [Boolean] Is a vTPM enabled on the VM, only available if #generation is 2
         def tpm_enabled
-          security.tpm_enabled
+          security&.tpm_enabled
         end
 
         def tpm_enabled=(enabled)
           return if enabled == tpm_enabled?
 
-          security.tpm_enabled = enabled
-          security.save
+          security&.tpm_enabled = enabled
+          security&.save
         end
 
         alias vm_id :id
         alias vm_name :name
 
+        # Start the VM
         def start(**options)
           requires :name, :computer_name
           service.start_vm(
@@ -211,6 +266,7 @@ module Fog
           )
         end
 
+        # Stop the VM
         def stop(**options)
           requires :name, :computer_name
           service.stop_vm(
@@ -220,6 +276,7 @@ module Fog
           )
         end
 
+        # Restart the VM
         def restart(**options)
           requires :name, :computer_name
           service.restart_vm(
@@ -291,6 +348,7 @@ module Fog
           self
         end
 
+        # Reload the VM attributes from the Hyper-V server
         def reload
           data = collection.get id
 
@@ -300,18 +358,22 @@ module Fog
           self
         end
 
+        # @return [Boolean] Is the VM ready? (state is +:Running+)
         def ready?
           state_num == 2
         end
 
+        # @return [Array<String>] The MAC addresses of all attached network adapters
         def mac_addresses
           network_adapters.map(&:mac_address)
         end
 
+        # @return [Array<String>] The IP addresses of all attached network adapters
         def ip_addresses
           network_adapters.map(&:ip_addresses).flatten
         end
 
+        # @return [Array<String>] The public (not link-local) IP addresses of all attached network adapters
         def public_ip_addresses
           ip_addresses
             .map { |a| IPAddr.new a }
@@ -319,6 +381,7 @@ module Fog
             .map(&:to_s)
         end
 
+        # @!visibility private
         def merge_attributes(new_attributes = {})
           %i[com_port1 com_port2].each do |attr|
             comport = new_attributes[attr]

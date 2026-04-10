@@ -21,7 +21,7 @@ rubocop:
 pages:
   before_script: []
   script:
-    - gem install yard redcarpet
+    - gem install yard rdoc redcarpet
     - yard doc -o public/
   artifacts:
     paths:

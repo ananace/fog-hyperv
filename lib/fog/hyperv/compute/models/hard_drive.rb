@@ -5,35 +5,71 @@ require 'fog/hyperv/model'
 module Fog
   module Hyperv
     class Compute
+      # A hard drive attached to a VM
       class HardDrive < Fog::Hyperv::Model
+        # @!attribute [r] id
+        #   @return [String] the GUID of this hard drive
         identity :id
 
+        # @!attribute [r] computer_name
+        #   @return [String] the name of the computer running the VM that this hard drive is attached to
         attribute :computer_name
+        # @!attribute [r] vm_id
+        #   @return [String] the GUID of the VM this hard drive is attached to
+        attribute :vm_id
+        # @!attribute [r] vm_name
+        #   @return [String] the name of the VM this hard drive is attached to
+        attribute :vm_name
+
+        # @!attribute controller_location
+        #   @return [String] the controller location this hard drive is attached to
         attribute :controller_location
+        # @!attribute controller_location
+        #   @return [Integer] the controller number this hard drive is attached to
         attribute :controller_number, type: :integer
+        # @!attribute controller_type
+        #   @return [:IDE, :SCSI] the controller type this hard drive is attached to
         attribute :controller_type, type: :enum, values: %i[IDE SCSI]
+        # @!attribute disk
+        #   @return [Object] the attached disk
         attribute :disk
         # attribute :is_deleted
+        # @!attribute maximum_iops
+        #   @return [Integer] the maximum number of IOPS allocated for this hard drive
         attribute :maximum_iops, type: :integer
+        # @!attribute minimum_iops
+        #   @return [Integer] the minimum number of IOPS allocated for this hard drive
         attribute :minimum_iops, type: :integer
+        # @!attribute [r] name
+        #   @return [String] the name of this hard drive
         attribute :name
+        # @!attribute path
+        #   @return [String] the path to the VHD file for this hard drive
         attribute :path
+        # @!attribute pool_name
+        #   @return [String] the name of the pool storing this hard drive's image
         attribute :pool_name
+        # @!attribute support_persistent_reservations
+        #   @return [Boolean] does the underlying hard drive support SCSI persistent reservations.
+        #     Should be set when multiple VMs share the same underlying disk.
         attribute :support_persistent_reservations
-        attribute :vm_id
-        attribute :vm_name
         # TODO? VM Snapshots?
 
+        # @!attribute [r] vhd
+        # @return [Vhd] the VHD that this hard drive uses
         def vhd
           return nil unless path && computer_name
 
           @vhd ||= service.vhds.get(path, computer_name: computer_name)
         end
 
+        # @return [Boolean] does the hard drive have a VHD attached?
         def vhd?
           !vhd.nil?
         end
 
+        # @!attribute size_bytes
+        # @return [Integer] the size of the underlying VHD
         def size_bytes
           vhd&.size_bytes || 0
         end
