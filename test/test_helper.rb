@@ -15,9 +15,10 @@ end
 
 require 'minitest/reporters'
 Minitest::Reporters.use! [
-  Minitest::Reporters::ProgressReporter.new,
+  Minitest::Reporters::DefaultReporter.new,
   Minitest::Reporters::JUnitReporter.new
 ]
+
 require 'minitest/mock'
 require 'minitest/autorun'
 

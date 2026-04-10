@@ -30,5 +30,13 @@ pages:
     - master
 
 rake:
+  parallel:
+    matrix:
+      - RUBY_VERSION:
+          - 'ruby:3.0'
+          - 'ruby:3.1'
+          - 'ruby:3.2'
+          - 'ruby:4.0'
+  image: ghcr.io/ruby/$RUBY_VERSION
   script:
     - bundle exec rake
