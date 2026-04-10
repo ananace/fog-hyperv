@@ -1,0 +1,26 @@
+# frozen_string_literal: true
+
+require 'fog/hyperv/model'
+
+module Fog
+  module Hyperv
+    class Compute
+      class ComPort < Fog::Hyperv::Model
+        identity :id
+
+        attribute :computer_name
+        attribute :debugger_mode, type: :enum, values: %i[On Off]
+        attribute :name
+        attribute :path
+
+        def save
+          raise Fog::Errors::NotImplemented
+        end
+
+        def reload
+          raise Fog::Errors::NotImplemented
+        end
+      end
+    end
+  end
+end

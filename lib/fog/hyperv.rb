@@ -4,18 +4,16 @@ require 'fog/core'
 
 module Fog
   module Attributes
-    autoload :Enum, File.expand_path('../hyperv/fog_extensions/enum.rb', __FILE__)
-  end
-
-  module Compute
-    autoload :Hyperv, File.expand_path('../hyperv/compute', __FILE__)
+    autoload :Enum, File.expand_path('hyperv/fog_extensions/enum.rb', __dir__)
   end
 
   module Hyperv
+    autoload :Compute, File.expand_path('hyperv/compute', __dir__)
     extend Fog::Provider
 
     module Errors
       class ServiceError < Fog::Errors::Error; end
+
       class VersionError < ServiceError
         attr_reader :version, :required_version, :function
 
@@ -24,7 +22,7 @@ module Fog
           @required_version = required_version
           @version = version
 
-          super "#{function} requires at least Hyper-V v#{required_version}, you have v#{version}"
+          super("#{function} requires at least Hyper-V v#{required_version}, you have v#{version}")
         end
       end
 
@@ -37,7 +35,7 @@ module Fog
           @exitcode = output.exitcode
           @info = info
           @message = @stderr.split("\n").first
-          super @message
+          super(@message)
         end
 
         def to_s
@@ -48,30 +46,30 @@ module Fog
       end
     end
 
-    autoload :Collection, File.expand_path('../collection', __FILE__)
-    autoload :Model, File.expand_path('../model', __FILE__)
-    autoload :ModelExtends, File.expand_path('../model', __FILE__)
-    autoload :ModelIncludes, File.expand_path('../model', __FILE__)
-    autoload :VMCollection, File.expand_path('../collection', __FILE__)
+    autoload :Collection, File.expand_path('hyperv/collection', __dir__)
+    autoload :Model, File.expand_path('hyperv/model', __dir__)
+    autoload :ModelExtends, File.expand_path('hyperv/model', __dir__)
+    autoload :ModelIncludes, File.expand_path('hyperv/model', __dir__)
+    autoload :VMCollection, File.expand_path('hyperv/collection', __dir__)
 
     service(:compute, 'Compute')
 
-    def self.shell_quoted(data, always = false)
+    def self.shell_quoted(data, always: false)
       case data
       when String
         if !data.start_with?('$') && (data =~ /(^$)|\s/ || always)
-          data.gsub(/`/, '``')
+          data.gsub('`', '``')
               .gsub(/\0/, '`0')
-              .gsub(/\n/, '`n') 
-              .gsub(/\r/, '`r') 
+              .gsub("\n", '`n')
+              .gsub("\r", '`r')
               .inspect
-              .gsub(/\\"/, '`"')
-              .gsub(/\\\\/, '\\')
+              .gsub('\"', '`"')
+              .gsub('\\\\', '\\')
         else
           data
         end
       when Array
-        '@(' + data.map { |e| shell_quoted(e, true) }.join(', ') + ')'
+        "@(#{data.map { |e| shell_quoted(e, always: true) }.join(', ')})"
       when FalseClass
         '$false'
       when TrueClass
@@ -88,7 +86,7 @@ module Fog
       when Hash
         data.each_with_object({}) do |(k, v), hash|
           value = v
-          value = camelize(v) if v.is_a?(Hash) || (v.is_a?(Array) && v.all? { |h| h.is_a?(Hash) })
+          value = camelize(v) if v.is_a?(Hash) || (v.is_a?(Array) && v.all?(Hash))
           hash[camelize(k)] = value
         end
       when Symbol
@@ -107,7 +105,7 @@ module Fog
       when Hash
         data.each_with_object({}) do |(k, v), hash|
           value = v
-          value = uncamelize(v) if v.is_a?(Hash) || (v.is_a?(Array) && v.all? { |h| h.is_a?(Hash) })
+          value = uncamelize(v) if v.is_a?(Hash) || (v.is_a?(Array) && v.all?(Hash))
           hash[uncamelize(k)] = value
         end
       when Symbol

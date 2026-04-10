@@ -1,0 +1,57 @@
+---
+AllCops:
+  TargetRubyVersion: 2.7
+  Exclude:
+    - '*.spec'
+    - 'Rakefile'
+    - 'vendor/**/*'
+  NewCops: enable
+
+Gemspec/DevelopmentDependencies:
+  Enabled: false
+
+Naming/PredicateMethod:
+  Enabled: false
+
+Style/OptionHash:
+  Enabled: true
+
+# Don't enforce documentation
+Style/Documentation:
+  Enabled: false
+
+# Underscore prefix is used for meta-params
+Lint/UnderscorePrefixedVariableName:
+  Enabled: false
+
+Metrics/PerceivedComplexity:
+  Enabled: false
+
+Metrics/CyclomaticComplexity:
+  Enabled: false
+
+Layout/LineLength:
+  Max: 140
+
+Metrics/MethodLength:
+  Max: 40
+
+Metrics/AbcSize:
+  Enabled: false
+
+Metrics/BlockLength:
+  Exclude:
+    - 'test/**/*'
+
+Metrics/ClassLength:
+  Max: 200
+  Exclude:
+    - 'test/**/*'
+
+Lint/AmbiguousBlockAssociation:
+  Enabled: false
+
+Style/ClassAndModuleChildren:
+  Exclude:
+    - 'test/**/*'
+    - 'app/controllers/concerns/foreman/**/*'

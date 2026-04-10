@@ -1,0 +1,14 @@
+# frozen_string_literal: true
+
+module Fog
+  module Hyperv
+    class Compute
+      class Real
+        def set_vm_firmware(**options)
+          requires options, :vm_name
+          run_shell('Set-VMFirmware', **options)
+        end
+      end
+    end
+  end
+end

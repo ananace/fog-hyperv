@@ -2,6 +2,6 @@
 
 module Fog
   module Hyperv
-    VERSION = '0.0.9'.freeze
+    VERSION = '0.0.9'
   end
 end

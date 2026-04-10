@@ -5,7 +5,7 @@ class Hyperv < Fog::Bin
     def class_for(key)
       case key
       when :compute
-        Fog::Compute::Hyperv
+        Fog::Hyperv::Compute
       else
         raise ArgumentError, "Unsupported #{self} service: #{key}"
       end
@@ -15,7 +15,7 @@ class Hyperv < Fog::Bin
       @connections ||= Hash.new do |h, k|
         h[k] = case key
                when :compute
-                 Fog::Compute.new(provider: 'Hyperv')
+                 Fog::Hyperv::Compute.new
                else
                  raise ArgumentError, "Unrecognized service: #{key.inspect}"
                end
