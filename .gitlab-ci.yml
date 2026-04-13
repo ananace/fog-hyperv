@@ -8,7 +8,7 @@ cache:
 
 before_script:
   - apt-get update -yqq
-  - apt-get install -yqq build-essential ruby-dev
+  - apt-get install -yqq build-essential ruby-dev libyaml-dev
   - gem install bundler -N
   - bundle config set path vendor
   - bundle install -j $(nproc)
