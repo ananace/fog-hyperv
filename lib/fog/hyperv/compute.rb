@@ -202,8 +202,13 @@ module Fog
         private
 
         def handle_mock_response(_method: nil, **args)
-          _method ||= caller[0][/`.*'/][1..-2]
-          _method ||= caller[1][/`.*'/][1..-2]
+          if Gem::Version.new(RUBY_VERSION) >= Gem::Version.new('4.0')
+            _method ||= caller[0][/'.*'/][1..-2].split('#').last
+            _method ||= caller[1][/'.*'/][1..-2].split('#').last
+          else
+            _method ||= caller[0][/`.*'/][1..-2]
+            _method ||= caller[1][/`.*'/][1..-2]
+          end
 
           path = File.join File.dirname(__FILE__), 'compute', 'requests', 'mock_files', "#{_method}.json"
           raise Fog::Errors::MockNotImplemented, "No mocked data for #{path}" unless File.exist? path
