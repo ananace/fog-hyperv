@@ -43,3 +43,6 @@ rake:
   image: ghcr.io/ruby/$RUBY_VERSION
   script:
     - bundle exec rake
+  artifacts:
+    reports:
+      junit: test/reports/TEST-*.xml
