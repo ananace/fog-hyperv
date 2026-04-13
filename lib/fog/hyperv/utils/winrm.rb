@@ -54,7 +54,7 @@ module Fog
               "'#{k}'=#{Fog::Hyperv.shell_quoted(v, always: true)}"
             end
 
-            "$Args = @{#{args.join ';'}}"
+            "$#{optmap_name} = @{#{args.join ';'}}"
           end
         end
 
@@ -123,7 +123,7 @@ module Fog
               !_always_include.include?(k) && (v.nil? || v.is_a?(FalseClass) || k.to_s.start_with?('_') || (v.is_a?(String) && v.empty?))
             end
             if bake_optmap
-              prefix = "#{hash_to_optmap(_bake_json: bake_json, **args)}\n"
+              prefix = "#{hash_to_optmap(optmap_name: 'FogArgs', _bake_json: bake_json, **args)}\n"
               command = command.gsub('@Args', '@FogArgs')
             else
               args = args.map do |k, v|
