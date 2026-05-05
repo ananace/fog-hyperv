@@ -1,15 +1,10 @@
 # frozen_string_literal: true
 
-module Fog
-  module Hyperv
-    class Compute
-      class Real
-        def remove_item(**options)
-          # TODO: Really lock this method down, validation is good.
-          requires options, :path
-          run_shell('Remove-Item', _skip_json: true, **options.merge(force: true)).exitcode.zero?
-        end
-      end
+class Fog::Hyperv::Compute
+  class Real
+    def remove_item(path:, computer_name: nil, **options)
+      # TODO: Really lock this method down, validation is good.
+      run_cmd 'Remove-Item', _target_computer: computer_name, _skip_json: true, path:, force: true, **options
     end
   end
 end

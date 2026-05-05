@@ -1,14 +1,17 @@
 # frozen_string_literal: true
 
-module Fog
-  module Hyperv
-    class Compute
-      class Real
-        def remove_vm_hard_disk_drive(**options)
-          requires options, :vm_name, :controller_type, :controller_number, :controller_location
-          run_shell('Remove-VMHardDiskDrive', _skip_json: true, **options).exitcode.zero?
-        end
-      end
+class Fog::Hyperv::Compute
+  class Real
+    def remove_vm_hard_disk_drive(vm_id:, id:, computer_name: nil, **options)
+      run_cmdlist(
+        [
+          ['$VM = Get-VM', { id: vm_id }],
+          ['$HDD = $VM | Get-VMHardDiskDrive', { _by_id: id }],
+          ['$HDD | Remove-VMHardDiskDrive', options]
+        ],
+        skip_json: true,
+        target_computer: computer_name
+      )
     end
   end
 end

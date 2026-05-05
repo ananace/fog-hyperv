@@ -1,15 +1,11 @@
 # frozen_string_literal: true
 
-module Fog
-  module Hyperv
-    class Compute
-      class Real
-        def new_vm_switch(**options)
-          requires options, :name
-          requires_one options, :net_adapter_name, :net_adapter_interface_description
-          run_shell('New-VMSwitch', **options)
-        end
-      end
+class Fog::Hyperv::Compute
+  class Real
+    def new_vm_switch(name:, computer_name: nil, **options)
+      requires_one options, :net_adapter_name, :net_adapter_interface_description
+
+      run_cmd 'New-VMSwitch', _target_computer: computer_name, name:, **options
     end
   end
 end

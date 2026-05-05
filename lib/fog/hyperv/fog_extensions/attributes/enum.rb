@@ -2,11 +2,11 @@
 
 module Fog
   module Attributes
-    class Enum < Default
+    class Hypervenum < Default
       attr_reader :values
 
       def initialize(model, name, options)
-        @values = options.fetch(:values, [])
+        @values = options.fetch(:values)
 
         raise Fog::Hyperv::Errors::ServiceError, "#{values} is not a valid array or hash" \
           unless %w[Array Hash].include?(values.class.to_s)

@@ -1,82 +1,72 @@
 # frozen_string_literal: true
 
-require 'fog/hyperv/model'
+class Fog::Hyperv::Compute
+  class Firmware < Fog::Hyperv::Model
+    # @!attribute [r] vm_id
+    #   @return [String] the GUID of the VM this UEFI configuration is attached to
+    identity :vm_id
+    # @!attribute [r] computer_name
+    #   @return [String] the name of the computer running the VM that this UEFI configuration is attached to
+    attribute :computer_name
 
-module Fog
-  module Hyperv
-    class Compute
-      class Firmware < Fog::Hyperv::Model
-        # @!attribute [r] computer_name
-        #   @return [String] The name of the computer running the VM that this UEFI configuration is attached to
-        attribute :computer_name
-        # @!attribute [r] vm_id
-        #   @return [String] The GUID of the VM this UEFI configuration is attached to
-        identity :vm_id
-        # @!attribute [r] vm_name
-        #   @return [String] The name of the VM this UEFI configuration is attached to
-        attribute :vm_name
+    # @!attribute [r] boot_order
+    #   @todo should be mapped to VM models; HDD/NIC/DVD, needs additional work
+    #   @return [Array<String>] the boot order of the VM
+    attribute :boot_order
+    # @!attribute console_mode
+    #   @return [:Default, :COM1, :COM2, :None] where the console output should be directed
+    attribute :console_mode, type: :hypervenum, values: %i[Default COM1 COM2 None]
+    # @!attribute preferred_network_boot_protocol
+    #   @return [:IPv4, :IPv6] the preferred IP protocol for PXE
+    attribute :preferred_network_boot_protocol, type: :hypervenum, values: %i[IPv4 IPv6]
+    # @!attribute secure_boot
+    #   @return [:On, :Off] should secure boot be enabled
+    #   @see ON_OFF_STATE_ENUM_VALUES
+    attribute :secure_boot, type: :hypervenum, values: ON_OFF_STATE_ENUM_VALUES
+    # @!attribute secure_boot_template
+    #   @return [String] the template to use for the secure boot configuration
+    #   @see Host#secure_boot_templates
+    attribute :secure_boot_template
+    # @!attribute secure_boot_template_id
+    #   @return [String] the template id to use for the secure boot configuration
+    #   @see Host#secure_boot_templates
+    attribute :secure_boot_template_id
+    # @!attribute pause_after_boot_failure
+    #   @return [:On, :Off] should the VM pause after failing boot
+    #   @see ON_OFF_STATE_ENUM_VALUES
+    attribute :pause_after_boot_failure, type: :hypervenum, values: ON_OFF_STATE_ENUM_VALUES
 
-        # @!attribute [r] boot_order
-        #   @return [Array<String>] The boot order of the VM
-        attribute :boot_order
-        # @!attribute console_mode
-        #   @return [:Default, :COM1, :COM2, :None] Where the console output should be directed
-        attribute :console_mode, type: :enum, values: %i[Default COM1 COM2 None]
-        # attribute :is_deleted
-        # @!attribute preferred_network_boot_protocol
-        #   @return [:IPv4, :IPv6] The preffered IP protocol for PXE
-        attribute :preferred_network_boot_protocol, type: :enum, values: %i[IPv4 IPv6]
-        # @!attribute secure_boot
-        #   @return [:On, :Off] Should secure boot be enabled
-        #   @see ON_OFF_STATE_ENUM_VALUES
-        attribute :secure_boot, type: :enum, values: ON_OFF_STATE_ENUM_VALUES
-        # @!attribute secure_boot_template
-        #   @return [String] The template to use for the secure boot configuration
-        #   @see Host#secure_boot_templates
-        attribute :secure_boot_template
-        # @!attribute pause_after_boot_failure
-        #   @return [:On, :Off] Should the VM pause after failing boot
-        #   @see ON_OFF_STATE_ENUM_VALUES
-        attribute :pause_after_boot_failure, type: :enum, values: ON_OFF_STATE_ENUM_VALUES
+    def update
+      requires :vm_id
 
-        def save
-          requires :computer_name, :vm_name
+      merge_attributes(
+        service.set_vm_firmware(
+          computer_name:,
+          vm_id:,
 
-          raise Fog::Hyperv::Errors::ServiceError, "Can't create Firmware instances" unless persisted?
+          enable_secure_boot: changed!(:secure_boot),
+          secure_boot_template: changed!(:secure_boot_template),
+          preferred_network_boot_protocol: changed!(:preferred_network_boot_protocol),
+          console_mode: changed!(:console_mode),
+          pause_after_boot_failure: changed!(:pause_after_boot_failure),
 
-          data = service.set_vm_firmware(
-            computer_name: computer_name,
-            vm_name: vm_name,
-            passthru: true,
+          _return_fields: self.class.attributes
+        )
+      )
+    end
 
-            enable_secure_boot: changed!(:secure_boot),
-            secure_boot_template: changed!(:secure_boot_template),
-            preferred_network_boot_protocol: changed!(:preferred_network_boot_protocol),
-            console_mode: changed!(:console_mode),
-            pause_after_boot_failure: changed!(:pause_after_boot_failure),
+    def reload
+      requires :vm_id
 
-            _return_fields: self.class.attributes
-          )
+      data = service.get_vm_firmware(
+        computer_name:,
+        vm_id:,
 
-          merge_attributes(data)
-          @old = dup
-          self
-        end
+        _return_fields: self.class.attributes
+      )
+      return unless data
 
-        def reload
-          requires :computer_name, :vm_name
-
-          data = service.get_vm_firmware(
-            computer_name: computer_name,
-            vm_name: vm_name,
-
-            _return_fields: self.class.attributes
-          )
-          merge_attributes(data)
-          @old = data
-          self
-        end
-      end
+      merge_attributes(data)
     end
   end
 end

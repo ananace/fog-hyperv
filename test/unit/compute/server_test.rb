@@ -17,12 +17,12 @@ class UnitServerTest < Minitest::Test
 
     assert_equal 'mockvm1', server.name
     assert_equal :Off, server.state
-    assert_equal :Ok, server.status.to_s.to_sym
+    assert_equal :Ok, server.primary_operational_status.to_s.to_sym
 
     server = @client.servers[1]
 
     assert_equal 'mockvm2', server.name
     assert_equal :Running, server.state
-    assert_equal :Ok, server.status.to_s.to_sym
+    assert_equal :Ok, server.primary_operational_status.to_s.to_sym
   end
 end

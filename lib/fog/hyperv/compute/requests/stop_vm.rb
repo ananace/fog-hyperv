@@ -1,23 +1,22 @@
 # frozen_string_literal: true
 
-module Fog
-  module Hyperv
-    class Compute
-      class Real
-        def stop_vm(**options)
-          # TODO: Handle -VMId/-Id too;
-          #
-          #   Get-VM -Id <guid> | Stop-VM
-          requires options, :name
-          run_shell('Stop-VM', _skip_json: true, **options).exitcode.zero?
-        end
-      end
+class Fog::Hyperv::Compute
+  class Real
+    def stop_vm(id:, computer_name: nil, **options)
+      run_cmdlist(
+        [
+          ['$VM = Get-VM', { id: }],
+          ['$VM | Stop-VM', options]
+        ],
+        skip_json: true,
+        target_computer: computer_name
+      )
+    end
+  end
 
-      class Mock
-        def stop_vm(**_)
-          true
-        end
-      end
+  class Mock
+    def stop_vm(**_)
+      true
     end
   end
 end

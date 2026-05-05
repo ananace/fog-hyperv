@@ -1,110 +1,109 @@
 # frozen_string_literal: true
 
-require 'fog/core/model'
+module Fog::Hyperv
+  module ModelExtends
+    def collection(name, collection_name = nil, options = {}) # rubocop:disable Style/OptionHash -- upstream design
+      collection_name ||= name
+      Fog::Hyperv::Associations::Collection.new(self, name, collection_name, options)
 
-module Fog
-  module Hyperv
-    module ModelExtends
-      def lazy_attributes(*attrs)
-        @lazy_attributes ||= []
-        @lazy_attributes += attrs.map(&:to_s).map(&:to_sym)
+      case to_s
+      when 'Fog::Hyperv::Compute::Server'
+        define_method name do
+          associations[name] ||= service.send(collection_name, vm: self, computer_name:, vm_id: id)
+        end
+      when 'Fog::Hyperv::Compute::Host'
+        define_method name do
+          associations[name] ||= service.send(collection_name, computer: self, computer_name:)
+        end
+      else
+        raise "Unknown class #{self}"
+      end
+
+      define_method :"#{name}=" do |data|
+        return associations[name].load(data) if associations[name]
+
+        send(name).load(data)
       end
     end
+  end
 
-    module ModelIncludes
-      def lazy_attributes
-        self.class.respond_to?(:lazy_attributes) ? self.class.lazy_attributes : []
-      end
-
-      def dirty?
-        attributes.reject do |k, v|
-          !self.class.attributes.include?(k) || lazy_attributes.include?(k) || (old ? old.attributes[k] == v : false)
-        end.any?
-      end
-
-      def parent
-        return @interface if @interface
-        return @vm if @vm
-        return @computer if @computer
-        return @cluster if @cluster
-        return nil unless collection
-        return collection.vm if collection.attributes.include? :vm
-        return collection.computer if collection.attributes.include? :computer
-
-        @parent ||= begin
-          r = service.servers.get vm_name if attributes.include? :vm_name
-          r = service.hosts.get computer_name if attributes.include? :computer_name
-          r
-        end
-      end
-
-      def interface
-        return unless @interface || (respond_to?(:vm_network_adapter_name) && vm_network_adapter_name)
-
-        @interface ||= service.network_adapters.get vm_network_adapter_name, vm_name: vm_name
-      end
-      alias network_adapter interface
-
-      def vm
-        return unless respond_to?(:vm_name) && vm_name
-
-        @vm ||= service.servers.get vm_name
-      end
-
-      def computer
-        return unless @computer || (respond_to?(:computer_name) && computer_name)
-
-        @computer ||= service.hosts.get computer_name
-      end
-
-      def cluster
-        return unless @cluster || (respond_to?(:cluster_name) && cluster_name)
-
-        @cluster ||= service.clusters.get cluster_name
-      end
-
-      private
-
-      def logger
-        service.logger
-      end
-
-      def clear_lazy
-        lazy_attributes.each do |attr|
-          attributes[attr] = nil
-        end
-      end
-
-      def changed?(attr)
-        attributes.reject do |k, v|
-          !self.class.attributes.include?(k) || lazy_attributes.include?(k) || (old ? old.attributes[k] == v : true)
-        end.key?(attr)
-      end
-
-      def changed!(attr)
-        changed?(attr) ? attributes[attr] : nil
-      end
-
-      def old
-        @old ||= (persisted? ? dup.reload : nil)
-      end
+  module ModelIncludes
+    def dirty?
+      attributes.reject do |k, v|
+        !self.class.attributes.include?(k) || (old ? old.attributes[k] == v : false)
+      end.any?
     end
 
-    class Model < Fog::Model
-      extend Fog::Hyperv::ModelExtends
-      include Fog::Hyperv::ModelIncludes
+    def vm
+      return @vm if @vm
+      return unless respond_to?(:vm_id) && vm_id
 
-      # Microsoft.HyperV.PowerShell.OnOffState
-      ON_OFF_STATE_ENUM_VALUES = %i[
-        On
-        Off
-      ].freeze
+      @vm ||= service.servers.get id: vm_id
+    end
 
-      def initialize(attributes = {})
-        super
+    def computer
+      return @computer if @computer
+      return @computer ||= service.hosts.get(computer_name) if respond_to?(:computer_name) && computer_name
 
-        @old = dup if persisted?
-      end
+      @computer ||= @vm.computer
+    end
+
+    def cluster
+      return @cluster if @cluster
+      return unless respond_to?(:cluster_name) && cluster_name
+
+      @cluster ||= service.clusters.get cluster_name
+    end
+
+    private
+
+    def logger
+      service.logger
+    end
+
+    def changed?(attr)
+      attributes.reject do |k, v|
+        !self.class.attributes.include?(k) || (old ? old.attributes[k] == v : true)
+      end.key?(attr)
+    end
+
+    def changed!(attr)
+      changed?(attr) ? attributes[attr] : nil
+    end
+
+    def old
+      @old ||= (persisted? ? dup.reload : nil)
+    end
+  end
+
+  class Model < Fog::Model
+    extend Fog::Hyperv::ModelExtends
+    include Fog::Hyperv::ModelIncludes
+
+    # Microsoft.HyperV.PowerShell.OnOffState
+    ON_OFF_STATE_ENUM_VALUES = %i[
+      On
+      Off
+    ].freeze
+
+    def initialize(attributes = {})
+      @vm = attributes.delete :vm
+      self.attributes[:vm] = @vm if self.class.attributes.include? :vm
+      @computer = attributes.delete :computer
+      self.attributes[:computer] = @computer if self.class.attributes.include? :computer
+      @cluster = attributes.delete :cluster
+      self.attributes[:cluster] = @cluster if self.class.attributes.include? :cluster
+
+      super
+
+      @old = dup if persisted?
+    end
+
+    def merge_attributes(attributes = {})
+      super
+
+      @old = dup
+      self
     end
   end
 end

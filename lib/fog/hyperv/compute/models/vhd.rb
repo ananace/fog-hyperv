@@ -1,162 +1,210 @@
 # frozen_string_literal: true
 
-require 'fog/hyperv/model'
+class Fog::Hyperv::Compute
+  # A VM hard drive - VHD - file
+  class Vhd < Fog::Hyperv::Model
+    # rubocop:disable Layout/HashAlignment
 
-module Fog
-  module Hyperv
-    class Compute
-      # A VM hard drive - VHD - file
-      class Vhd < Fog::Hyperv::Model
-        # rubocop:disable Layout/HashAlignment
+    # VHD types
+    # @note Defined by Microsoft.Vhd.PowerShell.VhdType
+    VHD_TYPE_ENUM_VALUES = {
+      Unknown:      0,
+      Fixed:        2,
+      Dynamic:      3,
+      Differencing: 4
+    }.freeze
 
-        # VHD types
-        # @note Defined by Microsoft.Vhd.PowerShell.VhdType
-        VHD_TYPE_ENUM_VALUES = {
-          Unknown:      0,
-          Fixed:        2,
-          Dynamic:      3,
-          Differencing: 4
-        }.freeze
+    # VHD formats
+    # @note Defined by Microsoft.Vhd.PowerShell.VhdFormat
+    VHD_FORMAT_ENUM_VALUES = {
+      Unknown: 0,
+      VHD:     2,
+      VHDX:    3,
+      VHDSet:  4
+    }.freeze
+    # rubocop:enable Layout/HashAlignment
 
-        # VHD formats
-        # @note Defined by Microsoft.Vhd.PowerShell.VhdFormat
-        VHD_FORMAT_ENUM_VALUES = {
-          Unknown: 0,
-          VHD:     2,
-          VHDX:    3,
-          VHDSet:  4
-        }.freeze
-        # rubocop:enable Layout/HashAlignment
+    # @!attribute [r] disk_identifier
+    #   @return [String] the guid of this VHD
+    identity :disk_identifier
 
-        # @!attribute [r] disk_identifier
-        #   @return [String] the GUID of this VHD
-        identity :disk_identifier
+    # @!attribute [r] computer_name
+    #   @return [String] the name of the computer hosting this VHD
+    attribute :computer_name
 
-        attribute :computer_name
+    # @!attribute [r] attached
+    #   @return [Boolean] is the VHD attached to something
+    attribute :attached, type: :boolean
+    # @!attribute [r] block_size
+    #   @return [Integer] the block size of the VHD in bytes
+    attribute :block_size, type: :integer
+    # @!attribute [r] disk_number
+    #   @return [Integer,nil] the disk number
+    attribute :disk_number
+    # @!attribute [r] file_size
+    #   @return [Integer,nil] the size of the VHD file in bytes
+    attribute :file_size
+    # @!attribute [r] logical_sector_size
+    #   @return [512, 4096] the logical sector size for the VHD in bytes
+    attribute :logical_sector_size, type: :integer
+    # @!attribute [r] minimum_size
+    #   @return [Integer,nil] the minimum possible size of the VHD in bytes, for shrinking purposes
+    attribute :minimum_size
+    # @!attribute [r] parent_path
+    #   @return [String,nil] the path to the parent VHD
+    attribute :parent_path
+    # @!attribute [r] path
+    #   @return [String,nil] the path to the VHD on disk
+    attribute :path
+    # @!attribute [r] pool_name
+    #   @return [String] the name of the pool storing this VHD
+    attribute :pool_name
+    # @!attribute physical_sector_size_bytes
+    #   @return [512, 4096] the physical sector size for the VHD in bytes
+    attribute :physical_sector_size, type: :integer
+    # @!attribute size
+    #   @return [Integer,nil] the size of the VHD in bytes
+    #   @note Defaults to 32GB if not specified
+    attribute :size, default: 32 * 1024 * 1024 * 1024
+    # @!attribute [r] vhd_format
+    #   @return [:Unknown, :VHD, :VHDX, :VHDSet] the format of the VHD
+    #   @see VHD_FORMAT_ENUM_VALUES
+    attribute :vhd_format, type: :hypervenum, default: :VHDX, values: VHD_FORMAT_ENUM_VALUES
+    # @!attribute [r] vhd_type
+    #   @return [:Unknown, :Fixed, :Dynamic, :Differencing] the type of the VHD
+    #   @see VHD_TYPE_ENUM_VALUES
+    attribute :vhd_type, type: :hypervenum, default: :Dynamic, values: VHD_TYPE_ENUM_VALUES
 
-        # @!attribute [r] attached
-        #   @return [Boolean] is the VHD attached to something
-        attribute :attached, type: :boolean
-        # @!attribute [r] block_size
-        #   @return [Integer] the block size of the VHD in bytes
-        attribute :block_size, type: :integer
-        # @!attribute [r] disk
-        #   @return [String] the disk number
-        attribute :disk, type: :integer
-        # @!attribute [r] file_size
-        #   @return [Integer] the size of the VHD file in bytes
-        attribute :file_size, type: :integer
-        # @!attribute [r] is_deleted
-        #   @return [Boolean] is the VHD deleted
-        attribute :is_deleted, type: :boolean
-        # @!attribute [r] minimum_size
-        #   @return [Integer] the minimum size of the VHD in bytes
-        attribute :minimum_size, type: :integer
-        # @!attribute [r] path
-        #   @return [String] the file path for the VHD, without extension
-        attribute :path, type: :string, default: 'New Disk'
-        # @!attribute [r] pool_name
-        #   @return [String] the name of the pool storing this VHD
-        attribute :pool_name
-        # @!attribute [r] size
-        #   @return [Integer] the size of the VHD in bytes
-        attribute :size, type: :integer, default: 343_597_383_68
-        # @!attribute [r] vhd_format
-        #   @return [:Unknown, :VHD, :VHDX, :VHDSet] the format of the VHD
-        #   @see VHD_FORMAT_ENUM_VALUES
-        attribute :vhd_format, type: :enum, default: :VHDX, values: VHD_FORMAT_ENUM_VALUES
-        # @!attribute [r] vhd_type
-        #   @return [:Unknown, :Fixed, :Dynamic, :Differencing] the type of the VHD
-        #   @see VHD_TYPE_ENUM_VALUES
-        attribute :vhd_type, type: :enum, default: :Dynamic, values: VHD_TYPE_ENUM_VALUES
-        # TODO? VM Snapshots?
-        #
+    # @!attribute [r] basename
+    #   @return [String] the basename of the VHD file, without extension
+    attribute :basename
 
-        # def identity_name
-        #   :disk_identifier unless disk_identifier
-        #   :disk_number if disk
-        #   :path
-        # end
+    # @!attribute [r] unc_path
+    # @return [String] the UNC path to the VHD file in a cluster
+    def unc_path
+      requires :path
 
-        # @!attribute [r] real_path
-        # @return [String] the real path on disk for the VHD file
-        def real_path
-          requires :path, :computer_name
+      "\\\\#{computer_name || 'localhost'}\\#{path.tr ':', '$'}"
+    end
 
-          basepath = "#{host.virtual_hard_disk_path}\\"
+    # Save the VHD to Hyper-V
+    def create
+      if basename
+        requires :vm
 
-          ret = path
-          ext = vhd_format&.downcase || 'vhdx'
-          ret += ".#{ext}" unless ret.downcase.end_with? ".#{ext}"
-          ret = basepath + ret unless ret.downcase.start_with? basepath.downcase
-          ret
-        end
-
-        # @!attribute [r] unc_path
-        # @return [String] the UNC path for the VHD file in a cluster
-        def unc_path
-          "\\\\#{computer_name || '.'}\\#{real_path.tr ':', '$'}"
-        end
-
-        # @!attribute [r] host
-        # @return [Host] the host that stores this VHD
-        def host
-          requires :computer_name
-
-          @host ||= begin
-            ret = parent || service.hosts.get(computer_name)
-            ret = ret.parent unless ret.is_a?(Host)
-            ret
-          end
-        end
-
-        # Save the VHD to Hyper-V
-        def save
-          # Can't change much of a VHD
-          return self if persisted?
-
-          requires :path, :computer_name, :size
-
-          data = service.new_vhd(
-            computer_name: computer_name,
-            path: real_path,
-
-            block_size_bytes: block_size,
-            size_bytes: size,
-
-            _return_fields: self.class.attributes,
-            _json_depth: 1
-          )
-
-          merge_attributes(data)
-          @old = dup
-          self
-        end
-
-        # Reload the VHD attributes from Hyper-V
-        def reload
-          requires :computer_name
-          requires_one :path, :disk
-
-          data = service.get_vhd(
-            computer_name: computer_name,
-            path: path,
-            disk_number: disk
-          )
-          merge_attributes(data.attributes)
-          @old = data
-          self
-        end
-
-        # Remove the VHD from disk
-        def destroy
-          requires :path, :disk_identifier
-
-          service.remove_item(
-            path: unc_path
-          )
-        end
+        attributes[:path] ||= vm.build_vhd_path("#{basename}.#{vhd_ext}")
       end
+
+      requires_one :path, :disk_number
+
+      attrs = {
+        source_disk: disk_number,
+        logical_sector_size_bytes: logical_sector_size,
+        physical_sector_size_bytes: physical_sector_size
+      }.compact
+      case vhd_type
+      when :Dynamic
+        attrs[:dynamic] = true
+        requires :size unless disk_number
+      when :Differencing
+        requires :parent_path
+        attrs[:differencing] = true
+        attrs[:parent_path] = parent_path
+        attrs.delete :source_disk
+        attrs.delete :logical_sector_size_bytes
+      when :Fixed
+        attrs[:fixed] = true
+        requires :size unless disk_number
+      else
+        raise "Invalid VHD type #{vhd_type.inspect}, must be :Dynamic, :Fixed, or :Differencing"
+      end
+
+      merge_attributes(
+        service.new_vhd(
+          computer_name:,
+          path:,
+
+          block_size_bytes: block_size,
+          size_bytes: size,
+          **attrs,
+
+          _return_fields: self.class.attributes - %i[basename]
+        )
+      )
+    end
+
+    def update
+      requires :path
+
+      if changed?(:size)
+        service.resize_vhd(
+          computer_name: old.computer_name,
+          path: old.path,
+
+          size_bytes: size
+        )
+        @old.size = size
+      end
+
+      @old = nil
+      self
+    end
+
+    # Reload the VHD attributes from Hyper-V
+    def reload
+      requires_one :path, :disk_number
+
+      data = service.get_vhd(
+        computer_name:,
+        path:,
+        disk_number:,
+
+        _return_fields: self.class.attributes - %i[basename]
+      )
+      return unless data
+
+      merge_attributes(data)
+    end
+
+    # Remove the VHD from disk
+    def destroy
+      requires :path
+
+      service.remove_item(
+        computer_name:,
+        path:
+      )
+      true
+    end
+
+    # Optimizes the VHD on disk
+    # @param mode [:full,:pretrimmed,:prezeroed,:quick,:retrim]
+    #   the optimization mode to use, will default to :full/:quick depending on VHD type
+    def optimize(mode: nil)
+      requires :path
+
+      service.optimize_vhd(
+        computer_name:,
+        path:,
+        mode:
+      )
+      true
+    end
+
+    private
+
+    def merge_attributes(new_attributes = {})
+      new_attributes[:parent_path] = nil if new_attributes[:parent_path] == ''
+      new_attributes[:basename] = File.basename(new_attributes[:path].split('\\').last, '.*') if new_attributes[:path]
+
+      super
+    end
+
+    def vhd_ext
+      ext = vhd_format&.downcase || 'vhdx'
+      ext = 'vhds' if ext.downcase == 'vhdset'
+      ext = 'vhdx' if ext.downcase == 'unknown'
+      ext
     end
   end
 end

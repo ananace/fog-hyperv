@@ -1,26 +1,16 @@
 # frozen_string_literal: true
 
-require 'fog/hyperv/collection'
-require 'fog/hyperv/compute/models/server'
+class Fog::Hyperv::Compute
+  class Servers < Fog::Hyperv::Collection
+    model Fog::Hyperv::Compute::Server
 
-module Fog
-  module Hyperv
-    class Compute
-      class Servers < Fog::Hyperv::ComputerCollection
-        model Fog::Hyperv::Compute::Server
+    get_method :get_vm
 
-        get_method :get_vm
+    def get(identifier, **filters)
+      id = identifier if identifier =~ /\A#{Fog::Hyperv::GUID}\z/i
+      name = identifier unless id
 
-        def get(identity, filters = {})
-          guid = identity =~ /\w{8}-\w{4}-\w{4}-\w{4}-\w{12}/
-
-          search = {}
-          search[:id] = identity if guid
-          search[:name] = identity unless guid
-
-          super(search.merge(filters))
-        end
-      end
+      super(name:, id:, **filters)
     end
   end
 end

@@ -1,82 +1,111 @@
 # frozen_string_literal: true
 
-require 'fog/hyperv/model'
+class Fog::Hyperv::Compute
+  class Switch < Fog::Hyperv::Model
+    # @!attribute [r] id
+    #   @return [String] the GUID of the network switch
+    identity :id
 
-module Fog
-  module Hyperv
-    class Compute
-      class Switch < Fog::Hyperv::Model
-        # @!attribute [r] id
-        #   @return [String] the GUID of the network switch
-        identity :id
+    # @!attribute [r] computer_name
+    #   @return [String] the name of the computer hosting this network switch
+    attribute :computer_name
 
-        # @!attribute [r] computer_name
-        #   @return [String] the name of the computer hosting this network switch
-        attribute :computer_name
+    # @!attribute allow_management_os
+    #   @return [Boolean] is the management OS allowed to use this switch
+    attribute :allow_management_os, type: :boolean
+    # @!attribute default_flow_minimum_bandwidth_absolute
+    #   @return [Integer] the default minimum bandwidth allocation for VMs without specific allocations
+    attribute :default_flow_minimum_bandwidth_absolute, type: :integer
+    # @!attribute default_flow_minimum_bandwidth_weight
+    #   @return [Integer] the default minimum bandwidth allocation for VMs without specific allocations, as a relative weight
+    attribute :default_flow_minimum_bandwidth_weight, type: :integer
+    # @!attribute name
+    #   @return [String] the name of the network switch
+    attribute :name
+    # @!attribute [r] net_adapter_interface_description
+    #   @return [String] the network interface description this switch is attached to
+    attribute :net_adapter_interface_description
+    # @!attribute [r] net_adapter_name
+    #   @return [String] the network interface name this switch is attached to
+    attribute :net_adapter_name
+    # @!attribute notes
+    #   @return [String] the user-specified notes for the network switch
+    attribute :notes
+    # @!attribute resource_pool_name
+    #   @return [String] the resource pool the switch is part of
+    attribute :resource_pool_name
+    # @!attribute [r] switch_type
+    #   @return [:Private, :Internal, :External] the type of network switch
+    attribute :switch_type, type: :hypervenum, values: %i[Private Internal External]
 
-        # attribute :default_flow_minimum_bandwidth_absolute
-        # attribute :default_flow_minimum_bandwidth_weight
-        # attribute :is_deleted
-        # @!attribute [r] name
-        #   @return [String] the name of the network switch
-        attribute :name
-        # @!attribute [r] net_adapter_interface_description
-        #   @return [String] the network interface description this switch is attached to
-        attribute :net_adapter_interface_description
-        # @!attribute notes
-        #   @return [String] the user-specified notes for the network switch
-        attribute :notes
-        # @!attribute [r] switch_type
-        #   @return [:Private, :Internal, :External] the type of network switch
-        attribute :switch_type, type: :enum, values: %i[Private Internal External]
+    def create
+      requires :name
+      requires_one :net_adapter_name, :net_adapter_interface_description, :switch_type
 
-        def save
-          requires :name
+      merge_attributes(
+        service.new_vm_switch(
+          computer_name:,
+          name:,
 
-          data =
-            if persisted?
-              service.set_vm_switch(
-                computer_name: old.computer_name,
-                name: old.name,
-                net_adapter_interface_description: old.net_adapter_interface_description,
-                switch_type: !old.net_adapter_interface_description && old.switch_type,
-                passthru: true,
+          allow_management_os:,
+          net_adapter_interface_description:,
+          net_adapter_name:,
+          notes:,
+          switch_type: !net_adapter_interface_description && switch_type,
 
-                default_flow_minimum_bandwidth_absolute: changed!(default_flow_minimum_bandwidth_absolute),
-                default_flow_minimum_bandwidth_weight: changed!(default_flow_minimum_bandwidth_weight),
-                notes: changed!(notes),
+          _return_fields: self.class.attributes
+        )
+      )
+    end
 
-                _return_fields: self.class.attributes,
-                _json_depth: 1
-              )
-            else
-              service.new_vm_switch(
-                computer_name: computer_name,
-                name: name,
-                net_adapter_interface_description: net_adapter_interface_description,
-                notes: notes,
-                switch_type: !net_adapter_interface_description && switch_type,
+    def update
+      requires :id
 
-                _return_fields: self.class.attributes,
-                _json_depth: 1
-              )
-            end
+      if changed?(:name)
+        service.rename_vm_switch(
+          computer_name: old.computer_name,
+          id: old.id,
 
-          merge_attributes(data)
-          @old = dup
-          self
-        end
-
-        def reload
-          data = collection.get(
-            name,
-            computer_name: computer_name
-          )
-          merge_attributes(data.attributes)
-          @old = data
-          self
-        end
+          new_name: name
+        )
+        @old.name = name
       end
+
+      merge_attributes(
+        service.set_vm_switch(
+          computer_name: old.computer_name,
+          id: old.id,
+
+          allow_management_os: changed!(:allow_management_os),
+          default_flow_minimum_bandwidth_absolute: changed!(:default_flow_minimum_bandwidth_absolute),
+          default_flow_minimum_bandwidth_weight: changed!(:default_flow_minimum_bandwidth_weight),
+          notes: changed!(:notes),
+
+          _return_fields: self.class.attributes
+        )
+      )
+    end
+
+    def destroy
+      requires :id
+
+      service.remove_vm_switch(
+        computer_name:,
+        id:
+      )
+      true
+    end
+
+    def reload
+      requires :id
+
+      data = service.get_vm_switch(
+        computer_name:,
+        id:
+      )
+      return unless data
+
+      merge_attributes(data)
     end
   end
 end

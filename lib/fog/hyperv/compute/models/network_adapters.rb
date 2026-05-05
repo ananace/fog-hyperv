@@ -1,26 +1,26 @@
 # frozen_string_literal: true
 
-require 'fog/hyperv/collection'
-require 'fog/hyperv/compute/models/host'
+class Fog::Hyperv::Compute
+  class NetworkAdapters < Fog::Hyperv::Collection
+    model Fog::Hyperv::Compute::NetworkAdapter
 
-module Fog
-  module Hyperv
-    class Compute
-      class NetworkAdapters < Fog::Hyperv::VMCollection
-        model Fog::Hyperv::Compute::NetworkAdapter
+    get_method :get_vm_network_adapter
 
-        get_method :get_vm_network_adapter
+    attribute :computer_name
+    attribute :vm_id
 
-        def all(**filters)
-          all = !(vm || filters.keys.any? { |k| k.to_s.start_with? 'vm_' })
-          super(**filters.merge(all: all))
-        end
+    def all(filters = {})
+      all = true
+      all = false if @vm || vm_id || filters.key?(:management_os)
 
-        def get(name, filters = {})
-          all = !(vm || filters.keys.any? { |k| k.to_s.start_with? 'vm_' })
-          super(filters.merge(name: name, all: all))
-        end
-      end
+      super({ all: }.merge(filters))
+    end
+
+    def get(identifier, **filters)
+      id = identifier if identifier =~ /\Amicrosoft:#{Fog::Hyperv::GUID}\\#{Fog::Hyperv::GUID}\z/i
+      name = identifier unless id
+
+      super(name:, _by_id: id, **filters)
     end
   end
 end

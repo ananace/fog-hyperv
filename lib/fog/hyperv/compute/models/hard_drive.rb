@@ -2,160 +2,170 @@
 
 require 'fog/hyperv/model'
 
-module Fog
-  module Hyperv
-    class Compute
-      # A hard drive attached to a VM
-      class HardDrive < Fog::Hyperv::Model
-        # @!attribute [r] id
-        #   @return [String] the GUID of this hard drive
-        identity :id
+class Fog::Hyperv::Compute
+  # A hard drive attached to a VM
+  class HardDrive < Fog::Hyperv::Model
+    # @!attribute [r] id
+    #   @return [String] the GUID of this hard drive
+    identity :id
 
-        # @!attribute [r] computer_name
-        #   @return [String] the name of the computer running the VM that this hard drive is attached to
-        attribute :computer_name
-        # @!attribute [r] vm_id
-        #   @return [String] the GUID of the VM this hard drive is attached to
-        attribute :vm_id
-        # @!attribute [r] vm_name
-        #   @return [String] the name of the VM this hard drive is attached to
-        attribute :vm_name
+    # @!attribute [r] computer_name
+    #   @return [String] the name of the computer running the VM that this hard drive is attached to
+    attribute :computer_name
+    # @!attribute [r] vm_id
+    #   @return [String] the GUID of the VM this hard drive is attached to
+    attribute :vm_id
+    # @!attribute [r] vm_name
+    #   @return [String] the name of the VM this hard drive is attached to
+    attribute :vm_name
 
-        # @!attribute controller_location
-        #   @return [String] the controller location this hard drive is attached to
-        attribute :controller_location
-        # @!attribute controller_location
-        #   @return [Integer] the controller number this hard drive is attached to
-        attribute :controller_number, type: :integer
-        # @!attribute controller_type
-        #   @return [:IDE, :SCSI] the controller type this hard drive is attached to
-        attribute :controller_type, type: :enum, values: %i[IDE SCSI]
-        # @!attribute disk
-        #   @return [Object] the attached disk
-        attribute :disk
-        # attribute :is_deleted
-        # @!attribute maximum_iops
-        #   @return [Integer] the maximum number of IOPS allocated for this hard drive
-        attribute :maximum_iops, type: :integer
-        # @!attribute minimum_iops
-        #   @return [Integer] the minimum number of IOPS allocated for this hard drive
-        attribute :minimum_iops, type: :integer
-        # @!attribute [r] name
-        #   @return [String] the name of this hard drive
-        attribute :name
-        # @!attribute path
-        #   @return [String] the path to the VHD file for this hard drive
-        attribute :path
-        # @!attribute pool_name
-        #   @return [String] the name of the pool storing this hard drive's image
-        attribute :pool_name
-        # @!attribute support_persistent_reservations
-        #   @return [Boolean] does the underlying hard drive support SCSI persistent reservations.
-        #     Should be set when multiple VMs share the same underlying disk.
-        attribute :support_persistent_reservations
-        # TODO? VM Snapshots?
+    # @!attribute controller_location
+    #   @return [String] the controller location this hard drive is attached to
+    attribute :controller_location
+    # @!attribute controller_number
+    #   @return [Integer] the controller number this hard drive is attached to
+    attribute :controller_number, type: :integer
+    # @!attribute controller_type
+    #   @return [:IDE, :SCSI] the controller type this hard drive is attached to
+    attribute :controller_type, type: :hypervenum, values: %i[IDE SCSI]
+    # @!attribute disk
+    #   @return [Object] the attached disk
+    attribute :disk
+    # attribute :is_deleted
+    # @!attribute maximum_iops
+    #   @return [Integer] the maximum number of IOPS allocated for this hard drive
+    attribute :maximum_iops, type: :integer
+    # @!attribute minimum_iops
+    #   @return [Integer] the minimum number of IOPS allocated for this hard drive
+    attribute :minimum_iops, type: :integer
+    # @!attribute [r] name
+    #   @return [String] the name of this hard drive
+    attribute :name
+    # @!attribute path
+    #   @return [String] the path to the VHD file for this hard drive
+    attribute :path
+    # @!attribute pool_name
+    #   @return [String] the name of the pool storing this hard drive's image
+    attribute :pool_name
+    # @!attribute support_persistent_reservations
+    #   @return [Boolean] does the underlying hard drive support SCSI persistent reservations.
+    #     Should be set when multiple VMs share the same underlying disk.
+    attribute :support_persistent_reservations
+    # TODO? VM Snapshots?
 
-        # @!attribute [r] vhd
-        # @return [Vhd] the VHD that this hard drive uses
-        def vhd
-          return nil unless path && computer_name
+    attribute :allow_unverified_paths, type: :boolean
 
-          @vhd ||= service.vhds.get(path, computer_name: computer_name)
-        end
+    def initialize(attributes = {})
+      vhd = attributes.delete :vhd
+      attributes[:path] ||= vhd.path if vhd
 
-        # @return [Boolean] does the hard drive have a VHD attached?
-        def vhd?
-          !vhd.nil?
-        end
+      super
+    end
 
-        # @!attribute size_bytes
-        # @return [Integer] the size of the underlying VHD
-        def size_bytes
-          vhd&.size_bytes || 0
-        end
+    # @!attribute vhd
+    # @return [Vhd,nil] the VHD that is attached to this hard drive
+    def vhd
+      return unless path
 
-        def size_bytes=(bytes)
-          vhd.size_bytes = bytes if vhd
-        end
+      @vhd ||= service.vhds.get(path, computer_name:)
+    end
 
-        def save
-          requires :computer_name, :vm_name
+    def vhd=(new_vhd)
+      raise ArgumentError, 'Must be a VHD' unless new_vhd.nil? || new_vhd.is_a?(Vhd)
 
-          if persisted?
-            data = service.set_vm_hard_disk_drive(
-              computer_name: old.computer_name,
-              vm_name: old.vm_name,
-              controller_location: old.controller_location,
-              controller_number: old.controller_number,
-              controller_type: old.controller_type,
-              passthru: true,
+      attributes[:path] = new_vhd&.path
+      @vhd = new_vhd
+    end
 
-              disk_number: changed?(:disk) && disk&.number,
-              maximum_iops: changed!(:maximum_iops),
-              minimum_iops: changed!(:minimum_iops),
-              path: changed!(:path),
-              resource_pool_name: changed!(:pool_name),
-              support_persistent_reservations: changed!(:support_persistent_reservations),
-              to_controller_location: changed!(:controller_location),
-              to_controller_number: changed!(:controller_number),
-              to_controller_type: changed!(:controller_type),
+    # @return [Boolean] does the hard drive have a VHD attached?
+    def vhd?
+      !vhd.nil?
+    end
 
-              _return_fields: self.class.attributes,
-              _json_depth: 1
-            )
-            @vhd = nil if changed?(:path)
-          else
-            possible = %i[computer_name controller_location controller_number controller_type path vm_name].freeze
-            data = service.add_vm_hard_disk_drive(
-              attributes
-                .slice(*possible)
-                .merge(
-                  disk_number: disk&.number,
-                  resource_pool_name: pool_name,
+    # @!attribute [r] size_bytes
+    # @return [Integer,nil] the size of the underlying VHD if any
+    def size_bytes
+      vhd&.size
+    end
 
-                  passthru: true,
-                  _return_fields: self.class.attributes,
-                  _json_depth: 1
-                )
-            )
-          end
+    def create
+      requires :vm_id
+      requires_one :controller_location, :controller_number, :controller_type, :path
 
-          merge_attributes(data)
-          @old = dup
-          self
-        end
+      merge_attributes(
+        service.add_vm_hard_disk_drive(
+          computer_name:,
+          vm_id:,
 
-        def reload
-          data = collection.get(
-            computer_name: computer_name,
-            vm_name: vm_name,
-            controller_location: controller_location,
-            controller_number: controller_number,
-            controller_type: controller_type
-          )
+          allow_unverified_paths:,
+          controller_location:,
+          controller_number:,
+          controller_type:,
+          # disk_number: disk&.number,
+          maximum_iops:,
+          minimum_iops:,
+          path:,
+          resource_pool_name: pool_name,
 
-          merge_attributes(data.attributes)
-          @old = data
-          self
-        end
+          _return_fields: self.class.attributes - %i[allow_unverified_paths]
+        )
+      )
+    end
 
-        def destroy(underlying: false)
-          return unless persisted?
+    def update
+      requires :id, :vm_id
 
-          service.remove_vm_hard_disk_drive(
-            computer_name: computer_name,
-            vm_name: vm_name,
+      merge_attributes(
+        service.set_vm_hard_disk_drive(
+          computer_name: old.computer_name,
+          vm_id: old.vm_id,
+          id: old.id,
 
-            controller_location: controller_location,
-            controller_number: controller_number,
-            controller_type: controller_type
-          )
+          allow_unverified_paths:,
+          # disk_number: changed?(:disk) && disk&.number,
+          maximum_iops: changed!(:maximum_iops),
+          minimum_iops: changed!(:minimum_iops),
+          path: changed!(:path),
+          resource_pool_name: changed!(:pool_name),
+          support_persistent_reservations: changed!(:support_persistent_reservations),
+          to_controller_location: changed!(:controller_location),
+          to_controller_number: changed!(:controller_number),
+          to_controller_type: changed!(:controller_type),
 
-          return unless underlying && vhd?
+          _return_fields: self.class.attributes - %i[allow_unverified_paths]
+        )
+      )
+      @vhd = nil if changed?(:path)
+      self
+    end
 
-          vhd.destroy
-        end
-      end
+    def reload
+      requires :id, :vm_id
+
+      data = service.get_vm_hard_disk_drive(
+        computer_name:,
+        vm_id:,
+        id:,
+
+        _return_fields: self.class.attributes - %i[allow_unverified_paths]
+      )
+      return unless data
+
+      merge_attributes(data)
+    end
+
+    def destroy(underlying: false)
+      return unless persisted?
+
+      requires :id, :vm_id
+
+      service.remove_vm_hard_disk_drive(
+        computer_name:,
+        vm_id:,
+        id:
+      )
+      vhd.destroy if underlying && vhd?
+      true
     end
   end
 end

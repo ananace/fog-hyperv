@@ -1,154 +1,73 @@
 # frozen_string_literal: true
 
-require 'fog/core/collection'
-
-module Fog
-  module Hyperv
-    class Collection < Fog::Collection
-      def self.get_method(method = nil)
-        @get_method ||= method
-      end
-
-      def self.requires
-        @requires ||= []
-      end
-
-      def self.requires?(req)
-        requires.include? req
-      end
-
-      def all(**filters)
-        requires(*self.class.requires)
-        data = service.send(method, **search_attributes, **filters)
-        data ||= []
-
-        load [data].flatten
-      end
-
-      def get(filters = {})
-        all(**filters).first
-      rescue Fog::Hyperv::Errors::PSError => e
-        raise Fog::Errors::NotFound, e if e.message =~ /Hyper-V was unable to find|^No .* is found/
-
-        raise
-      end
-
-      def new(attributes = {})
-        requires(*self.class.requires)
-        attributes = attributes.attributes if attributes.is_a? Fog::Model
-        super(creation_attributes.merge(attributes))
-      end
-
-      def create(attributes)
-        object = new(attributes)
-        object.save
-        object
-      end
-
-      protected
-
-      def search_attributes
-        attributes.dup.merge(
-          _return_fields: model.attributes - model.lazy_attributes,
-          _json_depth: 1
-        )
-      end
-
-      def creation_attributes
-        attributes.dup
-      end
-
-      private
-
-      def method
-        self.class.get_method
-      end
+module Fog::Hyperv
+  class Collection < Fog::Collection
+    def self.get_method(method = nil)
+      @get_method ||= method
     end
 
-    class ComputerCollection < Fog::Hyperv::Collection
-      def self.requires_computer
-        requires << :computer
-      end
-
-      attr_accessor :cluster, :computer
-
-      def new(attributes = {})
-        object = super
-        object.computer_name ||= computer.name if computer && object.respond_to?(:computer_name)
-        object
-      end
-
-      protected
-
-      def creation_attributes
-        attrs = super
-        attrs[:cluster] = cluster if cluster
-        attrs[:computer] = computer if computer
-        attrs[:computer_name] = computer.name if computer
-        attrs
-      end
-
-      def search_attributes
-        attrs = super
-        attrs.delete :cluster
-        attrs.delete :computer
-        attrs[:computer_name] ||= cluster.hosts.map(&:name) if cluster
-        attrs[:computer_name] ||= computer.name if computer
-        attrs
-      end
+    def self.requires(*attr)
+      @requires ||= []
+      @requires += attr if attr.any?
+      @requires
     end
 
-    class VMCollection < Fog::Hyperv::ComputerCollection
-      def self.match_on(attr = nil)
-        @match_on ||= attr
-      end
+    def self.requires?(req)
+      requires.include? req
+    end
 
-      def self.requires_vm
-        requires << :vm
-      end
+    def initialize(attributes = {})
+      @vm = attributes.delete(:vm)
+      @computer = attributes.delete(:computer)
+      @network_adapter = attributes.delete(:network_adapter)
 
-      attr_accessor :vm
+      super
+    end
 
-      def new(attributes = {})
-        object = super
-        object.computer_name ||= vm.computer_name if vm && object.respond_to?(:computer_name)
-        # Ensure both ID and Name are populated, regardless of `match_on`
-        object.vm_id ||= vm.id if vm && object.respond_to?(:vm_id)
-        object.vm_name ||= vm.name if vm && object.respond_to?(:vm_name)
-        object
-      end
+    def all(filters = {})
+      requires(*self.class.requires)
 
-      def inspect
-        # To avoid recursing on VM
-        to_s
-      end
+      data = service.send(method, **search_attributes, **filters)
+      data ||= []
 
-      protected
+      load [data].flatten
+    end
 
-      def creation_attributes
-        attrs = super
-        attrs[:vm] = vm if vm
-        attrs[:computer_name] = vm.computer_name if vm&.computer_name
-        attrs[:cluster_name] = vm.cluster_name if vm&.cluster_name
+    def get(**filters)
+      all(filters).first
+    rescue Fog::Hyperv::Errors::PSError => e
+      raise Fog::Errors::NotFound, e if e.message =~ /Hyper-V was unable to find|^No .* is found/
 
-        attrs
-      end
+      raise
+    end
 
-      def search_attributes
-        attrs = super
-        attrs.delete :vm
-        if vm
-          attrs[:computer_name] ||= vm.computer_name
-          attrs[match] = vm.send(match)
-        end
-        attrs
-      end
+    def new(attributes = {})
+      requires(*self.class.requires)
 
-      private
+      attributes = attributes.attributes if attributes.is_a? Fog::Model
+      super(creation_attributes.merge(attributes))
+    end
 
-      def match
-        self.class.match_on || :vm_name
-      end
+    protected
+
+    def search_attributes
+      attributes.merge(
+        _return_fields: model.attributes
+      )
+    end
+
+    def creation_attributes
+      attributes.merge(
+        vm: @vm,
+        computer: @computer,
+        network_adapter: @network_adapter
+      )
+    end
+
+    private
+
+    def method
+      self.class.get_method
     end
   end
 end

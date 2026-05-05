@@ -4,7 +4,7 @@ plugins:
   - rubocop-rake
 
 AllCops:
-  TargetRubyVersion: 2.7
+  TargetRubyVersion: 3.1
   Exclude:
     - '*.spec'
     - 'Rakefile'
@@ -56,6 +56,4 @@ Lint/AmbiguousBlockAssociation:
   Enabled: false
 
 Style/ClassAndModuleChildren:
-  Exclude:
-    - 'test/**/*'
-    - 'app/controllers/concerns/foreman/**/*'
+  Enabled: false

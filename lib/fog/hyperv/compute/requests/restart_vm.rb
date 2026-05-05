@@ -1,23 +1,22 @@
 # frozen_string_literal: true
 
-module Fog
-  module Hyperv
-    class Compute
-      class Real
-        def restart_vm(**options)
-          # TODO: Handle -VMId/-Id too;
-          #
-          #   Get-VM -Id <guid> | Start-VM
-          requires options, :name
-          run_shell('Restart-VM', _skip_json: true, **options).exitcode.zero?
-        end
-      end
+class Fog::Hyperv::Compute
+  class Real
+    def restart_vm(id:, computer_name: nil, **options)
+      run_cmdlist(
+        [
+          ['$VM = Get-VM', { id: }],
+          ['$VM | Restart-VM', options]
+        ],
+        skip_json: true,
+        target_computer: computer_name
+      )
+    end
+  end
 
-      class Mock
-        def restart_vm(**_)
-          true
-        end
-      end
+  class Mock
+    def restart_vm(**_)
+      true
     end
   end
 end

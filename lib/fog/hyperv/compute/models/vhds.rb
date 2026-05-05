@@ -1,21 +1,18 @@
 # frozen_string_literal: true
 
-require 'fog/hyperv/collection'
-require 'fog/hyperv/compute/models/vhd'
+class Fog::Hyperv::Compute
+  class Vhds < Fog::Hyperv::Collection
+    model Fog::Hyperv::Compute::Vhd
 
-module Fog
-  module Hyperv
-    class Compute
-      class Vhds < Fog::Hyperv::VMCollection
-        model Fog::Hyperv::Compute::Vhd
-        match_on :vm_id
+    get_method :get_vhd
 
-        get_method :get_vhd
+    attribute :computer_name
 
-        def get(path, filters = {})
-          super(search_attributes.merge(filters.merge(path: path)))
-        end
-      end
+    def get(identifier, **filters)
+      id = identifier if identifier =~ /\A#{Fog::Hyperv::GUID}\z/i
+      path = identifier unless id
+
+      super(disk_identifier: id, path:, **filters)
     end
   end
 end

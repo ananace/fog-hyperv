@@ -4,12 +4,17 @@ require 'fog/core'
 
 module Fog
   module Attributes
-    autoload :Enum, File.expand_path('hyperv/fog_extensions/enum.rb', __dir__)
+    autoload :Hypervdatetime, File.expand_path('hyperv/fog_extensions/attributes/datetime.rb', __dir__)
+    autoload :Hypervenum, File.expand_path('hyperv/fog_extensions/attributes/enum.rb', __dir__)
+    autoload :Hypervenumarray, File.expand_path('hyperv/fog_extensions/attributes/enumarray.rb', __dir__)
+    autoload :Hypervtimespan, File.expand_path('hyperv/fog_extensions/attributes/timespan.rb', __dir__)
   end
 
   module Hyperv
     autoload :Compute, File.expand_path('hyperv/compute', __dir__)
     extend Fog::Provider
+
+    GUID = /\w{8}-\w{4}-\w{4}-\w{4}-\w{12}/i
 
     module Errors
       class ServiceError < Fog::Errors::Error; end
@@ -46,6 +51,15 @@ module Fog
       end
     end
 
+    module Associations
+      autoload :Collection, File.expand_path('hyperv/fog_extensions/associations/collection', __dir__)
+    end
+
+    module Utils
+      autoload :Powershell, File.expand_path('hyperv/utils/powershell', __dir__)
+      autoload :Winrm, File.expand_path('hyperv/utils/winrm', __dir__)
+    end
+
     autoload :Collection, File.expand_path('hyperv/collection', __dir__)
     autoload :Model, File.expand_path('hyperv/model', __dir__)
     autoload :ModelExtends, File.expand_path('hyperv/model', __dir__)
@@ -53,31 +67,6 @@ module Fog
     autoload :VMCollection, File.expand_path('hyperv/collection', __dir__)
 
     service(:compute, 'Compute')
-
-    def self.shell_quoted(data, always: false)
-      case data
-      when String
-        if !data.start_with?('$') && (data =~ /(^$)|\s/ || always)
-          data.gsub('`', '``')
-              .gsub(/\0/, '`0')
-              .gsub("\n", '`n')
-              .gsub("\r", '`r')
-              .inspect
-              .gsub('\"', '`"')
-              .gsub('\\\\', '\\')
-        else
-          data
-        end
-      when Array
-        "@(#{data.map { |e| shell_quoted(e, always: true) }.join(', ')})"
-      when FalseClass
-        '$false'
-      when TrueClass
-        '$true'
-      else
-        shell_quoted data.to_s
-      end
-    end
 
     def self.camelize(data)
       case data

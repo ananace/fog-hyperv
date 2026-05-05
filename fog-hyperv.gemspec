@@ -17,7 +17,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.metadata['rubygems_mfa_required'] = 'true'
-  spec.required_ruby_version = '>= 2.7'
+  spec.required_ruby_version = '>= 3.0'
 
   spec.add_dependency 'fog-core', '~> 2'
   spec.add_dependency 'fog-json', '~> 1'

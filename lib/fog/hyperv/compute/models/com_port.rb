@@ -1,37 +1,68 @@
 # frozen_string_literal: true
 
-require 'fog/hyperv/model'
+class Fog::Hyperv::Compute
+  class ComPort < Fog::Hyperv::Model
+    # @!attribute [r] id
+    #   @return [String] the combined GUID of this COM port
+    identity :id, type: :string
 
-module Fog
-  module Hyperv
-    class Compute
-      class ComPort < Fog::Hyperv::Model
-        # @!attribute [r] id
-        #   @return [String] The GUID of the COM port
-        identity :id
+    # @!attribute [r] vm_id
+    #   @return [String] the GUID of the VM this BIOS configuration is attached to
+    attribute :vm_id, type: :string
+    # @!attribute [r] computer_name
+    #   @return [String] the name of the computer running the VM that this BIOS configuration is attached to
+    attribute :computer_name, type: :string
 
-        # @!attribute [r] computer_name
-        #   @return [String] The name of the computer running the VM this COM port is attached to
-        attribute :computer_name
+    # @!attribute debugger_mode
+    #   @return [String] is a debugger enabled on this COM port
+    attribute :debugger_mode, type: :hypervenum, values: ON_OFF_STATE_ENUM_VALUES
+    # @!attribute [r] name
+    #   @return [String] the name of this COM port
+    attribute :name, type: :string
+    # @!attribute path
+    #   @return [String] the path this COM port is attached to
+    attribute :path
 
-        # @!attribute [r] debugger_mode
-        #   @return [:On, :Off] If a debugger is enabled on this COM port
-        attribute :debugger_mode, type: :enum, values: %i[On Off]
-        # @!attribute [r] name
-        #   @return [String] The name of this COM port
-        attribute :name
-        # @!attribute [r] path
-        #   @return [String] The path of this COM port
-        attribute :path
+    def update
+      requires :vm_id, :id
 
-        def save
-          raise Fog::Errors::NotImplemented
-        end
+      data = service.set_vm_com_port(
+        computer_name:,
+        vm_id:,
+        id:,
 
-        def reload
-          raise Fog::Errors::NotImplemented
-        end
-      end
+        debugger_mode: changed!(:debugger_mode),
+        path: changed!(:path),
+
+        _return_fields: self.class.attributes
+      )
+
+      merge_attributes(data)
+      self
+    end
+
+    def reload
+      requires :vm_id, :id
+
+      data = service.get_vm_com_port(
+        computer_name:,
+        vm_id:,
+        id:,
+
+        _return_fields: self.class.attributes
+      )
+      return unless data
+
+      merge_attributes(data)
+      self
+    end
+
+    private
+
+    def merge_attributes(new_attributes = {})
+      new_attributes[:path] = nil if new_attributes[:path] == ''
+
+      super
     end
   end
 end

@@ -1,14 +1,15 @@
 # frozen_string_literal: true
 
-module Fog
-  module Hyperv
-    class Compute
-      class Real
-        def set_vm_firmware(**options)
-          requires options, :vm_name
-          run_shell('Set-VMFirmware', **options)
-        end
-      end
+class Fog::Hyperv::Compute
+  class Real
+    def set_vm_firmware(vm_id:, computer_name: nil, **options)
+      run_cmdlist(
+        [
+          ['$VM = Get-VM', { id: vm_id }],
+          ['$VM | Set-VMFirmware', { passthru: true, **options }]
+        ],
+        target_computer: computer_name
+      )
     end
   end
 end

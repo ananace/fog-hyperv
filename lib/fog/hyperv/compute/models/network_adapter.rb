@@ -1,260 +1,320 @@
 # frozen_string_literal: true
 
-require 'fog/hyperv/model'
+class Fog::Hyperv::Compute
+  class NetworkAdapter < Fog::Hyperv::Model
+    # rubocop:disable Layout/HashAlignment
 
-module Fog
-  module Hyperv
-    class Compute
-      class NetworkAdapter < Fog::Hyperv::Model
-        # rubocop:disable Layout/HashAlignment
+    # Network adapter statuses
+    # @note Defined by Microsoft.HyperV.PowerShell.VMNetworkAdapterOperationalStatus
+    NIC_STATUS_ENUM_VALUES = {
+      Unknown:             0,
+      Other:               1,
+      Ok:                  2,
+      Degraded:            3,
+      Stressed:            4,
+      PredictiveFailure:   5,
+      Error:               6,
+      NonRecoverableError: 7,
+      Starting:            8,
+      Stopping:            9,
+      Stopped:             10,
+      InService:           11,
+      NoContact:           12,
+      LostCommunication:   13,
+      Aborted:             14,
+      Dormant:             15,
+      SupportingEntity:    16,
+      Completed:           17,
+      PowerMode:           18,
+      ProtocolVersion:     32_775
+    }.freeze
+    # rubocop:enable Layout/HashAlignment
 
-        # Network adapter statuses
-        NIC_STATUS_ENUM_VALUES = {
-          Unknown:             0,
-          Other:               1,
-          Ok:                  2,
-          Degraded:            3,
-          Stressed:            4,
-          PredictiveFailure:   5,
-          Error:               6,
-          NonRecoverableError: 7,
-          Starting:            8,
-          Stopping:            9,
-          Stopped:             10,
-          InService:           11,
-          NoContact:           12,
-          LostCommunication:   13,
-          Aborted:             14,
-          Dormant:             15,
-          SupportingEntity:    16,
-          Completed:           17,
-          PowerMode:           18,
-          ProtocolVersion:     32_775
-        }.freeze
-        # rubocop:enable Layout/HashAlignment
+    # @!attribute [r] id
+    #   @return [String] the GUID of this network adapter
+    identity :id
 
-        # @!attribute [r] id
-        #   @return [String] the GUID of this network adapter
-        identity :id
+    # @!attribute [r] computer_name
+    #   @return [String] the name of the computer running the VM that this network adapter is attached to
+    attribute :computer_name, type: :string
+    # @!attribute [r] vm_id
+    #   @return [String,nil] the GUID of the VM this network adapter is attached to
+    attribute :vm_id
+    # @!attribute [r] is_management_os
+    #   @return [Boolean] is the network adapter attached to the management OS
+    attribute :is_management_os, type: :boolean
 
-        # @!attribute [r] computer_name
-        #   @return [String] the name of the computer running the VM that this network adapter is attached to
-        attribute :computer_name
-        # @!attribute [r] vm_id
-        #   @return [String] the GUID of the VM this network adapter is attached to
-        attribute :vm_id
-        # @!attribute [r] vm_name
-        #   @return [String] the name of the VM this network adapter is attached to
-        attribute :vm_name
+    # attribute :acl_list
+    # @!attribute [r] connected
+    #   @return [Boolean] is the network adapter connected to the network
+    #   @see connect
+    #   @see disconnect
+    attribute :connected, type: :boolean
 
-        # attribute :acl_list
-        # @!attribute [r] connected
-        #   @return [Boolean] is the network adapter connected to the network
-        #   @see connect
-        #   @see disconnect
-        attribute :connected, type: :boolean
+    # @!attribute dynamic_mac_address_enabled
+    #   @return [Boolean] is the network adapter assigned a dynamic MAC address
+    attribute :dynamic_mac_address_enabled, type: :boolean, default: true
+    # @!attribute [r] ip_addresses
+    #   @return [Array<String>] the IP addresses currently assigned to the network adapter
+    attribute :ip_addresses
+    # attribute :is_deleted
+    # @!attribute [r] is_external_adapter
+    #   @return [Boolean] is the network adapter external to the VM
+    attribute :is_external_adapter, type: :boolean
+    # @!attribute [r] is_legacy
+    #   @return [Boolean] is the network adapter using legacy ROM
+    attribute :is_legacy, type: :boolean
+    # attribute :isolation_setting # Might need lazy loading
+    # @!attribute mac_address
+    #   @return [String] the MAC address of the network adapter
+    #   @note Can only be changed if dynamic_mac_address_enabled is false
+    attribute :mac_address, type: :string
+    # @!attribute name
+    #   @return [String] the name of the network adapter
+    attribute :name, type: :string, default: 'Network Adapter'
+    # @!attribute router_guard
+    #   @return [:On, :Off] should the NIC drop RA/Redirection messages from unauthorized VMs
+    attribute :router_guard, type: :hypervenum, values: ON_OFF_STATE_ENUM_VALUES
+    # @!attribute [r] status
+    #   @return [Symbol] the status of the network adapter
+    #   @see NIC_STATUS_ENUM_VALUES
+    attribute :status, type: :hypervenumarray, values: NIC_STATUS_ENUM_VALUES
+    # @!attribute switch_id
+    #   @return [String] the ID of the switch the adapter is connected to
+    #   @see connect
+    #   @see disconnect
+    attribute :switch_id
+    # @!attribute switch_name
+    #   @return [String] the name of the switch the adapter is connected to
+    #   @see connect
+    #   @see disconnect
+    attribute :switch_name
 
-        # @!attribute dynamic_mac_address_enabled
-        #   @return [Boolean] is the network adapter assigned a dynamic MAC address
-        attribute :dynamic_mac_address_enabled, type: :boolean, default: true
-        # @!attribute [r] ip_addresses
-        #   @return [Array<String>] the IP addresses currently assigned to the network adapter
-        attribute :ip_addresses
-        # attribute :is_deleted
-        # @!attribute [r] is_external_adapter
-        #   @return [Boolean] is the network adapter external to the VM
-        attribute :is_external_adapter, type: :boolean
-        # @!attribute [r] is_legacy
-        #   @return [Boolean] is the network adapter using legacy ROM
-        attribute :is_legacy, type: :boolean
-        # @!attribute [r] is_management_os
-        #   @return [Boolean] is the network adapter attached to the management OS
-        attribute :is_management_os, type: :boolean
-        # attribute :isolation_setting # Might need lazy loading
-        # @!attribute mac_address
-        #   @return [String] the MAC address of the network adapter
-        #   @note Can only be changed if dynamic_mac_address_enabled is false
-        attribute :mac_address
-        # @!attribute [r] name
-        #   @return [String] the name of the network adapter
-        attribute :name, type: :string, default: 'Network Adapter'
-        # attribute :router_guard, type: :enum, values: [ :On, :Off ]
-        # attribute :status, type: :enum, values: STATUS_ENUM_VALUES
-        # @!attribute [r] switch_id
-        #   @return [String] the ID of the switch the adapter is connected to
-        #   @see connect
-        #   @see disconnect
-        attribute :switch_id
-        # @!attribute [r] switch_name
-        #   @return [String] the name of the switch the adapter is connected to
-        #   @see connect
-        #   @see disconnect
-        attribute :switch_name, type: :string
+    # @!attribute [r] vlan_setting
+    # @return [NetworkAdapterVlan] the VLAN that the network adapter is connected to
+    def vlan_setting
+      return @vlan_setting if @vlan_setting
 
-        lazy_attributes :vlan_setting
+      if persisted?
+        requires :id
 
-        # @!attribute [r] vlan_setting
-        # @return [NetworkAdapterVlan] the VLAN that the network adapter is connected to
-        def vlan_setting
-          attributes[:vlan_setting] ||= Fog::Hyperv::Compute::NetworkAdapterVlan.new(
-            (
-              if persisted?
-                service.get_vm_network_adapter_vlan(
-                  computer_name: computer_name,
-                  vm_name: vm_name,
-                  vm_network_adapter_name: name,
+        @vlan_setting = Fog::Hyperv::Compute::NetworkAdapterVlan.new(
+          service.get_vm_network_adapter_vlan(
+            computer_name:,
+            management_os: is_management_os,
+            vm_id:,
+            id:,
 
-                  _return_fields: Fog::Hyperv::Compute::NetworkAdapterVlan.attributes + %i[parent_adapter]
-                )
-              else
-                {
-                  computer_name: computer_name,
-                  parent_adapter: {
-                    computer_name: computer_name,
-                    vm_name: vm_name,
-                    name: name
-                  }
-                }
-              end
-            ).merge(
-              parent_adapter: self,
-              service: service
-            )
+            _return_fields: Fog::Hyperv::Compute::NetworkAdapterVlan.attributes
+          ).merge(
+            network_adapter: self,
+            service:,
+            vm:
           )
-        end
+        )
+      else
+        @vlan_setting = Fog::Hyperv::Compute::NetworkAdapterVlan.new(
+          network_adapter: self,
+          service:,
+          vm:
+        )
+      end
+    end
 
-        # Connect the network adapter to a given switch
-        # @param switch [Switch,String] a switch - or the name of one - to connect to
-        def connect(switch, **options)
-          requires :name, :computer_name, :vm_name
+    # Connect the network adapter to a given switch
+    # @param switch [Switch,String] a switch - or the ID/name of one - to connect to
+    def connect(switch, **options)
+      requires :id
 
-          switch = switch.name if switch.is_a? Fog::Hyperv::Compute::Switch
+      if switch.is_a? Fog::Hyperv::Compute::Switch
+        new_switch_id = switch.id
+        new_switch_name = switch.name
+      else
+        new_switch_id = switch if switch.is_a?(String) && switch =~ Fog::Hyperv::GUID
+        new_switch_name = switch unless new_switch_id
+      end
+      options[:management_os] = true if is_management_os
 
-          service.connect_vm_network_adapter options.merge(
-            computer_name: computer_name,
-            name: name,
-            switch_name: switch,
-            vm_name: vm_name
-          )
-        end
+      service.connect_vm_network_adapter(
+        computer_name:,
+        vm_id:,
+        id:,
 
-        # Disconnect the network adapter from any connected switch
-        def disconnect(**options)
-          requires :name, :computer_name, :vm_name
+        switch_id: new_switch_id,
+        switch_name: new_switch_name,
 
-          service.disconnect_vm_network_adapter options.merge(
-            computer_name: computer_name,
-            name: name,
-            vm_name: vm_name
-          )
-        end
+        **options
+      )
 
-        # @!attribute [r] switch
-        # @return [Switch] the switch the network adapter is connected to
-        # @see connect
-        # @see disconnect
-        def switch
-          service.switches.get switch_name, computer_name: computer_name if switch_name
-        end
+      old.switch_id = attributes[:switch_id] = new_switch_id
+      old.switch_name = attributes[:switch_name] = new_switch_name
 
-        def save
-          requires :name, :computer_name, :vm_name
+      true
+    end
 
-          data =
-            if persisted?
-              ret = service.set_vm_network_adapter(
-                computer_name: old.computer_name,
-                name: old.name,
-                vm_name: old.vm_name,
-                passthru: true,
+    # Disconnect the network adapter from any connected switch
+    def disconnect(**options)
+      requires :id
 
-                dynamic_mac_address: changed?(:dynamic_mac_address_enabled) && dynamic_mac_address_enabled,
-                static_mac_address: changed!(:mac_address) || ((changed!(:dynamic_mac_address_enabled) == false) && mac_address),
+      options[:management_os] = true if is_management_os
+      service.disconnect_vm_network_adapter(
+        computer_name:,
+        vm_id:,
+        id:,
 
-                _return_fields: self.class.attributes,
-                _json_depth: 1
-              )
+        **options
+      )
 
-              save_switch if changed?(:switch_name)
-              ret[:switch_name] = switch_name
-              ret
-            else
-              service.add_vm_network_adapter(
-                computer_name: computer_name,
-                name: name,
-                vm_name: vm_name,
-                passthru: true,
+      old.switch_id = attributes[:switch_id] = nil
+      old.switch_name = attributes[:switch_name] = nil
+      true
+    end
 
-                dynamic_mac_address: dynamic_mac_address_enabled,
-                is_legacy: !!is_legacy, # rubocop:disable Style/DoubleNegation -- Bool ensurance
-                static_mac_address: !dynamic_mac_address_enabled && mac_address,
-                switch_name: switch_name,
+    # @!attribute switch
+    # @return [Switch,nil] the switch the network adapter is connected to
+    # @see connect
+    # @see disconnect
+    def switch
+      service.switches.get(switch_id:, switch_name:, computer_name:) if switch_name.any? || switch_id.any?
+    end
 
-                _return_fields: self.class.attributes,
-                _json_depth: 1
-              )
-            end
+    def switch=(new_switch)
+      if new_switch.nil?
+        attributes[:switch_id] = nil
+        attributes[:switch_name] = nil
 
-          vlan_setting.save if attributes[:vlan_setting] && (!persisted? || vlan_setting.dirty?)
+        return
+      end
 
-          if data.is_a? Array
-            data = data.find { |e| e[:id] == id } if id
-            data = data.last unless id
-          end
+      raise 'Not a switch' unless new_switch.is_a? Fog::Hyperv::Compute::Switch
 
-          merge_attributes(data)
-          @old = dup
-          self
-        end
+      attributes[:switch_id] = new_switch.id
+      attributes[:switch_name] = new_switch.name
+    end
 
-        def destroy
-          requires :vm_name, :name, :computer_name, :id
+    def create
+      selector = {}
+      if is_management_os
+        selector[:management_os] = true
+      else
+        requires :vm_id
 
-          service.remove_vm_network_adapter(
-            name: name,
-            computer_name: computer_name,
-            vm_name: vm_name
-          )
-        end
+        selector[:vm_id] = vm_id
+      end
 
-        def reload
-          data = collection.get(
-            name,
-            computer_name: computer_name,
-            vm_name: vm_name,
-            _suffix: "| Where Id -Eq '#{id}'"
-          )
-          merge_attributes(data.attributes)
-          @old = data
-          self
-        end
+      data = service.add_vm_network_adapter(
+        **selector,
+        computer_name:,
 
-        protected
+        name:,
+        dynamic_mac_address: dynamic_mac_address_enabled,
+        is_legacy: !!is_legacy, # rubocop:disable Style/DoubleNegation -- Needs to be bool
+        static_mac_address: !dynamic_mac_address_enabled && mac_address,
+        switch_name:,
 
-        def merge_attributes(new_attributes = {})
-          new_attributes[:ip_addresses] = [] if new_attributes[:ip_addresses] == ''
+        _return_fields: self.class.attributes
+      )
+      vlan_setting.save if @vlan_setting
 
-          super
-        end
+      merge_attributes(data)
+    end
 
-        private
+    def update
+      requires :id
+      requires :vm_id unless is_management_os
 
-        def save_switch
-          if switch_name
-            service.connect_vm_network_adapter(
-              computer_name: ret.computer_name,
-              name: ret.name,
-              vm_name: ret.vm_name,
-              switch_name: switch_name
-            )
-          else
-            service.disconnect_vm_network_adapter(
-              computer_name: ret.computer_name,
-              name: ret.name,
-              vm_name: ret.vm_name
-            )
-          end
-        end
+      if changed?(:name)
+        service.rename_vm_network_adapter(
+          computer_name: old.computer_name,
+          id: old.id,
+          vm_id: old.vm_id,
+          management_os: old.is_management_os,
+
+          new_name: name
+        )
+        @old.name = name
+      end
+
+      if dirty?
+        data = service.set_vm_network_adapter(
+          computer_name: old.computer_name,
+          id: old.id,
+          vm_id: old.vm_id,
+          management_os: old.is_management_os,
+
+          dynamic_mac_address: changed?(:dynamic_mac_address_enabled) && dynamic_mac_address_enabled,
+          static_mac_address: changed!(:mac_address) || ((changed!(:dynamic_mac_address_enabled) == false) && mac_address),
+
+          _return_fields: self.class.attributes
+        )
+
+        save_switch if changed?(:switch_name) || changed?(:switch_id)
+        data[:switch_name] = switch_name
+        data[:switch_id] = switch_id
+      end
+
+      vlan_setting.save if @vlan_setting && vlan_setting.dirty?
+
+      merge_attributes(data) if dirty?
+      self
+    end
+
+    def destroy
+      requires :id
+      requires :vm_id unless is_management_os
+
+      service.remove_vm_network_adapter(
+        computer_name:,
+        vm_id:,
+        id:,
+        management_os: is_management_os
+      )
+      true
+    end
+
+    def reload
+      requires :id
+      requires :vm_id unless is_management_os
+
+      data = service.get_vm_network_adapter(
+        computer_name:,
+        vm_id:,
+        id:,
+        management_os: is_management_os,
+
+        _return_fields: self.class.attributes
+      )
+      return unless data
+
+      merge_attributes(data)
+    end
+
+    protected
+
+    def merge_attributes(new_attributes = {})
+      new_attributes[:ip_addresses] = [] if new_attributes[:ip_addresses] == ''
+
+      super
+    end
+
+    private
+
+    def save_switch
+      selector = {
+        computer_name:,
+        vm_id:,
+        id:
+      }
+      selector[:management_os] = true if is_management_os
+
+      if switch_name || switch_id
+        service.connect_vm_network_adapter(
+          **selector,
+          switch_name:,
+          switch_id:
+        )
+      else
+        service.disconnect_vm_network_adapter(**selector)
       end
     end
   end

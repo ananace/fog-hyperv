@@ -1,22 +1,24 @@
 # frozen_string_literal: true
 
-module Fog
-  module Hyperv
-    class Compute
-      class Real
-        def get_vm_hard_disk_drive(**options)
-          requires options, :vm_name
-          run_shell('Get-VMHardDiskDrive', **options)
-        end
-      end
+class Fog::Hyperv::Compute
+  class Real
+    def get_vm_hard_disk_drive(vm_id:, computer_name: nil, **options)
+      _by_id = options.delete :id
+      run_cmdlist(
+        [
+          ['$VM = Get-VM', { id: vm_id }],
+          ['$VM | Get-VMHardDiskDrive', { _by_id:, **options }]
+        ],
+        target_computer: computer_name
+      )
+    end
+  end
 
-      class Mock
-        def get_vm_hard_disk_drive(**args)
-          requires args, :vm_name
+  class Mock
+    def get_vm_hard_disk_drive(**args)
+      requires args, :vm_id
 
-          handle_mock_response(args).find { |b| b[:vm_name].casecmp(args[:vm_name]).zero? }
-        end
-      end
+      handle_mock_response(args).find { |b| b[:vm_id].casecmp(args[:vm_id]).zero? }
     end
   end
 end

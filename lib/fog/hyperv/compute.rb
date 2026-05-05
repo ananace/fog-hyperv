@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'fog/core'
-require 'fog/hyperv/utils/winrm'
 
 module Fog
   module Hyperv
@@ -19,6 +18,7 @@ module Fog
       model :cluster
       collection :clusters
       model :com_port
+      collection :com_ports
       model :dvd_drive
       collection :dvd_drives
       model :firmware
@@ -52,6 +52,7 @@ module Fog
       request :get_vhd
       request :get_vm
       request :get_vm_bios
+      request :get_vm_com_port
       request :get_vm_dvd_drive
       request :get_vm_firmware
       request :get_vm_floppy_disk_drive
@@ -60,6 +61,7 @@ module Fog
       request :get_vm_host
       request :get_vm_host_cluster
       request :get_vm_host_sbt
+      request :get_vm_key_protector
       request :get_vm_network_adapter
       request :get_vm_network_adapter_vlan
       request :get_vm_security
@@ -67,23 +69,35 @@ module Fog
       request :new_vhd
       request :new_vm
       request :new_vm_switch
+      request :optimize_vhd
       request :remove_item
       request :remove_vm
       request :remove_vm_dvd_drive
       request :remove_vm_hard_disk_drive
       request :remove_vm_network_adapter
+      request :remove_vm_switch
+      request :rename_vm
+      request :rename_vm_network_adapter
+      request :rename_vm_switch
+      request :resize_vhd
       request :restart_vm
+      request :resume_vm
+      request :save_vm
       request :set_vm
       request :set_vm_bios
+      request :set_vm_com_port
       request :set_vm_dvd_drive
-      request :set_vm_hard_disk_drive
       request :set_vm_firmware
+      request :set_vm_floppy_disk_drive
+      request :set_vm_hard_disk_drive
+      request :set_vm_key_protector
       request :set_vm_network_adapter
       request :set_vm_network_adapter_vlan
       request :set_vm_security
       request :set_vm_switch
       request :start_vm
       request :stop_vm
+      request :suspend_vm
 
       class Shared
         def version
@@ -106,7 +120,7 @@ module Fog
           return if missing.length < args.length
 
           method = caller[0][/`.*'/][1..-2]
-          raise(ArgumentError, "#{missing[0...-1].join(', ')}, or #{missing[-1]} are required for #{method}")
+          raise(ArgumentError, "#{missing[0...-1].join(', ')}, or #{missing[-1]} is required for #{method}")
         end
 
         def requires_version(required_version)
@@ -141,8 +155,10 @@ module Fog
           @hyperv_realm = options[:hyperv_realm]
           @hyperv_transport = options[:hyperv_transport] || (@hyperv_realm ? :kerberos : :negotiate)
 
-          # Logging.logger['WinRM::HTTP::HttpNegotiate'].level = :error
-          @logger = Logging.logger['hyper-v']
+          # Hide NEGOTIATE logging from WinRM to reduce log spam when debugging
+          Logging.logger['WinRM::HTTP::HttpNegotiate'].level = :error
+
+          @logger = Logging.logger[Fog::Hyperv]
           if options[:hyperv_debug]
             logger.level = :debug
             logger.add_appenders Logging.appenders.stdout
@@ -157,7 +173,7 @@ module Fog
 
         def valid?
           if local?
-            run_shell('Get-VMHost', _return_fields: :name) && true
+            run_cmd('Get-VMHost', _return_fields: :name) && true
           else
             run_wql('SELECT Name FROM Msvm_ComputerSystem WHERE Caption = "Hosting Computer System"')[:xml_fragment] && true
           end

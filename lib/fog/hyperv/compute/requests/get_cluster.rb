@@ -1,13 +1,11 @@
 # frozen_string_literal: true
 
-module Fog
-  module Hyperv
-    class Compute
-      class Real
-        def get_cluster(**options)
-          run_shell('Get-Cluster', **options)
-        end
-      end
+class Fog::Hyperv::Compute
+  class Real
+    def get_cluster(**options)
+      _by_id = options.delete(:id)
+
+      run_cmd 'Get-Cluster', _by_id:, **options
     end
   end
 end

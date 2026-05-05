@@ -1,17 +1,16 @@
 # frozen_string_literal: true
 
-module Fog
-  module Hyperv
-    class Compute
-      class Real
-        def remove_vm(**options)
-          # TODO: Handle -VMId/-Id too;
-          #
-          #   Get-VM -Id <guid> | Remove-VM
-          requires options, :name
-          run_shell('Remove-VM', _skip_json: true, **options.merge(force: true)).exitcode.zero?
-        end
-      end
+class Fog::Hyperv::Compute
+  class Real
+    def remove_vm(id:, computer_name: nil, **options)
+      run_cmdlist(
+        [
+          ['$VM = Get-VM', { id: }],
+          ['$VM | Remove-VM', { force: true, **options }]
+        ],
+        skip_json: true,
+        target_computer: computer_name
+      )
     end
   end
 end

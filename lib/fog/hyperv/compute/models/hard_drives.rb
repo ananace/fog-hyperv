@@ -1,16 +1,18 @@
 # frozen_string_literal: true
 
-require 'fog/hyperv/collection'
-require 'fog/hyperv/compute/models/hard_drive'
+class Fog::Hyperv::Compute
+  class HardDrives < Fog::Hyperv::Collection
+    model Fog::Hyperv::Compute::HardDrive
 
-module Fog
-  module Hyperv
-    class Compute
-      class HardDrives < Fog::Hyperv::VMCollection
-        model Fog::Hyperv::Compute::HardDrive
+    get_method :get_vm_hard_disk_drive
 
-        get_method :get_vm_hard_disk_drive
-      end
+    attribute :computer_name
+    attribute :vm_id
+
+    requires :vm_id
+
+    def get(id, **filters)
+      super(_by_id: id, **filters)
     end
   end
 end

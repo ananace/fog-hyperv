@@ -1,6 +1,6 @@
 # Fog Hyper-V
 
-[![Build Status](https://travis-ci.org/ananace/fog-hyperv.svg?branch=master)](https://travis-ci.org/ananace/fog-hyperv) [![Gem Version](https://badge.fury.io/rb/fog-hyperv.svg)](https://badge.fury.io/rb/fog-hyperv)
+[![Gem Version](https://badge.fury.io/rb/fog-hyperv.svg)](https://badge.fury.io/rb/fog-hyperv)
 
 Manage your Hyper-V instance with the help of the Fog cloud service abstractions.
 
@@ -59,5 +59,5 @@ After checking out the repo, run `bundle install` to install dependencies. Then,
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/ananace/fog-hyperv
+Bug reports and pull requests are welcome on the LiU GitLab at https://gitlab.liu.se/ITI/fog-hyperv or GitHub at https://github.com/ananace/fog-hyperv
 

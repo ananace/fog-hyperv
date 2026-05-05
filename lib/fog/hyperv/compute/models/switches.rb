@@ -1,20 +1,18 @@
 # frozen_string_literal: true
 
-require 'fog/hyperv/collection'
-require 'fog/hyperv/compute/models/switch'
+class Fog::Hyperv::Compute
+  class Switches < Fog::Hyperv::Collection
+    model Fog::Hyperv::Compute::Switch
 
-module Fog
-  module Hyperv
-    class Compute
-      class Switches < Fog::Hyperv::ComputerCollection
-        model Fog::Hyperv::Compute::Switch
+    get_method :get_vm_switch
 
-        get_method :get_vm_switch
+    attribute :computer_name
 
-        def get(name, filters = {})
-          super(filters.merge(name: name))
-        end
-      end
+    def get(identifier, **filter)
+      id = identifier if identifier =~ /\A#{Fog::Hyperv::GUID}\z/i
+      name = identifier unless id
+
+      super(name:, id:, **filter)
     end
   end
 end

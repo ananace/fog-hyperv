@@ -1,3 +1,9 @@
+## Unreleased
+
+- Major rewrite of the codebase, moving to handling objects by their GUID as far as possible
+- Add support for renaming of VMs, NICs, and Switches
+- Add support for resizing VHDs
+
 ## v0.0.9 2018-05-15
 
 - Add support for Fog-Core v2.0+

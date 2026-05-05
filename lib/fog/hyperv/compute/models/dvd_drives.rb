@@ -1,17 +1,18 @@
 # frozen_string_literal: true
 
-require 'fog/hyperv/collection'
-require 'fog/hyperv/compute/models/dvd_drive'
+class Fog::Hyperv::Compute
+  class DvdDrives < Fog::Hyperv::Collection
+    model Fog::Hyperv::Compute::DvdDrive
 
-module Fog
-  module Hyperv
-    class Compute
-      class DvdDrives < Fog::Hyperv::VMCollection
-        model Fog::Hyperv::Compute::DvdDrive
-        requires_vm
+    get_method :get_vm_dvd_drive
 
-        get_method :get_vm_dvd_drive
-      end
+    attribute :computer_name
+    attribute :vm_id
+
+    requires :vm_id
+
+    def get(id, **filters)
+      super(_by_id: id, **filters)
     end
   end
 end

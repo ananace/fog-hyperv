@@ -1,24 +1,20 @@
 # frozen_string_literal: true
 
-module Fog
-  module Hyperv
-    class Compute
-      class Real
-        def get_vm_group(**options)
-          requires_version '10.0'
+class Fog::Hyperv::Compute
+  class Real
+    def get_vm_group(computer_name: nil, **options)
+      requires_version '10.0'
 
-          run_shell('Get-VMGroup', **options)
-        end
-      end
+      run_cmd('Get-VMGroup', _target_computer: computer_name, **options)
+    end
+  end
 
-      class Mock
-        def get_vm_group(**_options)
-          requires_version '10.0'
+  class Mock
+    def get_vm_group(**_options)
+      requires_version '10.0'
 
-          # TODO
-          Fog::Mock.not_implemented
-        end
-      end
+      # TODO
+      Fog::Mock.not_implemented
     end
   end
 end

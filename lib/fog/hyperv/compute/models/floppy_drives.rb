@@ -1,17 +1,18 @@
 # frozen_string_literal: true
 
-require 'fog/hyperv/collection'
-require 'fog/hyperv/compute/models/floppy_drive'
+class Fog::Hyperv::Compute
+  class FloppyDrives < Fog::Hyperv::Collection
+    model Fog::Hyperv::Compute::FloppyDrive
 
-module Fog
-  module Hyperv
-    class Compute
-      class FloppyDrives < Fog::Hyperv::VMCollection
-        model Fog::Hyperv::Compute::FloppyDrive
-        requires_vm
+    get_method :get_vm_floppy_disk_drive
 
-        get_method :get_vm_floppy_disk_drive
-      end
+    attribute :computer_name
+    attribute :vm_id
+
+    requires :vm_id
+
+    def get(id, **filters)
+      super(_by_id: id, **filters)
     end
   end
 end

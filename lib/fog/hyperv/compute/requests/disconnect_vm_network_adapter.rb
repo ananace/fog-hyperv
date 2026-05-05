@@ -1,14 +1,29 @@
 # frozen_string_literal: true
 
-module Fog
-  module Hyperv
-    class Compute
-      class Real
-        def disconnect_vm_network_adapter(**options)
-          requires :vm_name
-          run_shell('Disconnect-VMNetworkAdapter', _skip_json: true, **options).exitcode.zero?
-        end
+class Fog::Hyperv::Compute
+  class Real
+    def disconnect_vm_network_adapter(id:, computer_name: nil, **options)
+      requires_one options, :vm_id, :management_os
+      options.delete :management_os
+
+      cmdlist = []
+      if options[:vm_id]
+        vm_id = options.delete :vm_id
+        cmdlist += [
+          ['$VM = Get-VM', { id: vm_id }],
+          ['$NIC = $VM | Get-VMNetworkAdapter', { _by_id: id }]
+        ]
+      else
+        options.delete :vm_id
+        cmdlist << ['$NIC = Get-VMNetworkAdapter', { _by_id: id, management_os: true }]
       end
+      cmdlist << ['$NIC | Disconnect-VMNetworkAdapter', options]
+
+      run_cmdlist(commands, skip_json: true, target_computer: computer_name)
     end
+  end
+
+  class Mock
+    def disconnect_vm_network_adapter(*args); end
   end
 end
