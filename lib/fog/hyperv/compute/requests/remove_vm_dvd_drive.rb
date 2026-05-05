@@ -7,7 +7,7 @@ class Fog::Hyperv::Compute
         [
           ['$VM = Get-VM', { id: vm_id }],
           ['$DVD = $VM | Get-VMDvdDrive', { _by_id: id }],
-          ['$DVD | Remove-VMDvdDrive', options]
+          ['$DVD | Remove-VMDvdDrive', { force: true, **options }]
         ],
         skip_json: true,
         target_computer: computer_name

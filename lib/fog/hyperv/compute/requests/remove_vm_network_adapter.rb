@@ -17,7 +17,7 @@ class Fog::Hyperv::Compute
         options.delete :vm_id
         cmdlist << ['$NIC = Get-VMNetworkAdapter', { _by_id: id, management_os: true }]
       end
-      cmdlist << ['$NIC | Remove-VMNetworkAdapter', options]
+      cmdlist << ['$NIC | Remove-VMNetworkAdapter', { force: true, **options }]
 
       run_cmdlist(
         cmdlist,
