@@ -2,6 +2,11 @@
 
 module Fog::Hyperv
   module ModelExtends
+    # Attach a collection of sub-models
+    # @param name [Symbol] the attribute name to store the collection under
+    # @param collection_name [Symbol] the name of the collection on the service
+    # @param options [Hash] the options to create the collection attachment with
+    # @see Fog::Hyperv::Associations::Collection
     def collection(name, collection_name = nil, options = {}) # rubocop:disable Style/OptionHash -- upstream design
       collection_name ||= name
       Fog::Hyperv::Associations::Collection.new(self, name, collection_name, options)
@@ -28,26 +33,38 @@ module Fog::Hyperv
   end
 
   module ModelIncludes
+    # Has the model been modified
+    # @return [Boolean] have any attributes changed since the model was retrieved
     def dirty?
-      attributes.reject do |k, v|
-        !self.class.attributes.include?(k) || (old ? old.attributes[k] == v : false)
-      end.any?
+      dirty!.any?
     end
 
+    def dirty!
+      attributes.reject do |k, v|
+        !self.class.attributes.include?(k) || (old ? old.attributes[k] == v : false)
+      end
+    end
+
+    # Get the VM this model is attached to
+    # @return [Fog::Hyperv::Compute::Server,nil] the VM this model is attached to, if any
     def vm
       return @vm if @vm
       return unless respond_to?(:vm_id) && vm_id
 
-      @vm ||= service.servers.get id: vm_id
+      @vm ||= service.servers.get vm_id
     end
 
+    # Get the Computer this model is attached to
+    # @return [Fog::Hyperv::Compute::Host,nil] the Computer this model is attached to, if any
     def computer
       return @computer if @computer
       return @computer ||= service.hosts.get(computer_name) if respond_to?(:computer_name) && computer_name
 
-      @computer ||= @vm.computer
+      @computer ||= vm&.computer
     end
 
+    # Get the Cluster this model is part of
+    # @return [Fog::Hyperv::Compute::Cluster,nil] the Cluster this model is part of, if any
     def cluster
       return @cluster if @cluster
       return unless respond_to?(:cluster_name) && cluster_name
@@ -76,11 +93,13 @@ module Fog::Hyperv
     end
   end
 
+  # A slightly specialized Fog::Model which includes shared Hyper-V functionality
   class Model < Fog::Model
     extend Fog::Hyperv::ModelExtends
     include Fog::Hyperv::ModelIncludes
 
-    # Microsoft.HyperV.PowerShell.OnOffState
+    # General enum for on/off toggles as used by Hyper-V
+    # @note Defined by Microsoft.HyperV.PowerShell.OnOffState
     ON_OFF_STATE_ENUM_VALUES = %i[
       On
       Off

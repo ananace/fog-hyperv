@@ -20,7 +20,17 @@ class Fog::Hyperv::Compute
       id = identifier if identifier =~ /\Amicrosoft:#{Fog::Hyperv::GUID}\\#{Fog::Hyperv::GUID}\z/i
       name = identifier unless id
 
+      raise ArgumentError, 'Must provide a name or GUID' if (id.nil? || id.empty?) && (name.nil? || name.empty?)
+
       super(name:, _by_id: id, **filters)
+    end
+
+    protected
+
+    def search_attributes
+      super.merge(
+        _return_fields: model.attributes - %i[vlan_setting]
+      )
     end
   end
 end

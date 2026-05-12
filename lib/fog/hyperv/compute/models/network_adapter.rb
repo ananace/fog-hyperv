@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class Fog::Hyperv::Compute
+  # rubocop:disable Metrics/ClassLength
+
   class NetworkAdapter < Fog::Hyperv::Model
     # rubocop:disable Layout/HashAlignment
 
@@ -30,13 +32,15 @@ class Fog::Hyperv::Compute
     }.freeze
     # rubocop:enable Layout/HashAlignment
 
+    NIC_FALLBACK_MAC = ('0' * 12).freeze
+
     # @!attribute [r] id
     #   @return [String] the GUID of this network adapter
     identity :id
 
     # @!attribute [r] computer_name
     #   @return [String] the name of the computer running the VM that this network adapter is attached to
-    attribute :computer_name, type: :string
+    attribute :computer_name
     # @!attribute [r] vm_id
     #   @return [String,nil] the GUID of the VM this network adapter is attached to
     attribute :vm_id
@@ -53,7 +57,7 @@ class Fog::Hyperv::Compute
 
     # @!attribute dynamic_mac_address_enabled
     #   @return [Boolean] is the network adapter assigned a dynamic MAC address
-    attribute :dynamic_mac_address_enabled, type: :boolean, default: true
+    attribute :dynamic_mac_address_enabled, type: :boolean
     # @!attribute [r] ip_addresses
     #   @return [Array<String>] the IP addresses currently assigned to the network adapter
     attribute :ip_addresses
@@ -68,13 +72,22 @@ class Fog::Hyperv::Compute
     # @!attribute mac_address
     #   @return [String] the MAC address of the network adapter
     #   @note Can only be changed if dynamic_mac_address_enabled is false
-    attribute :mac_address, type: :string
+    attribute :mac_address
     # @!attribute name
     #   @return [String] the name of the network adapter
-    attribute :name, type: :string, default: 'Network Adapter'
+    attribute :name
+    # @!attribute mac_address_spoofing
+    #   @return [:On, :Off] should the NIC be allowed to send packets with different MAC address
+    attribute :mac_address_spoofing, type: :hypervenum, values: ON_OFF_STATE_ENUM_VALUES
+    # @!attribute dhcp_guard
+    #   @return [:On, :Off] should the NIC drop DHCP messages from unauthorized VMs
+    attribute :dhcp_guard, type: :hypervenum, values: ON_OFF_STATE_ENUM_VALUES
     # @!attribute router_guard
     #   @return [:On, :Off] should the NIC drop RA/Redirection messages from unauthorized VMs
     attribute :router_guard, type: :hypervenum, values: ON_OFF_STATE_ENUM_VALUES
+    # @!attribute allow_teaming
+    #   @return [:On, :Off] should the NIC be allowed to be teamed with other NICs on the same switch
+    attribute :allow_teaming, type: :hypervenum, values: ON_OFF_STATE_ENUM_VALUES
     # @!attribute [r] status
     #   @return [Symbol] the status of the network adapter
     #   @see NIC_STATUS_ENUM_VALUES
@@ -90,34 +103,37 @@ class Fog::Hyperv::Compute
     #   @see disconnect
     attribute :switch_name
 
+    has_one :vlan_setting, :vlan_setting
+
     # @!attribute [r] vlan_setting
     # @return [NetworkAdapterVlan] the VLAN that the network adapter is connected to
     def vlan_setting
-      return @vlan_setting if @vlan_setting
+      return associations[:vlan_setting] if associations[:vlan_setting]
+
+      require_relative 'network_adapter_vlan'
+      attrs = {
+        parent_adapter: self,
+        service: @service,
+        vm: @vm
+      }
 
       if persisted?
         requires :id
+        requires :vm_id unless is_management_os
 
-        @vlan_setting = Fog::Hyperv::Compute::NetworkAdapterVlan.new(
-          service.get_vm_network_adapter_vlan(
+        associations[:vlan_setting] = Fog::Hyperv::Compute::NetworkAdapterVlan.new(
+          **service.get_vm_network_adapter_vlan(
             computer_name:,
             management_os: is_management_os,
             vm_id:,
             id:,
 
             _return_fields: Fog::Hyperv::Compute::NetworkAdapterVlan.attributes
-          ).merge(
-            network_adapter: self,
-            service:,
-            vm:
-          )
+          ),
+          **attrs
         )
       else
-        @vlan_setting = Fog::Hyperv::Compute::NetworkAdapterVlan.new(
-          network_adapter: self,
-          service:,
-          vm:
-        )
+        associations[:vlan_setting] = Fog::Hyperv::Compute::NetworkAdapterVlan.new(attrs)
       end
     end
 
@@ -214,15 +230,29 @@ class Fog::Hyperv::Compute
 
         _return_fields: self.class.attributes
       )
-      vlan_setting.save if @vlan_setting
+      post_save_changes = {
+        mac_address_spoofing: mac_address_spoofing,
+        dhcp_guard: dhcp_guard,
+        router_guard: router_guard,
+        allow_teaming: allow_teaming
+      }.compact
+
+      vlan_setting.save if associations[:vlan_setting] && vlan_setting.dirty?
 
       merge_attributes(data)
+      return self unless post_save_changes.any?
+
+      attributes.merge!(post_save_changes)
+      update if dirty?
+
+      self
     end
 
     def update
       requires :id
       requires :vm_id unless is_management_os
 
+      data = {}
       if changed?(:name)
         service.rename_vm_network_adapter(
           computer_name: old.computer_name,
@@ -232,31 +262,32 @@ class Fog::Hyperv::Compute
 
           new_name: name
         )
-        @old.name = name
+        data[:name] = name
       end
 
-      if dirty?
-        data = service.set_vm_network_adapter(
+      changes = build_changelist
+      if changes.any?
+        data += service.set_vm_network_adapter(
           computer_name: old.computer_name,
           id: old.id,
           vm_id: old.vm_id,
           management_os: old.is_management_os,
 
-          dynamic_mac_address: changed?(:dynamic_mac_address_enabled) && dynamic_mac_address_enabled,
-          static_mac_address: changed!(:mac_address) || ((changed!(:dynamic_mac_address_enabled) == false) && mac_address),
+          **changes,
 
+          _always_include: changes.keys,
           _return_fields: self.class.attributes
         )
+      end
 
-        save_switch if changed?(:switch_name) || changed?(:switch_id)
+      if changed?(:switch_name) || changed?(:switch_id)
+        save_switch
         data[:switch_name] = switch_name
         data[:switch_id] = switch_id
       end
+      vlan_setting.save if associations[:vlan_setting] && vlan_setting.dirty?
 
-      vlan_setting.save if @vlan_setting && vlan_setting.dirty?
-
-      merge_attributes(data) if dirty?
-      self
+      merge_attributes(data)
     end
 
     def destroy
@@ -293,11 +324,29 @@ class Fog::Hyperv::Compute
 
     def merge_attributes(new_attributes = {})
       new_attributes[:ip_addresses] = [] if new_attributes[:ip_addresses] == ''
+      new_attributes[:mac_address] = NIC_FALLBACK_MAC if new_attributes[:mac_address].nil? || new_attributes[:mac_address] == ''
 
       super
     end
 
     private
+
+    def build_changelist
+      changes = {
+        mac_address_spoofing: changed!(:mac_address_spoofing),
+        dhcp_guard: changed!(:dhcp_guard),
+        router_guard: changed!(:router_guard),
+        allow_teaming: changed!(:allow_teaming)
+      }
+      unless is_management_os
+        if dynamic_mac_address_enabled
+          changes[:dynamic_mac_address] = changed!(:dynamic_mac_address_enabled)
+        elsif mac_address && mac_address != NIC_FALLBACK_MAC
+          changes[:static_mac_address] = mac_address
+        end
+      end
+      changes.compact
+    end
 
     def save_switch
       selector = {
@@ -318,4 +367,5 @@ class Fog::Hyperv::Compute
       end
     end
   end
+  # rubocop:enable Metrics/ClassLength
 end

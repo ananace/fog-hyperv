@@ -5,10 +5,6 @@ class Fog::Hyperv::Compute
   #
   # @see https://learn.microsoft.com/en-us/windows/win32/hyperv_v2/msvm-securitysettingdata WMI definitions
   class Security < Fog::Hyperv::Model
-    # @!attribute [r] vm
-    #   @return [Server] the VM this security configuration is attached to
-    identity :vm
-
     # @!attribute tpm_enabled
     #   @return [Boolean] is a vTPM enabled for the VM
     attribute :tpm_enabled, type: :boolean
@@ -27,6 +23,12 @@ class Fog::Hyperv::Compute
     # @!attribute [r] bind_to_host_tpm
     #   @return [Boolean] is the VM bound to the host TPM
     attribute :bind_to_host_tpm, type: :boolean
+
+    # @!attribute [r] vm
+    #   @return [Server] the VM this security configuration is attached to
+    has_one :vm, :servers
+
+    alias identity :hash
 
     # @!attribute [r] key_protector
     # @return [String, null] the key protector encryption key

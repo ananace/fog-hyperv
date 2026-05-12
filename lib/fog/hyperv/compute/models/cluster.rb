@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
 class Fog::Hyperv::Compute
+  # A cluster known to Hyper-V
+  #
+  # This model is read-only and strictly informative
   class Cluster < Fog::Hyperv::Model
     # @!attribute [r] id
     #   @return [String] the GUID of the cluster
@@ -24,6 +27,7 @@ class Fog::Hyperv::Compute
       cluster_nodes.map { |n| service.hosts.get(n[:name]) }
     end
 
+    # Reload the cluster information from Hyper-V
     def reload
       requires :id
 

@@ -89,16 +89,16 @@ class Fog::Hyperv::Compute
 
     # @!attribute [r] id
     #   @return [String] the GUID of the VM
-    identity :id, type: :string
+    identity :id
     alias vm_id :id
 
     # @!attribute [r] computer_name
     #   @return [String] the name of the host running the VM
-    attribute :computer_name, type: :string
+    attribute :computer_name
 
     # @!attribute name
     #   @return [String] the name of the VM
-    attribute :name, type: :string
+    attribute :name
     alias vm_name :name
     # @!attribute [r] creation_time
     #   @return [Time] the time the VM was created
@@ -153,6 +153,9 @@ class Fog::Hyperv::Compute
     collection :network_adapters
     collection :vhds
 
+    has_one :bios, :bios
+    has_one :security, :security
+
     def initialize(attrs = {})
       @cluster = attrs.delete :cluster
       @computer = attrs.delete :computer
@@ -163,7 +166,7 @@ class Fog::Hyperv::Compute
     # @!attribute [r] bios
     # @return [Bios,Firmware] BIOS/UEFI configuration depending on generation
     def bios
-      @bios ||= begin
+      associations[:bios] ||= begin
         requires :generation, :id
         if generation == :BIOS
           klass = Fog::Hyperv::Compute::Bios
@@ -174,18 +177,18 @@ class Fog::Hyperv::Compute
         end
 
         klass.new(
-          service.public_send(
+          **service.public_send(
             method,
             computer_name:,
-            vm_id: id,
+            vm_id:,
 
             _return_fields: klass.attributes
-          ).merge(
-            service: service,
-            vm: self,
-            computer: @computer,
-            cluster: @cluster
-          )
+          ),
+
+          vm: self,
+          service: @service,
+          computer: @computer,
+          cluster: @cluster
         )
       end
     end
@@ -197,18 +200,18 @@ class Fog::Hyperv::Compute
       requires :generation, :id
       return nil unless generation == :UEFI
 
-      @security ||= Fog::Hyperv::Compute::Security.new(
-        service.get_vm_security(
+      associations[:security] ||= Fog::Hyperv::Compute::Security.new(
+        **service.get_vm_security(
           computer_name:,
-          vm_id: id,
+          vm_id:,
 
-          _return_fields: Fog::Hyperv::Compute::Security.attributes - %i[vm]
-        ).merge(
-          service: service,
-          vm: self,
-          computer: @computer,
-          cluster: @cluster
-        )
+          _return_fields: Fog::Hyperv::Compute::Security.attributes
+        ),
+
+        vm: self,
+        service: @service,
+        computer: @computer,
+        cluster: @cluster
       )
     end
 
@@ -224,7 +227,7 @@ class Fog::Hyperv::Compute
 
       security.tpm_enabled = enabled
       security.save
-      enabled
+      enabled # rubocop:disable Lint/Void -- Needs to shadow the result of security.save
     end
 
     # Start the VM
@@ -313,7 +316,7 @@ class Fog::Hyperv::Compute
 
       service.remove_vm(
         computer_name:,
-        id:,
+        id:
       )
       true
     end

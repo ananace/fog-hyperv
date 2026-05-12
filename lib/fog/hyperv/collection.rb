@@ -1,17 +1,21 @@
 # frozen_string_literal: true
 
 module Fog::Hyperv
+  # Expanded Fog::Collection with Hyper-V specific configuration
   class Collection < Fog::Collection
+    # Define the service request that is used to retrieve data for this collection
     def self.get_method(method = nil)
       @get_method ||= method
     end
 
+    # Add required attributes for retrieving data for this collection
     def self.requires(*attr)
       @requires ||= []
       @requires += attr if attr.any?
       @requires
     end
 
+    # Check if the collection requires a specific attribute
     def self.requires?(req)
       requires.include? req
     end
@@ -20,10 +24,12 @@ module Fog::Hyperv
       @vm = attributes.delete(:vm)
       @computer = attributes.delete(:computer)
       @network_adapter = attributes.delete(:network_adapter)
+      @cluster = attributes.delete(:cluster)
 
       super
     end
 
+    # Retrieve all instances for the collection
     def all(filters = {})
       requires(*self.class.requires)
 
@@ -33,6 +39,7 @@ module Fog::Hyperv
       load [data].flatten
     end
 
+    # Get a specific instance in the collection
     def get(**filters)
       all(filters).first
     rescue Fog::Hyperv::Errors::PSError => e
@@ -41,6 +48,7 @@ module Fog::Hyperv
       raise
     end
 
+    # Create a new instance in the collection
     def new(attributes = {})
       requires(*self.class.requires)
 
@@ -58,9 +66,12 @@ module Fog::Hyperv
 
     def creation_attributes
       attributes.merge(
-        vm: @vm,
-        computer: @computer,
-        network_adapter: @network_adapter
+        {
+          vm: @vm,
+          computer: @computer,
+          network_adapter: @network_adapter,
+          cluster: @cluster
+        }.compact
       )
     end
 

@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
 class Fog::Hyperv::Compute
+  # UEFI firmware settings for a VM
+  #
+  # @see https://learn.microsoft.com/en-us/powershell/module/hyper-v/set-vmfirmware for set-request
   class Firmware < Fog::Hyperv::Model
     # @!attribute [r] vm_id
     #   @return [String] the GUID of the VM this UEFI configuration is attached to
@@ -27,7 +30,7 @@ class Fog::Hyperv::Compute
     #   @return [String] the template to use for the secure boot configuration
     #   @see Host#secure_boot_templates
     attribute :secure_boot_template
-    # @!attribute secure_boot_template_id
+    # @!attribute [r] secure_boot_template_id
     #   @return [String] the template id to use for the secure boot configuration
     #   @see Host#secure_boot_templates
     attribute :secure_boot_template_id
@@ -36,6 +39,7 @@ class Fog::Hyperv::Compute
     #   @see ON_OFF_STATE_ENUM_VALUES
     attribute :pause_after_boot_failure, type: :hypervenum, values: ON_OFF_STATE_ENUM_VALUES
 
+    # Save any modifications to Hyper-V
     def update
       requires :vm_id
 
@@ -55,6 +59,7 @@ class Fog::Hyperv::Compute
       )
     end
 
+    # Reload attributes from Hyper-V
     def reload
       requires :vm_id
 

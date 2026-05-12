@@ -14,10 +14,6 @@ class Fog::Hyperv::Compute
       Unknown Isolated Community Promiscuous
     ].freeze
 
-    # @!attribute [r] network_adapter
-    #   @return [NetworkAdapter] the network adapter this VLAN configuration refers to
-    identity :network_adapter
-
     # @!attribute operation_mode
     #   @return [:Untagged, :Access, :Trunk, :Private] the active VLAN mode
     attribute :operation_mode, type: :hypervenum, default: :Untagged, values: VLAN_OPERATION_MODE
@@ -43,15 +39,11 @@ class Fog::Hyperv::Compute
     #   @return [Array<Integer>] the list of secondary VLAN IDs to use for private_vlan_mode +:Promiscuous+
     attribute :secondary_vlan_id_list
 
-    attr_reader :network_adapter
-
-    def initialize(attributes = {})
-      @network_adapter = attributes.delete :network_adapter
-
-      super
-    end
-
     # rubocop:disable Metrics/MethodLength -- Argument handling takes some space
+
+    has_one :parent_adapter, :network_adapters
+
+    alias identity :parent_adapter
 
     def update
       args = {}
@@ -90,9 +82,9 @@ class Fog::Hyperv::Compute
 
       merge_attributes(
         service.set_vm_network_adapter_vlan(
-          computer_name: network_adapter.computer_name,
-          vm_id: network_adapter.vm_id,
-          id: network_adapter.id,
+          computer_name: parent_adapter.computer_name,
+          vm_id: parent_adapter.vm_id,
+          id: parent_adapter.id,
 
           **args,
 
@@ -106,9 +98,9 @@ class Fog::Hyperv::Compute
       requires :network_adapter
 
       data = service.get_vm_network_adapter_vlan(
-        computer_name: network_adapter.computer_name,
-        vm_id: network_adapter.vm_id,
-        id: network_adapter.id,
+        computer_name: parent_adapter.computer_name,
+        vm_id: parent_adapter.vm_id,
+        id: parent_adapter.id,
 
         _return_fields: self.class.attributes
       )

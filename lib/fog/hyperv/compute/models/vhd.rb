@@ -136,17 +136,16 @@ class Fog::Hyperv::Compute
     def update
       requires :path
 
-      if changed?(:size)
-        service.resize_vhd(
-          computer_name: old.computer_name,
-          path: old.path,
+      return unless changed?(:size)
 
-          size_bytes: size
-        )
-        @old.size = size
-      end
+      service.resize_vhd(
+        computer_name: old.computer_name,
+        path: old.path,
 
-      @old = nil
+        size_bytes: size
+      )
+      @old.size = size
+
       self
     end
 

@@ -10,6 +10,8 @@ class Fog::Hyperv::Compute
       id = identifier if identifier =~ /\A#{Fog::Hyperv::GUID}\z/i
       name = identifier unless id
 
+      raise ArgumentError, 'Must provide a name or GUID' if (id.nil? || id.empty?) && (name.nil? || name.empty?)
+
       super(name:, id:, **filters)
     end
   end

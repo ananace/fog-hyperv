@@ -12,7 +12,17 @@ class Fog::Hyperv::Compute
     requires :vm_id
 
     def get(id, **filters)
+      raise ArgumentError, 'Must provide a GUID' if id.nil? || id.empty?
+
       super(_by_id: id, **filters)
+    end
+
+    protected
+
+    def search_attributes
+      super.merge(
+        _return_fields: model.attributes - %i[allow_unverified_paths vhd]
+      )
     end
   end
 end

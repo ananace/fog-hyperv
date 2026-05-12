@@ -42,7 +42,7 @@ class Fog::Hyperv::Compute
     # @!attribute [r] secure_boot_templates
     # @return [Array<String>] the available secure boot templates on this host
     def secure_boot_templates
-      @secure_boot_templates ||= service.get_vm_host_sbt(computer_name: name)
+      service.get_vm_host_sbt(computer_name: name)
     end
 
     def reload

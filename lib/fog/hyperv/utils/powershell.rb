@@ -2,6 +2,10 @@
 
 module Fog::Hyperv::Utils::Powershell
   # Build a Powershell option map from a set of keyword arguments
+  # @param _optmap_name [String] the name of the option map to generate
+  # @param _ps_version [Integer] the major version of PowerShell to generate the option map for
+  # @param _from_json [Boolean] should the option map be built from JSON data
+  # @param options [Hash] the options to convert into a PowerShell option map
   def self.build_optmap(_optmap_name: 'FogArgs', _ps_version: 5, _from_json: true, **_options)
     ps_opts = Fog::Hyperv.camelize(_options)
     if _from_json
@@ -27,6 +31,13 @@ module Fog::Hyperv::Utils::Powershell
   end
 
   # Build a Powershell cmdlet call
+  # @param cmdlet [String] the PowerShell cmdlet to call
+  # @param args [Hash] the argument to call the cmdlet with
+  # @param _ps_version [Integer] the major version of PowerShell the call is being made for
+  #
+  # @example Running a simple cmdlet
+  #   build_call 'Get-VM', { name: 'example VM' }, _ps_version: 7
+  #   => "$Fogwozmqayrgsyd = ConvertFrom-Json -AsHashtable '{"Name": "example VM"}\nGet-VM @Fogwozmqayrgsyd"
   def self.build_call(cmdlet, args = {}, _ps_version: 5)
     return [cmdlet.gsub('@Args', '')].flatten if args.empty?
 
@@ -43,7 +54,9 @@ module Fog::Hyperv::Utils::Powershell
     commands
   end
 
-  # Convert Ruby data to PowerShel
+  # Convert Ruby data to PowerShell equivalents
+  # @param data [Object] the Ruby data to convert
+  # @param always [Boolean] should the data be included even if the equivalent would be a no-op
   def self.shell_quote(data, always: false)
     case data
     when String

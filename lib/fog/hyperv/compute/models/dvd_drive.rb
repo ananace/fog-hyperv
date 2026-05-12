@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
 class Fog::Hyperv::Compute
+  # A virtual DVD drive attached to a VM
+  #
+  # @see https://learn.microsoft.com/en-us/powershell/module/hyper-v/set-vmdvddrive for set-request
   class DvdDrive < Fog::Hyperv::Model
     # @!attribute [r] id
     #   @return [String] the GUID of this DVD drive
@@ -13,7 +16,6 @@ class Fog::Hyperv::Compute
     #   @return [String] the GUID of the VM this DVD drive is attached to
     attribute :vm_id
 
-    # attribute :is_deleted
     # @!attribute [r] name
     #   @return [String] the name of this DVD drive
     attribute :name
@@ -38,7 +40,14 @@ class Fog::Hyperv::Compute
     # TODO? VM Snapshots?
     #
 
-    def create(allow_unverified_paths: false)
+    # Should non-verifiable paths be allowed to be set
+    attr_accessor :allow_unverified_paths
+
+    # Create a new instance of a DVD drive
+    #
+    # @note Requires vm_id, as well as either controller settings or a path
+    # @see https://learn.microsoft.com/en-us/powershell/module/hyper-v/add-vmdvddrive for the add-request
+    def create
       requires :vm_id
       requires_one :controller_location, :controller_number, :controller_type, :path
 
@@ -58,6 +67,7 @@ class Fog::Hyperv::Compute
       )
     end
 
+    # Save any modifications to Hyper-V
     def update
       requires :id, :vm_id
 
@@ -82,6 +92,7 @@ class Fog::Hyperv::Compute
       )
     end
 
+    # Remove the DVD drive from Hyper-V
     def destroy
       requires :id, :vm_id
 
@@ -93,10 +104,11 @@ class Fog::Hyperv::Compute
       true
     end
 
+    # Reload attributes from Hyper-V
     def reload
       requires :id, :vm_id
 
-      data = service.set_vm_dvd_drive(
+      data = service.get_vm_dvd_drive(
         computer_name:,
         vm_id:,
         id:,
@@ -105,7 +117,7 @@ class Fog::Hyperv::Compute
       )
       return unless data
 
-      merge_attributes(data.attributes)
+      merge_attributes(data)
     end
   end
 end

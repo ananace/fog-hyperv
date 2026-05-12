@@ -15,9 +15,6 @@ class Fog::Hyperv::Compute
     # @!attribute [r] vm_id
     #   @return [String] the GUID of the VM this hard drive is attached to
     attribute :vm_id
-    # @!attribute [r] vm_name
-    #   @return [String] the name of the VM this hard drive is attached to
-    attribute :vm_name
 
     # @!attribute controller_location
     #   @return [String] the controller location this hard drive is attached to
@@ -55,9 +52,11 @@ class Fog::Hyperv::Compute
 
     attribute :allow_unverified_paths, type: :boolean
 
+    has_one :vhd, :vhds
+
     def initialize(attributes = {})
-      vhd = attributes.delete :vhd
-      attributes[:path] ||= vhd.path if vhd
+      vhd = attributes[:vhd]
+      attributes[:path] ||= vhd&.path
 
       super
     end
@@ -65,16 +64,17 @@ class Fog::Hyperv::Compute
     # @!attribute vhd
     # @return [Vhd,nil] the VHD that is attached to this hard drive
     def vhd
+      return associations[:vhd] if associations[:vhd]
       return unless path
 
-      @vhd ||= service.vhds.get(path, computer_name:)
+      associations[:vhd] = service.vhds.get(path, computer_name:)
     end
 
     def vhd=(new_vhd)
       raise ArgumentError, 'Must be a VHD' unless new_vhd.nil? || new_vhd.is_a?(Vhd)
 
-      attributes[:path] = new_vhd&.path
-      @vhd = new_vhd
+      associations[:path] = new_vhd&.path
+      associations[:vhd] = new_vhd
     end
 
     # @return [Boolean] does the hard drive have a VHD attached?
@@ -92,6 +92,11 @@ class Fog::Hyperv::Compute
       requires :vm_id
       requires_one :controller_location, :controller_number, :controller_type, :path
 
+      if associations[:vhd]
+        vhd.save if !vhd.persisted? || vhd.dirty?
+        attributes[:path] ||= vhd.path
+      end
+
       merge_attributes(
         service.add_vm_hard_disk_drive(
           computer_name:,
@@ -107,7 +112,7 @@ class Fog::Hyperv::Compute
           path:,
           resource_pool_name: pool_name,
 
-          _return_fields: self.class.attributes - %i[allow_unverified_paths]
+          _return_fields: self.class.attributes - %i[allow_unverified_paths vhd]
         )
       )
     end
@@ -132,10 +137,14 @@ class Fog::Hyperv::Compute
           to_controller_number: changed!(:controller_number),
           to_controller_type: changed!(:controller_type),
 
-          _return_fields: self.class.attributes - %i[allow_unverified_paths]
+          _return_fields: self.class.attributes - %i[allow_unverified_paths vhd]
         )
       )
-      @vhd = nil if changed?(:path)
+
+      if associations[:vhd]
+        vhd.save if !vhd.persisted? || vhd.dirty?
+        associations[:vhd] = nil if changed?(:path)
+      end
       self
     end
 
@@ -147,7 +156,7 @@ class Fog::Hyperv::Compute
         vm_id:,
         id:,
 
-        _return_fields: self.class.attributes - %i[allow_unverified_paths]
+        _return_fields: self.class.attributes - %i[allow_unverified_paths vhd]
       )
       return unless data
 

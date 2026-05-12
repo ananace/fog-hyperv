@@ -11,14 +11,18 @@ module Fog
   end
 
   module Hyperv
-    autoload :Compute, File.expand_path('hyperv/compute', __dir__)
     extend Fog::Provider
 
-    GUID = /\w{8}-\w{4}-\w{4}-\w{4}-\w{12}/i
+    autoload :Compute, File.expand_path('hyperv/compute', __dir__)
+
+    # General GUID format matching the UUIDv4 specification
+    GUID = /[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[0-9a-f]{4}-[0-9a-f]{12}/i
 
     module Errors
+      # A general service error occurred
       class ServiceError < Fog::Errors::Error; end
 
+      # A version constrain was not matched
       class VersionError < ServiceError
         attr_reader :version, :required_version, :function
 
@@ -31,6 +35,7 @@ module Fog
         end
       end
 
+      # A powershell call failed
       class PSError < ServiceError
         attr_reader :stdout, :stderr, :exitcode, :info, :message
 
@@ -68,6 +73,7 @@ module Fog
 
     service(:compute, 'Compute')
 
+    # Convert a piece of data from being snake_case to being CamelCase
     def self.camelize(data)
       case data
       when Array
@@ -87,6 +93,7 @@ module Fog
       end
     end
 
+    # Convert a piece of data from being CamelCase to being snake_case
     def self.uncamelize(data)
       case data
       when Array

@@ -6,7 +6,7 @@ class Fog::Hyperv::Compute
       run_cmdlist(
         [
           ['$VM = Get-VM', { id: }],
-          ['$VM | Stop-VM', options]
+          ['$VM | Stop-VM', { force: true, **options }]
         ],
         skip_json: true,
         target_computer: computer_name
