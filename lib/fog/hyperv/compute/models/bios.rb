@@ -5,11 +5,6 @@ class Fog::Hyperv::Compute
   #
   # @see https://learn.microsoft.com/en-us/powershell/module/hyper-v/set-vmbios for set-request
   class Bios < Fog::Hyperv::Model
-    # Possible boot devices
-    # @note Defined by Microsoft.HyperV.PowerShell.BootDevice
-    BIOS_BOOT_DEVICE = %i[
-      Floppy CD IDE LegacyNetworkAdapter NetworkAdapter VHD
-    ].freeze
 
     # @!attribute [r] vm_id
     #   @return [String] the GUID of the VM this BIOS configuration is attached to
@@ -21,17 +16,17 @@ class Fog::Hyperv::Compute
 
     # attribute :is_deleted, type: :boolean
     # @!attribute num_lock_enabled
-    #   @return [Boolean] should num-lock be enabled on boot
+    #   @return [Boolean] if num-lock should be enabled on boot
     attribute :num_lock_enabled, type: :boolean
     # @!attribute startup_order
     #   @note Hyper-V only really allows reordering these entries, not adding/removing from the list
-    #   @return [Array<Symol>] the boot order of the VM
-    #   @see BIOS_BOOT_DEVICE
+    #   @return [Array<Symbol>] the boot order of the VM
+    #   @see Fog::Hyperv::BOOT_DEVICE_ENUM_VALUES
     #   @example Set legacy net boot as default - if possible
     #     netboot = bios.startup_order.delete :LegacyNetworkAdapter
     #     bios.startup_order.unshift netboot if netboot
     #     bios.save
-    attribute :startup_order, type: :hypervenumarray, values: BIOS_BOOT_DEVICE
+    attribute :startup_order, type: :hypervenumarray, values: Fog::Hyperv::BOOT_DEVICE_ENUM_VALUES
 
     # Save any modifications to Hyper-V
     def update

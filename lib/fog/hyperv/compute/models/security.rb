@@ -6,22 +6,22 @@ class Fog::Hyperv::Compute
   # @see https://learn.microsoft.com/en-us/windows/win32/hyperv_v2/msvm-securitysettingdata WMI definitions
   class Security < Fog::Hyperv::Model
     # @!attribute tpm_enabled
-    #   @return [Boolean] is a vTPM enabled for the VM
+    #   @return [Boolean] if a vTPM is enabled for the VM
     attribute :tpm_enabled, type: :boolean
     # @!attribute [r] ksd_enabled
-    #   @return [Boolean] is a key storage device enabled for the VM
+    #   @return [Boolean] if a key storage device is enabled for the VM
     attribute :ksd_enabled, type: :boolean
     # @!attribute [r] shielded
-    #   @return [Boolean] is the VM shielded
+    #   @return [Boolean] if the VM is shielded
     attribute :shielded, type: :boolean
     # @!attribute encrypt_state_and_vm_migration_traffic
-    #   @return [Boolean] should VM state and migration traffic be encrypted
+    #   @return [Boolean] if VM state and migration traffic should be encrypted
     attribute :encrypt_state_and_vm_migration_traffic, type: :boolean
     # @!attribute virtualization_based_security_opt_out
-    #   @return [Boolean] should virtualization-based securty be opted out of for the VM
+    #   @return [Boolean] if virtualization-based securty should be opted out of for the VM
     attribute :virtualization_based_security_opt_out, type: :boolean
     # @!attribute [r] bind_to_host_tpm
-    #   @return [Boolean] is the VM bound to the host TPM
+    #   @return [Boolean] if the VM is bound to the host TPM
     attribute :bind_to_host_tpm, type: :boolean
 
     # @!attribute [r] vm

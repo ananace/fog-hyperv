@@ -20,7 +20,7 @@ class Fog::Hyperv::Compute
     attribute :name, type: :string
 
     # @!attribute [r] hosts
-    #   @return [Array<Host>] the hosts in the cluster
+    #   @return [Array<Host>] the list of hosts in the cluster
     def hosts
       return [] unless persisted?
 

@@ -177,8 +177,9 @@ class Fog::Hyperv::Compute
     end
 
     # Optimizes the VHD on disk
-    # @param mode [:full,:pretrimmed,:prezeroed,:quick,:retrim]
-    #   the optimization mode to use, will default to :full/:quick depending on VHD type
+    #
+    # @param mode [:full,:pretrimmed,:prezeroed,:quick,:retrim,nil] the optimization mode to use,
+    #   will default to :full/:quick depending on VHD type
     def optimize(mode: nil)
       requires :path
 

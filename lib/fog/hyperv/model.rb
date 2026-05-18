@@ -98,13 +98,6 @@ module Fog::Hyperv
     extend Fog::Hyperv::ModelExtends
     include Fog::Hyperv::ModelIncludes
 
-    # General enum for on/off toggles as used by Hyper-V
-    # @note Defined by Microsoft.HyperV.PowerShell.OnOffState
-    ON_OFF_STATE_ENUM_VALUES = %i[
-      On
-      Off
-    ].freeze
-
     def initialize(attributes = {})
       @vm = attributes.delete :vm
       self.attributes[:vm] = @vm if self.class.attributes.include? :vm

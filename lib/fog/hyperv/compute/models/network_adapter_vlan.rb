@@ -18,7 +18,7 @@ class Fog::Hyperv::Compute
     #   @return [:Untagged, :Access, :Trunk, :Private] the active VLAN mode
     attribute :operation_mode, type: :hypervenum, default: :Untagged, values: VLAN_OPERATION_MODE
     # @!attribute private_vlan_mode
-    #   @return [:Isolated, :Community, :Promiscuous] the type of private mode
+    #   @return [:Isolated, :Community, :Promiscuous] the type of private VLAN mode to use
     attribute :private_vlan_mode, type: :hypervenum, default: :Isolated, values: PRIVATE_VLAN_MODE
     # @!attribute access_vlan_id
     #   @return [Integer] the VLAN ID to use for operation_mode +:Access+
@@ -41,6 +41,8 @@ class Fog::Hyperv::Compute
 
     # rubocop:disable Metrics/MethodLength -- Argument handling takes some space
 
+    # @!attribute parent_adapter
+    #   @return [NetworkAdapter] the network adapter this VLAN configuration applies to
     has_one :parent_adapter, :network_adapters
 
     alias identity :parent_adapter

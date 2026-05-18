@@ -17,13 +17,13 @@ class Fog::Hyperv::Compute
     attribute :computer_name, type: :string
 
     # @!attribute debugger_mode
-    #   @return [String] is a debugger enabled on this COM port
-    attribute :debugger_mode, type: :hypervenum, values: ON_OFF_STATE_ENUM_VALUES
+    #   @return [:On,:Off] if a debugger enabled on this COM port
+    attribute :debugger_mode, type: :hypervenum, values: Fog::Hyperv::ON_OFF_STATE_ENUM_VALUES
     # @!attribute [r] name
     #   @return [String] the name of this COM port
     attribute :name, type: :string
     # @!attribute path
-    #   @return [String] the path this COM port is attached to
+    #   @return [String] the path of the file/socket this COM port is attached to
     attribute :path
 
     # Save any modifications to Hyper-V

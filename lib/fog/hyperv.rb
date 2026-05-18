@@ -11,12 +11,11 @@ module Fog
   end
 
   module Hyperv
+    require 'fog/hyperv/constants'
+
     extend Fog::Provider
 
     autoload :Compute, File.expand_path('hyperv/compute', __dir__)
-
-    # General GUID format matching the UUIDv4 specification
-    GUID = /[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[0-9a-f]{4}-[0-9a-f]{12}/i
 
     module Errors
       # A general service error occurred

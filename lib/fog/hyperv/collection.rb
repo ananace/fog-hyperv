@@ -35,13 +35,19 @@ module Fog::Hyperv
 
       data = service.send(method, **search_attributes, **filters)
       data ||= []
+      # Hyper-V will either return an array or a single value depending on the number of entries found
+      data = [data].flatten
 
-      load [data].flatten
+      return self.clone.load(data) if filters.any?
+
+      load data
+      @loaded = true
+      self
     end
 
     # Get a specific instance in the collection
     def get(**filters)
-      all(filters).first
+      new [service.send(method, **search_attributes, **filters)].flatten.first
     rescue Fog::Hyperv::Errors::PSError => e
       raise Fog::Errors::NotFound, e if e.message =~ /Hyper-V was unable to find|^No .* is found/
 

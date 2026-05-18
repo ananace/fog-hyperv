@@ -35,8 +35,14 @@ class Fog::Hyperv::Compute
     #   @return [String] the path where VMs will be stored on this host
     attribute :virtual_machine_path
 
+    # @!attribute [r] network_adapters
+    #   @return [Array<NetworkAdapter>] the network adapters on this host
     collection :network_adapters
+    # @!attribute [r] servers
+    #   @return [Array<Server>] the VMs running on this host
     collection :servers
+    # @!attribute [r] switches
+    #   @return [Array<Switch>] the network switches available on this host
     collection :switches
 
     # @!attribute [r] secure_boot_templates

@@ -23,9 +23,8 @@ class Fog::Hyperv::Compute
     #   @return [:IPv4, :IPv6] the preferred IP protocol for PXE
     attribute :preferred_network_boot_protocol, type: :hypervenum, values: %i[IPv4 IPv6]
     # @!attribute secure_boot
-    #   @return [:On, :Off] should secure boot be enabled
-    #   @see ON_OFF_STATE_ENUM_VALUES
-    attribute :secure_boot, type: :hypervenum, values: ON_OFF_STATE_ENUM_VALUES
+    #   @return [:On, :Off] if secure boot should be enabled
+    attribute :secure_boot, type: :hypervenum, values: Fog::Hyperv::ON_OFF_STATE_ENUM_VALUES
     # @!attribute secure_boot_template
     #   @return [String] the template to use for the secure boot configuration
     #   @see Host#secure_boot_templates
@@ -35,9 +34,8 @@ class Fog::Hyperv::Compute
     #   @see Host#secure_boot_templates
     attribute :secure_boot_template_id
     # @!attribute pause_after_boot_failure
-    #   @return [:On, :Off] should the VM pause after failing boot
-    #   @see ON_OFF_STATE_ENUM_VALUES
-    attribute :pause_after_boot_failure, type: :hypervenum, values: ON_OFF_STATE_ENUM_VALUES
+    #   @return [:On, :Off] if the VM should pause after failing boot
+    attribute :pause_after_boot_failure, type: :hypervenum, values: Fog::Hyperv::ON_OFF_STATE_ENUM_VALUES
 
     # Save any modifications to Hyper-V
     def update

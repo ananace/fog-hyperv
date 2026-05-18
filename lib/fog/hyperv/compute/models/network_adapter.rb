@@ -32,7 +32,7 @@ class Fog::Hyperv::Compute
     }.freeze
     # rubocop:enable Layout/HashAlignment
 
-    NIC_FALLBACK_MAC = ('0' * 12).freeze
+    NIC_FALLBACK_MAC = '000000000000'
 
     # @!attribute [r] id
     #   @return [String] the GUID of this network adapter
@@ -45,30 +45,29 @@ class Fog::Hyperv::Compute
     #   @return [String,nil] the GUID of the VM this network adapter is attached to
     attribute :vm_id
     # @!attribute [r] is_management_os
-    #   @return [Boolean] is the network adapter attached to the management OS
+    #   @return [Boolean] if the network adapter is attached to the management OS
     attribute :is_management_os, type: :boolean
 
     # attribute :acl_list
     # @!attribute [r] connected
-    #   @return [Boolean] is the network adapter connected to the network
+    #   @return [Boolean] if the network adapter is connected to the network
     #   @see connect
     #   @see disconnect
     attribute :connected, type: :boolean
 
     # @!attribute dynamic_mac_address_enabled
-    #   @return [Boolean] is the network adapter assigned a dynamic MAC address
-    attribute :dynamic_mac_address_enabled, type: :boolean
+    #   @return [Boolean] if the network adapter is assigned a dynamic MAC address
+    attribute :dynamic_mac_address_enabled, type: :boolean, default: true
     # @!attribute [r] ip_addresses
     #   @return [Array<String>] the IP addresses currently assigned to the network adapter
     attribute :ip_addresses
     # attribute :is_deleted
     # @!attribute [r] is_external_adapter
-    #   @return [Boolean] is the network adapter external to the VM
+    #   @return [Boolean] if the network adapter is external to the VM
     attribute :is_external_adapter, type: :boolean
     # @!attribute [r] is_legacy
-    #   @return [Boolean] is the network adapter using legacy ROM
+    #   @return [Boolean] if the network adapter is using legacy option ROM
     attribute :is_legacy, type: :boolean
-    # attribute :isolation_setting # Might need lazy loading
     # @!attribute mac_address
     #   @return [String] the MAC address of the network adapter
     #   @note Can only be changed if dynamic_mac_address_enabled is false
@@ -77,17 +76,17 @@ class Fog::Hyperv::Compute
     #   @return [String] the name of the network adapter
     attribute :name
     # @!attribute mac_address_spoofing
-    #   @return [:On, :Off] should the NIC be allowed to send packets with different MAC address
-    attribute :mac_address_spoofing, type: :hypervenum, values: ON_OFF_STATE_ENUM_VALUES
+    #   @return [:On, :Off] if the NIC should be allowed to send packets with different MAC address
+    attribute :mac_address_spoofing, type: :hypervenum, values: Fog::Hyperv::ON_OFF_STATE_ENUM_VALUES
     # @!attribute dhcp_guard
-    #   @return [:On, :Off] should the NIC drop DHCP messages from unauthorized VMs
-    attribute :dhcp_guard, type: :hypervenum, values: ON_OFF_STATE_ENUM_VALUES
+    #   @return [:On, :Off] if the NIC should drop DHCP messages from unauthorized VMs
+    attribute :dhcp_guard, type: :hypervenum, values: Fog::Hyperv::ON_OFF_STATE_ENUM_VALUES
     # @!attribute router_guard
-    #   @return [:On, :Off] should the NIC drop RA/Redirection messages from unauthorized VMs
-    attribute :router_guard, type: :hypervenum, values: ON_OFF_STATE_ENUM_VALUES
+    #   @return [:On, :Off] if the NIC should drop RA/Redirection messages from unauthorized VMs
+    attribute :router_guard, type: :hypervenum, values: Fog::Hyperv::ON_OFF_STATE_ENUM_VALUES
     # @!attribute allow_teaming
-    #   @return [:On, :Off] should the NIC be allowed to be teamed with other NICs on the same switch
-    attribute :allow_teaming, type: :hypervenum, values: ON_OFF_STATE_ENUM_VALUES
+    #   @return [:On, :Off] if the NIC should be allowed to be teamed with other NICs on the same switch
+    attribute :allow_teaming, type: :hypervenum, values: Fog::Hyperv::ON_OFF_STATE_ENUM_VALUES
     # @!attribute [r] status
     #   @return [Symbol] the status of the network adapter
     #   @see NIC_STATUS_ENUM_VALUES

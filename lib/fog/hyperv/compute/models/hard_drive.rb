@@ -22,11 +22,11 @@ class Fog::Hyperv::Compute
     # @!attribute controller_number
     #   @return [Integer] the controller number this hard drive is attached to
     attribute :controller_number, type: :integer
-    # @!attribute controller_type
+    # @!attribute [r] controller_type
     #   @return [:IDE, :SCSI] the controller type this hard drive is attached to
     attribute :controller_type, type: :hypervenum, values: %i[IDE SCSI]
     # @!attribute disk
-    #   @return [Object] the attached disk
+    #   @return [Object] the attached physical disk
     attribute :disk
     # attribute :is_deleted
     # @!attribute maximum_iops
@@ -45,8 +45,8 @@ class Fog::Hyperv::Compute
     #   @return [String] the name of the pool storing this hard drive's image
     attribute :pool_name
     # @!attribute support_persistent_reservations
-    #   @return [Boolean] does the underlying hard drive support SCSI persistent reservations.
-    #     Should be set when multiple VMs share the same underlying disk.
+    #   @return [Boolean] if the underlying hard drive supports SCSI persistent reservations.
+    #     This should be set when multiple VMs share the same underlying disk.
     attribute :support_persistent_reservations
     # TODO? VM Snapshots?
 

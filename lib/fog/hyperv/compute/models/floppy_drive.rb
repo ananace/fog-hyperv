@@ -16,7 +16,7 @@ class Fog::Hyperv::Compute
     # @!attribute [r] name
     #   @return [String] the name of this floppy drive
     attribute :name, type: :string
-    # @!attribute [r] path
+    # @!attribute path
     #   @return [String] the path this floppy drive is serving
     attribute :path
 

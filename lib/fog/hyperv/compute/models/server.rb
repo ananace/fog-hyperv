@@ -12,7 +12,8 @@ class Fog::Hyperv::Compute
 
     # rubocop:disable Layout/HashAlignment
 
-    # VM running state
+    # VM runtime state
+    #
     # @note Defined by Microsoft.HyperV.PowerShell.VMState
     VM_STATE_ENUM_VALUES = {
       Other:              1,
@@ -47,6 +48,7 @@ class Fog::Hyperv::Compute
     }.freeze
 
     # VM object status
+    #
     # @note Defined by Microsoft.HyperV.PowerShell.VMOperationalStatus
     VM_STATUS_ENUM_VALUES = {
       Ok:                        2,
@@ -80,7 +82,7 @@ class Fog::Hyperv::Compute
       CriticalIoError:           32_795
     }.freeze
 
-    # VM generation - BIOS/UEFI
+    # VM firmware generation - i.e. BIOS/UEFI
     VM_GENERATION_VALUES = {
       BIOS: 1,
       UEFI: 2
@@ -104,13 +106,13 @@ class Fog::Hyperv::Compute
     #   @return [Time] the time the VM was created
     attribute :creation_time, type: :hypervdatetime
     # @!attribute dynamic_memory_enabled
-    #   @return [Boolean] is memory dynamically allocated
+    #   @return [Boolean] if memory is dynamically handled - sliding between #memory_minimum and #memory_maximum
     attribute :dynamic_memory_enabled, type: :boolean, default: false
     # @!attribute [r] generation
-    #   @return [Symbol] the generation of the VM
+    #   @return [Symbol] the VM firmware generation
     attribute :generation, type: :hypervenum, values: VM_GENERATION_VALUES, default: :UEFI
     # @!attribute [r] is_clustered
-    #   @return [Boolean] is the VM clustered
+    #   @return [Boolean] iv the VM is clustered
     attribute :is_clustered, type: :boolean, default: false
     # @!attribute [r] state
     #   @return [Symbol] the state of the VM
@@ -125,32 +127,45 @@ class Fog::Hyperv::Compute
     #   @see VM_STATUS_ENUM_VALUES
     attribute :secondary_operational_status, type: :hypervenum, values: VM_STATUS_ENUM_VALUES
     # @!attribute [r] memory_assigned
-    #   @return [Integer] the assigned memory of the VM
+    #   @return [Integer] the memory assigned to the VM on startup
     attribute :memory_assigned, type: :integer
     # @!attribute memory_maximum
-    #   @return [Integer] the maximum amount of memory the VM can assign
+    #   @return [Integer] the maximum amount of memory the VM can assign when #dynamic_memory_enabled
     attribute :memory_maximum, type: :integer, default: 17_179_869_184
     # @!attribute memory_minimum
-    #   @return [Integer] the minimum amount of memory the VM can assign
+    #   @return [Integer] the minimum amount of memory the VM can assign when #dynamic_memory_enabled
     attribute :memory_minimum, type: :integer, default: 536_870_912
     # @!attribute memory_startup
-    #   @return [Integer] the starting amount of memory the VM will assign
+    #   @return [Integer] the starting amount of memory the VM will be assigned
     attribute :memory_startup, type: :integer, default: 536_870_912
     # @!attribute notes
-    #   @return [String] user-specified notes on the VM
+    #   @return [String] user-specified notes for the VM
     attribute :notes, type: :string
     # @!attribute processor_count
     #   @return [Integer] the number of processors in the VM
     attribute :processor_count, type: :integer, default: 1
     # @!attribute [r] uptime
-    #   @return [Time] the time the VM was created
+    #   @return [Time] the amount of time the VM has been online
     attribute :uptime, type: :hypervtimespan
 
+    # @!attribute com_ports
+    #   @return [Array<ComPort>] the COM ports on the VM
     collection :com_ports
+    # @!attribute dvd_drives
+    #   @return [Array<DvdDrive>] the DVD drives on the VM
     collection :dvd_drives
+    # @!attribute floppy_drives
+    #   @note only supported on #generation +:BIOS+
+    #   @return [Array<FloppyDrive>] the floppy drives on the VM
     collection :floppy_drives
+    # @!attribute hard_drives
+    #   @return [Array<HardDrive>] the hard drives on the VM
     collection :hard_drives
+    # @!attribute network_adapters
+    #   @return [Array<NetworkAdapter>] the network adapters on the VM
     collection :network_adapters
+    # @!attribute vhds
+    #   @return [Array<Vhd>] the VHD images in use by the VM
     collection :vhds
 
     has_one :bios, :bios
@@ -195,7 +210,7 @@ class Fog::Hyperv::Compute
     alias firmware :bios
 
     # @!attribute [r] security
-    # @return [Security] UEFI security configuration, if #generation is 2
+    # @return [Security] UEFI security configuration, if #generation is +:UEFI+
     def security
       requires :generation, :id
       return nil unless generation == :UEFI
@@ -215,8 +230,8 @@ class Fog::Hyperv::Compute
       )
     end
 
-    # @!attribute [r] tpm_enabled
-    # @return [Boolean] Is a vTPM enabled on the VM, only available if #generation is 2
+    # @!attribute tpm_enabled
+    # @return [Boolean] if a vTPM is enabled on the VM, only available if #generation is +:UEFI+
     def tpm_enabled
       security&.tpm_enabled
     end
@@ -234,95 +249,86 @@ class Fog::Hyperv::Compute
     def start
       requires :id
 
-      service.start_vm(
-        computer_name:,
-        id:
-      )
+      service.start_vm(computer_name:, id:)
       true
     end
 
     # Stop the VM
-    # @param [Boolean] turn_off send power off instead of ACPI shutdown
-    # @param [Boolean] force kill the VM if it doesn't shut down cleanly
-    def stop(turn_off: false, force: false)
+    # @param [Boolean] turn_off perform an instant power off instead of an ACPI shutdown
+    def stop(turn_off: false)
       requires :id
-      service.stop_vm(
-        computer_name:,
-        id:,
 
-        turn_off:,
-        force:
-      )
+      service.stop_vm(computer_name:, id:, turn_off:)
       true
     end
 
     # Suspend VM execution
     def suspend
       requires :id
-      service.suspend_vm(
-        computer_name:,
-        id:
-      )
+
+      service.suspend_vm(computer_name:, id:)
       true
     end
 
     # Resume suspended VM execution
     def resume
       requires :id
-      service.resume_vm(
-        computer_name:,
-        id:
-      )
+
+      service.resume_vm(computer_name:, id:)
       true
     end
 
-    # Hibernate VM, i.e. suspend and save VM state to disk
+    # Hibernate the VM, i.e. save VM state to disk and turn it off
     def hibernate
       requires :id
-      service.save_vm(
-        computer_name:,
-        id:
-      )
+
+      service.save_vm(computer_name:, id:)
       true
     end
 
     # Restart the VM
-    # @param [Boolean] force restart the VM if it doesn't shut down cleanly
-    def restart(force: false)
+    # @note This method will always cause a hard reset, i.e. power off and on without waiting for OS shutdown
+    def restart
       requires :id
-      service.restart_vm(
-        computer_name:,
-        id:,
 
-        force:
-      )
+      service.restart_vm(computer_name:, id:, force:)
       true
     end
     alias reboot :restart
 
-    # Update the VM object to the latetest version
+    # Update the VM object to the latest version
     def update_version
       requires :id
-      service.update_vm(
-        computer_name:,
-        id:
-      )
+
+      service.update_vm(computer_name:, id:)
       true
     end
 
+    # Remove the VM object from Hyper-V
+    #
+    # @note if the VM has VHDs, make sure to remove them first to not leave the VM data remaining on disk
     def destroy
       requires :id
       stop turn_off: true if ready?
 
-      service.remove_vm(
-        computer_name:,
-        id:
-      )
+      service.remove_vm(computer_name:, id:)
       true
     end
 
+    # Create the VM object if it doesn't exist
+    # @param [Symbol] boot_device the default boot device to configure the VM with, one of BOOT_DEVICE
+    # @param [String] switch_name the name of a Switch to connect the VM to on creation
     def create(boot_device: nil, switch_name: nil, **attrs)
       attrs[:no_vhd] = true unless attrs[:new_vhd_path]
+
+      # Attributes that can't be set as part of the New-VM call
+      post_create_attributes = {
+        processor_count:,
+        notes:,
+        dynamic_memory_enabled:,
+        memory_minimum_bytes: memory_minimum,
+        memory_maximum_bytes: memory_maximum,
+      }.compact
 
       merge_attributes(
         service.new_vm(
@@ -339,18 +345,32 @@ class Fog::Hyperv::Compute
           _return_fields: self.class.attributes
         )
       )
+      if post_create_attributes.any?
+        attributes.merge! post_create_attributes
+        save if dirty?
+      end
 
-      # vhds.each do |vhd|
-      #   next if hard_drives.find { |hdd| hdd.path == vhd.path }
-      #
-      #   hard_drives.new(path: vhd.path)
-      # end
-      #
-      # self.class.associations.each_key do |assoc|
-      #   next unless attributes.key? assoc
-      #
-      #   attributes[assoc].each(&:save)
-      # end
+      associations[:vhds]&.each do |vhd|
+        if !vhd.persisted?
+          vhd.computer_name = computer_name
+          vhd.save
+        end
+        next if hard_drives.find { |hdd| hdd.path == vhd.path }
+
+        hard_drives.create(path: vhd.path)
+      end
+
+      self.class.associations.each_key do |assoc|
+        next unless associations.key? assoc
+
+        associations[assoc].select do |obj|
+          obj.computer_name = computer_name if obj.respond_to?(:computer_name=)
+          obj.vm_id = id if obj.respond_to?(:vm_id=)
+
+          obj.save if obj.dirty? || !obj.persisted?
+        end
+        associations[assoc].clear
+      end
 
       self
     end
@@ -358,33 +378,23 @@ class Fog::Hyperv::Compute
     def update
       requires :id
 
-      if changed?(:name)
-        service.rename_vm(
+      merge_attributes(
+        service.set_vm(
           computer_name: old.computer_name,
           id: old.id,
 
-          new_name: name
+          processor_count: changed!(:processor_count),
+          dynamic_memory: changed?(:dynamic_memory_enabled) && dynamic_memory_enabled,
+          static_memory: changed?(:dynamic_memory_enabled) && !dynamic_memory_enabled,
+          memory_minimum_bytes: changed?(:memory_minimum) && dynamic_memory_enabled && memory_minimum,
+          memory_maximum_bytes: changed?(:memory_maximum) && dynamic_memory_enabled && memory_maximum,
+          memory_startup_bytes: changed!(:memory_startup),
+          notes: changed!(:notes),
+          new_vm_name: changed!(:name),
+
+          _return_fields: self.class.attributes
         )
-        @old.name = name
-      end
-
-      data = service.set_vm(
-        computer_name: old.computer_name,
-        id: old.id,
-
-        processor_count: changed!(:processor_count),
-        dynamic_memory: changed?(:dynamic_memory_enabled) && dynamic_memory_enabled,
-        static_memory: changed?(:dynamic_memory_enabled) && !dynamic_memory_enabled,
-        memory_minimum_bytes: changed?(:memory_minimum) && dynamic_memory_enabled && memory_minimum,
-        memory_maximum_bytes: changed?(:memory_maximum) && dynamic_memory_enabled && memory_maximum,
-        memory_startup_bytes: changed!(:memory_startup),
-        notes: changed!(:notes),
-        new_name: changed!(:name),
-
-        _return_fields: self.class.attributes
       )
-
-      merge_attributes(data)
 
       # %i[network_adapters dvd_drives floppy_drives hard_drives vhds].each do |attr|
       #   next unless attributes.key? attr
@@ -396,16 +406,11 @@ class Fog::Hyperv::Compute
 
     # Reload the VM attributes from the Hyper-V server
     # @return [self] if model successfully reloaded
-    # @return [nil] if something went wrong or model was not found
+    # @return [nil] if something went wrong or the model was not found
     def reload
       requires :id
 
-      data = service.get_vm(
-        computer_name:,
-        id:,
-
-        _return_fields: self.class.attributes
-      )
+      data = service.get_vm computer_name:, id:, _return_fields: self.class.attributes
       return unless data
 
       merge_attributes(data)
@@ -422,18 +427,20 @@ class Fog::Hyperv::Compute
       [computer.virtual_hard_disk_path, '\\', name, '\\', filename].join
     end
 
+    # Get the username of the main system account
+    # @return [String] the system account username - usually "Administrator" or "root"
     def username
       @username || 'Administrator'
     end
 
-    # @return [Boolean] is the VM ready? (i.e. state is +:Running+)
+    # @return [Boolean] if the VM is ready? (i.e. #state is +:Running+)
     def ready?
       state_num == 2
     end
 
     # @return [Array<String>] the MAC addresses of all attached network adapters
     def mac_addresses
-      network_adapters.map(&:mac_address)
+      network_adapters.map &:mac_address
     end
 
     # @return [Array<String>] the IP addresses of all attached network adapters
