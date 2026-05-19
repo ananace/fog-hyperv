@@ -92,6 +92,7 @@ class Fog::Hyperv::Compute
 
           **args,
 
+          _always_include: args.keys,
           _return_fields: self.class.attributes
         ) || {} # Unmodified object returns nothing
       )

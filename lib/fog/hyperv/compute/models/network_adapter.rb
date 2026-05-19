@@ -159,7 +159,6 @@ class Fog::Hyperv::Compute
 
       old.switch_id = attributes[:switch_id] = new_switch_id
       old.switch_name = attributes[:switch_name] = new_switch_name
-
       true
     end
 
@@ -213,15 +212,18 @@ class Fog::Hyperv::Compute
         selector[:vm_id] = vm_id
       end
 
+      args = { name:, switch_name: }
+      args[:is_legacy] = true if is_legacy
+      if !dynamic_mac_address_enabled && mac_address != NIC_FALLBACK_MAC
+        args[:static_mac_address] = mac_address
+      else
+        args[:dynamic_mac_address] = true
+      end
       data = service.add_vm_network_adapter(
         **selector,
         computer_name:,
 
-        name:,
-        dynamic_mac_address: dynamic_mac_address_enabled,
-        is_legacy: !!is_legacy, # rubocop:disable Style/DoubleNegation -- Needs to be bool
-        static_mac_address: !dynamic_mac_address_enabled && mac_address,
-        switch_name:,
+        **args,
 
         _return_fields: self.class.attributes
       )
@@ -338,7 +340,8 @@ class Fog::Hyperv::Compute
         if dynamic_mac_address_enabled
           changes[:dynamic_mac_address] = changed!(:dynamic_mac_address_enabled)
         elsif mac_address && mac_address != NIC_FALLBACK_MAC
-          changes[:static_mac_address] = mac_address
+          changes[:static_mac_address] = changed!(:mac_address)
+          changes[:static_mac_address] ||= changed?(:dynamic_mac_address_enabled) ? mac_address : nil
         end
       end
       changes.compact
