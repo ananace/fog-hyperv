@@ -25,9 +25,14 @@ module Fog::Hyperv
       end
 
       define_method :"#{name}=" do |data|
-        return associations[name].load(data) if associations[name]
-
-        send(name).load(data)
+        assoc = associations[name] || send(name)
+        assoc.clear
+        assoc.instance_variable_set :@loaded, true
+        [data].flatten.each do |obj|
+          obj = assoc.new obj if obj.is_a?(Hash)
+          assoc << obj
+        end
+        assoc
       end
     end
   end

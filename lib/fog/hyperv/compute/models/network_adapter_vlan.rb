@@ -48,6 +48,8 @@ class Fog::Hyperv::Compute
     alias identity :parent_adapter
 
     def update
+      requires :parent_adapter
+
       args = {}
       case operation_mode
       when :Untagged
@@ -59,7 +61,7 @@ class Fog::Hyperv::Compute
       when :Trunk
         requires :allowed_vlan_id_list, :native_vlan_id
         args[:trunk] = true
-        args[:allowed_vlan_id_list] = allowed_vlan_id_list
+        args[:allowed_vlan_id_list] = allowed_vlan_id_list.join ','
         args[:native_vlan_id] = native_vlan_id
       when :Private
         requires :private_vlan_mode, :primary_vlan_id
@@ -78,7 +80,7 @@ class Fog::Hyperv::Compute
           requires :secondary_vlan_id_list
           args[:promiscuous] = true
           args[:primary_vlan_id] = primary_vlan_id
-          args[:secondary_vlan_id_list] = secondary_vlan_id_list
+          args[:secondary_vlan_id_list] = secondary_vlan_id_list.join ','
         end
       end
 
@@ -91,13 +93,13 @@ class Fog::Hyperv::Compute
           **args,
 
           _return_fields: self.class.attributes
-        )
+        ) || {} # Unmodified object returns nothing
       )
     end
     # rubocop:enable Metrics/MethodLength
 
     def reload
-      requires :network_adapter
+      requires :parent_adapter
 
       data = service.get_vm_network_adapter_vlan(
         computer_name: parent_adapter.computer_name,
@@ -109,6 +111,17 @@ class Fog::Hyperv::Compute
       return unless data
 
       merge_attributes(data)
+    end
+
+    private
+
+    def merge_attributes(new_attributes = {})
+      new_attributes[:allowed_vlan_id_list] = [] \
+        if new_attributes[:allowed_vlan_id_list].nil? || new_attributes[:allowed_vlan_id_list] == ""
+      new_attributes[:secondary_vlan_id_list] = [] \
+        if new_attributes[:secondary_vlan_id_list].nil? || new_attributes[:secondary_vlan_id_list] == ""
+
+      super
     end
   end
 end

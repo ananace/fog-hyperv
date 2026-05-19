@@ -110,11 +110,7 @@ class Fog::Hyperv::Compute
       return associations[:vlan_setting] if associations[:vlan_setting]
 
       require_relative 'network_adapter_vlan'
-      attrs = {
-        parent_adapter: self,
-        service: @service,
-        vm: @vm
-      }
+      attrs = { parent_adapter: self, service: @service, vm: @vm }
 
       if persisted?
         requires :id
@@ -236,9 +232,8 @@ class Fog::Hyperv::Compute
         allow_teaming: allow_teaming
       }.compact
 
-      vlan_setting.save if associations[:vlan_setting] && vlan_setting.dirty?
-
       merge_attributes(data)
+      vlan_setting.save if associations[:vlan_setting]
       return self unless post_save_changes.any?
 
       attributes.merge!(post_save_changes)
@@ -266,16 +261,18 @@ class Fog::Hyperv::Compute
 
       changes = build_changelist
       if changes.any?
-        data += service.set_vm_network_adapter(
-          computer_name: old.computer_name,
-          id: old.id,
-          vm_id: old.vm_id,
-          management_os: old.is_management_os,
+        data.merge!(
+          service.set_vm_network_adapter(
+            computer_name: old.computer_name,
+            id: old.id,
+            vm_id: old.vm_id,
+            management_os: old.is_management_os,
 
-          **changes,
+            **changes,
 
-          _always_include: changes.keys,
-          _return_fields: self.class.attributes
+            _always_include: changes.keys,
+            _return_fields: self.class.attributes
+          )
         )
       end
 
@@ -348,19 +345,11 @@ class Fog::Hyperv::Compute
     end
 
     def save_switch
-      selector = {
-        computer_name:,
-        vm_id:,
-        id:
-      }
+      selector = { computer_name:, vm_id:, id: }.compact
       selector[:management_os] = true if is_management_os
 
       if switch_name || switch_id
-        service.connect_vm_network_adapter(
-          **selector,
-          switch_name:,
-          switch_id:
-        )
+        service.connect_vm_network_adapter(**selector, switch_name:, switch_id:)
       else
         service.disconnect_vm_network_adapter(**selector)
       end

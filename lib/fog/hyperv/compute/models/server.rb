@@ -378,19 +378,29 @@ class Fog::Hyperv::Compute
     def update
       requires :id
 
+      changes = {
+        processor_count: changed!(:processor_count),
+        memory_startup_bytes: changed!(:memory_startup),
+        notes: changed!(:notes),
+        new_vm_name: changed!(:name)
+      }
+      if dynamic_memory_enabled
+        changes[:dynamic_memory] = changed?(:dynamic_memory_enabled)
+        changes[:memory_minimum_bytes] = changed!(:memory_minimum) || (changed?(:dynamic_memory_enabled) && memory_minimum)
+        changes[:memory_maximum_bytes] = changed!(:memory_maximum) || (changed?(:dynamic_memory_enabled) && memory_maximum)
+      else
+        changes[:static_memory] = changed?(:dynamic_memory_enabled)
+      end
+      changes.reject { |_, v| v.nil? || v == false }
+
+      return self if changes.empty?
+
       merge_attributes(
         service.set_vm(
           computer_name: old.computer_name,
           id: old.id,
 
-          processor_count: changed!(:processor_count),
-          dynamic_memory: changed?(:dynamic_memory_enabled) && dynamic_memory_enabled,
-          static_memory: changed?(:dynamic_memory_enabled) && !dynamic_memory_enabled,
-          memory_minimum_bytes: changed?(:memory_minimum) && dynamic_memory_enabled && memory_minimum,
-          memory_maximum_bytes: changed?(:memory_maximum) && dynamic_memory_enabled && memory_maximum,
-          memory_startup_bytes: changed!(:memory_startup),
-          notes: changed!(:notes),
-          new_vm_name: changed!(:name),
+          **changes,
 
           _return_fields: self.class.attributes
         )
