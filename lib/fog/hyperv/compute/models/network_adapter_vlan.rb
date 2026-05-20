@@ -61,7 +61,7 @@ class Fog::Hyperv::Compute
       when :Trunk
         requires :allowed_vlan_id_list, :native_vlan_id
         args[:trunk] = true
-        args[:allowed_vlan_id_list] = allowed_vlan_id_list.join ','
+        args[:allowed_vlan_id_list] = render_vlan_list(allowed_vlan_id_list)
         args[:native_vlan_id] = native_vlan_id
       when :Private
         requires :private_vlan_mode, :primary_vlan_id
@@ -80,7 +80,7 @@ class Fog::Hyperv::Compute
           requires :secondary_vlan_id_list
           args[:promiscuous] = true
           args[:primary_vlan_id] = primary_vlan_id
-          args[:secondary_vlan_id_list] = secondary_vlan_id_list.join ','
+          args[:secondary_vlan_id_list] = render_vlan_list(secondary_vlan_id_list)
         end
       end
 
@@ -123,6 +123,30 @@ class Fog::Hyperv::Compute
         if new_attributes[:secondary_vlan_id_list].nil? || new_attributes[:secondary_vlan_id_list] == ""
 
       super
+    end
+
+    def render_vlan_list(list)
+      ret = []
+      list = list.sort.map(&:to_i)
+
+      render_tuple = proc do |from, to|
+        next from if from == to
+
+        "#{from}-#{to}"
+      end
+
+      rangeend = rangestart = list.first
+      list.each do |vlan|
+        if vlan > rangeend + 1
+          ret << render_tuple.call(rangestart, rangeend)
+          rangestart = rangeend = vlan
+        else
+          rangeend = vlan
+        end
+      end
+      ret << render_tuple.call(rangestart, rangeend)
+
+      ret.join ','
     end
   end
 end
