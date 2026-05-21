@@ -73,7 +73,7 @@ class Fog::Hyperv::Compute
     def vhd=(new_vhd)
       raise ArgumentError, 'Must be a VHD' unless new_vhd.nil? || new_vhd.is_a?(Vhd)
 
-      associations[:path] = new_vhd&.path
+      attributes[:path] = new_vhd&.path
       associations[:vhd] = new_vhd
     end
 
