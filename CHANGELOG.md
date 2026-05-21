@@ -1,8 +1,10 @@
-## Unreleased
+## v0.1.0 Unreleased
 
-- Major rewrite of the codebase, moving to handling objects by their GUID as far as possible
+- Major rewrite of the codebase, moving to handling objects by GUID as far as possible
 - Add support for renaming of VMs, NICs, and Switches
-- Add support for resizing VHDs
+- Add support for optimizing and resizing VHDs
+- Improve support for VLAN configuration on NICs
+- Extract more useful metadata from Hyper-V objects
 
 ## v0.0.9 2018-05-15
 
