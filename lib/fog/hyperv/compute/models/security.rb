@@ -78,15 +78,17 @@ class Fog::Hyperv::Compute
         service.public_send(meth, vm_id: vm.id)
       end
 
-      return self unless dirty?
+      changes = {
+        encrypt_state_and_vm_migration_traffic: changed!(:encrypt_state_and_vm_migration_traffic),
+        virtualization_based_security_opt_out: changed!(:virtualization_based_security_opt_out)
+      }.compact
+      return self unless changes.any?
 
       merge_attributes(
         service.set_vm_security(
           computer_name: old.vm.computer_name,
           vm_id: old.vm.id,
 
-          encrypt_state_and_vm_migration_traffic:,
-          virtualization_based_security_opt_out:,
 
           _return_fields: self.class.attributes
         )

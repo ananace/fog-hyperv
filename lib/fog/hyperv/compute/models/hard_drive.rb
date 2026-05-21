@@ -120,31 +120,38 @@ class Fog::Hyperv::Compute
     def update
       requires :id, :vm_id
 
-      merge_attributes(
-        service.set_vm_hard_disk_drive(
-          computer_name: old.computer_name,
-          vm_id: old.vm_id,
-          id: old.id,
+      changes = {
+        maximum_iops: changed!(:maximum_iops),
+        minimum_iops: changed!(:minimum_iops),
+        resource_pool_name: changed!(:pool_name),
+        support_persistent_reservations: changed!(:support_persistent_reservations),
+        to_controller_location: changed!(:controller_location),
+        to_controller_number: changed!(:controller_number),
+        to_controller_type: changed!(:controller_type),
+      }.compact
+      changes[:path] = path if changed?(:path)
 
-          allow_unverified_paths:,
-          # disk_number: changed?(:disk) && disk&.number,
-          maximum_iops: changed!(:maximum_iops),
-          minimum_iops: changed!(:minimum_iops),
-          path: changed!(:path),
-          resource_pool_name: changed!(:pool_name),
-          support_persistent_reservations: changed!(:support_persistent_reservations),
-          to_controller_location: changed!(:controller_location),
-          to_controller_number: changed!(:controller_number),
-          to_controller_type: changed!(:controller_type),
+      if changes.any?
+        merge_attributes(
+          service.set_vm_hard_disk_drive(
+            computer_name: old.computer_name,
+            vm_id: old.vm_id,
+            id: old.id,
 
-          _return_fields: self.class.attributes - %i[allow_unverified_paths vhd]
+            **changes,
+            allow_unverified_paths:,
+
+            _always_include: changes.keys,
+            _return_fields: self.class.attributes - %i[allow_unverified_paths vhd]
+          )
         )
-      )
+      end
 
       if associations[:vhd]
         vhd.save if !vhd.persisted? || vhd.dirty?
         associations[:vhd] = nil if changed?(:path)
       end
+
       self
     end
 

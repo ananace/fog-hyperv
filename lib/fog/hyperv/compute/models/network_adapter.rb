@@ -335,7 +335,7 @@ class Fog::Hyperv::Compute
         dhcp_guard: changed!(:dhcp_guard),
         router_guard: changed!(:router_guard),
         allow_teaming: changed!(:allow_teaming)
-      }
+      }.compact
       unless is_management_os
         if dynamic_mac_address_enabled
           changes[:dynamic_mac_address] = changed!(:dynamic_mac_address_enabled)

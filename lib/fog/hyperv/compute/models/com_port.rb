@@ -30,19 +30,25 @@ class Fog::Hyperv::Compute
     def update
       requires :vm_id, :id
 
-      data = service.set_vm_com_port(
-        computer_name:,
-        vm_id:,
-        id:,
+      changes = {
+        debugger_mode: changed!(:debugger_mode)
+      }.compact
+      # Ensure path: nil is sent
+      changes[:path] = path if changed? :path
+      return self unless changes.any?
 
-        debugger_mode: changed!(:debugger_mode),
-        path: changed!(:path),
+      merge_attributes(
+        service.set_vm_com_port(
+          computer_name:,
+          vm_id:,
+          id:,
 
-        _return_fields: self.class.attributes
+          **changes,
+
+          _always_include: changes.keys,
+          _return_fields: self.class.attributes
+        )
       )
-
-      merge_attributes(data)
-      self
     end
 
     # Reload attributes from Hyper-V

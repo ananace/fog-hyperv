@@ -71,16 +71,22 @@ class Fog::Hyperv::Compute
         @old.name = name
       end
 
+      changes = {
+        allow_management_os: changed!(:allow_management_os),
+        default_flow_minimum_bandwidth_absolute: changed!(:default_flow_minimum_bandwidth_absolute),
+        default_flow_minimum_bandwidth_weight: changed!(:default_flow_minimum_bandwidth_weight),
+      }.compact
+      changes[:notes] = notes || '' if changed? :notes
+      return self unless changes.any?
+
       merge_attributes(
         service.set_vm_switch(
           computer_name: old.computer_name,
           id: old.id,
 
-          allow_management_os: changed!(:allow_management_os),
-          default_flow_minimum_bandwidth_absolute: changed!(:default_flow_minimum_bandwidth_absolute),
-          default_flow_minimum_bandwidth_weight: changed!(:default_flow_minimum_bandwidth_weight),
-          notes: changed!(:notes),
+          **changes,
 
+          _always_include: changes.keys,
           _return_fields: self.class.attributes
         )
       )

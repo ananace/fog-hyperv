@@ -122,8 +122,8 @@ class Fog::Hyperv::Compute
       merge_attributes(
         service.new_vhd(
           computer_name:,
-          path:,
 
+          path:,
           block_size_bytes: block_size,
           size_bytes: size,
           **attrs,
@@ -136,7 +136,7 @@ class Fog::Hyperv::Compute
     def update
       requires :path
 
-      return unless changed?(:size)
+      return self unless changed?(:size)
 
       service.resize_vhd(
         computer_name: old.computer_name,

@@ -35,13 +35,17 @@ class Fog::Hyperv::Compute
       # raise ArgumentError, 'Startup order can only be rearranged, not modified' \
       #   if changed?(:startup_order) && startup_order.sort != old.startup_order.sort
 
+      changes = {
+        startup_order: changed!(:startup_order)
+      }.compact
+      changes[num_lock_enabled ? :enable_num_lock : :disable_num_lock] = true if changed?(:num_lock_enabled)
+      return self unless changes.any?
+
       data = service.set_vm_bios(
         computer_name:,
         vm_id:,
 
-        disable_num_lock: changed?(:num_lock_enabled) && !num_lock_enabled,
-        enable_num_lock: changed?(:num_lock_enabled) && num_lock_enabled,
-        startup_order: changed!(:startup_order),
+        **changes,
 
         _return_fields: self.class.attributes
       )

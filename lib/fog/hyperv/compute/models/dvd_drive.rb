@@ -71,9 +71,14 @@ class Fog::Hyperv::Compute
     def update
       requires :id, :vm_id
 
-      include = []
-      # Always include changes to path in the set call, in case it's set to nil
-      include << :path if changed? :path
+      changes = {
+        resource_pool_name: changed!(:pool_name),
+        to_controller_number: changed!(:controller_number),
+        to_controller_location: changed!(:controller_location),
+      }.compact
+      # Ensure path: nil is sent
+      changes[:path] = path if changed? :path
+      return self unless changes.any?
 
       merge_attributes(
         service.set_vm_dvd_drive(
@@ -81,12 +86,10 @@ class Fog::Hyperv::Compute
           vm_id: old.vm_id,
           id: old.id,
 
-          resource_pool_name: changed!(:pool_name),
-          path: changed!(:path),
-          to_controller_number: changed!(:controller_number),
-          to_controller_location: changed!(:controller_location),
+          allow_unverified_paths:,
+          **changes,
 
-          _always_include: include,
+          _always_include: changes.keys,
           _return_fields: self.class.attributes
         )
       )

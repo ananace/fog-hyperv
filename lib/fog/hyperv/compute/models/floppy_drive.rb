@@ -19,12 +19,18 @@ class Fog::Hyperv::Compute
     # @!attribute path
     #   @return [String] the path this floppy drive is serving
     attribute :path
+    # @!attribute pool_name
+    #   @return [String] the pool storing this floppy drive's image
+    attribute :pool_name
 
     def update
       requires :vm_id, :id
 
-      include = []
-      include << :path if changed? :path
+      changes = {
+        resource_pool_name: changed!(:pool_name)
+      }.compact
+      changes[:path] = path if changed? :path
+      return self unless changes.any?
 
       merge_attributes(
         service.set_vm_floppy_disk_drive(
@@ -32,9 +38,9 @@ class Fog::Hyperv::Compute
           vm_id:,
           id:,
 
-          path: changed!(:path),
+          **changes,
 
-          _always_include: include,
+          _always_include: changes.keys,
           _return_fields: self.class.attributes
         )
       )

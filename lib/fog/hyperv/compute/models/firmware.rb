@@ -41,16 +41,20 @@ class Fog::Hyperv::Compute
     def update
       requires :vm_id
 
+      changes = {
+        enable_secure_boot: changed!(:secure_boot),
+        secure_boot_template: changed!(:secure_boot_template),
+        preferred_network_boot_protocol: changed!(:preferred_network_boot_protocol),
+        console_mode: changed!(:console_mode),
+        pause_after_boot_failure: changed!(:pause_after_boot_failure),
+      }.compact
+      return self unless changes.any?
+
       merge_attributes(
         service.set_vm_firmware(
           computer_name:,
           vm_id:,
 
-          enable_secure_boot: changed!(:secure_boot),
-          secure_boot_template: changed!(:secure_boot_template),
-          preferred_network_boot_protocol: changed!(:preferred_network_boot_protocol),
-          console_mode: changed!(:console_mode),
-          pause_after_boot_failure: changed!(:pause_after_boot_failure),
 
           _return_fields: self.class.attributes
         )

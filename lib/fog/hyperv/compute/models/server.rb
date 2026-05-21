@@ -381,19 +381,19 @@ class Fog::Hyperv::Compute
       changes = {
         processor_count: changed!(:processor_count),
         memory_startup_bytes: changed!(:memory_startup),
-        notes: changed!(:notes),
         new_vm_name: changed!(:name)
-      }
+      }.compact
       if dynamic_memory_enabled
-        changes[:dynamic_memory] = changed?(:dynamic_memory_enabled)
-        changes[:memory_minimum_bytes] = changed!(:memory_minimum) || (changed?(:dynamic_memory_enabled) && memory_minimum)
-        changes[:memory_maximum_bytes] = changed!(:memory_maximum) || (changed?(:dynamic_memory_enabled) && memory_maximum)
+        changes[:dynamic_memory] = true if changed?(:dynamic_memory_enabled)
+        changes[:memory_minimum_bytes] = memory_minimum if changed?(:dynamic_memory_enabled, :memory_minimum)
+        changes[:memory_maximum_bytes] = memory_maximum if changed?(:dynamic_memory_enabled, :memory_maximum)
       else
-        changes[:static_memory] = changed?(:dynamic_memory_enabled)
+        changes[:static_memory] = true if changed?(:dynamic_memory_enabled)
       end
-      changes.reject { |_, v| v.nil? || v == false }
+      changes.compact!
 
-      return self if changes.empty?
+      changes[:notes] = notes || '' if changed? :notes
+      return self unless changes.any?
 
       merge_attributes(
         service.set_vm(
@@ -402,6 +402,7 @@ class Fog::Hyperv::Compute
 
           **changes,
 
+          _always_include: changes.keys,
           _return_fields: self.class.attributes
         )
       )

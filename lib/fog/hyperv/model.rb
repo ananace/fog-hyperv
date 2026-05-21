@@ -45,9 +45,10 @@ module Fog::Hyperv
     end
 
     def dirty!
-      attributes.reject do |k, v|
-        !self.class.attributes.include?(k) || (old ? old.attributes[k] == v : false)
-      end
+      potential = attributes.select { |k,_| self.class.attributes.include?(k) }
+      return potential unless old
+
+      potential.select { |k, v| old.attributes[k] != v }
     end
 
     # Get the VM this model is attached to
@@ -83,10 +84,16 @@ module Fog::Hyperv
       service.logger
     end
 
-    def changed?(attr)
-      attributes.reject do |k, v|
-        !self.class.attributes.include?(k) || (old ? old.attributes[k] == v : true)
-      end.key?(attr)
+    # Has
+    def changed?(*attrs, all: false)
+      return false unless old
+
+      changed = dirty!
+      if all
+        attrs.all? { |attr| changed.key? attr }
+      else
+        attrs.any? { |attr| changed.key? attr }
+      end
     end
 
     def changed!(attr)
