@@ -114,18 +114,7 @@ class Fog::Hyperv::Compute
       merge_attributes(data)
     end
 
-    private
-
-    def merge_attributes(new_attributes = {})
-      new_attributes[:allowed_vlan_id_list] = [] \
-        if new_attributes[:allowed_vlan_id_list].nil? || new_attributes[:allowed_vlan_id_list] == ""
-      new_attributes[:secondary_vlan_id_list] = [] \
-        if new_attributes[:secondary_vlan_id_list].nil? || new_attributes[:secondary_vlan_id_list] == ""
-
-      super
-    end
-
-    def render_vlan_list(list)
+    def self.render_vlan_list(list)
       ret = []
       list = list.sort.map(&:to_i)
 
@@ -147,6 +136,21 @@ class Fog::Hyperv::Compute
       ret << render_tuple.call(rangestart, rangeend)
 
       ret.join ','
+    end
+
+    private
+
+    def merge_attributes(new_attributes = {})
+      new_attributes[:allowed_vlan_id_list] = [] \
+        if new_attributes[:allowed_vlan_id_list].nil? || new_attributes[:allowed_vlan_id_list] == ""
+      new_attributes[:secondary_vlan_id_list] = [] \
+        if new_attributes[:secondary_vlan_id_list].nil? || new_attributes[:secondary_vlan_id_list] == ""
+
+      super
+    end
+
+    def render_vlan_list(list)
+      self.class.render_vlan_list list
     end
   end
 end
