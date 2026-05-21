@@ -41,14 +41,16 @@ module Fog::Hyperv
     # Has the model been modified
     # @return [Boolean] have any attributes changed since the model was retrieved
     def dirty?
-      dirty!.any?
+      dirty.any?
     end
 
-    def dirty!
-      potential = attributes.select { |k,_| self.class.attributes.include?(k) }
+    # Get all dirty attributes
+    # @return [Array<Symbol>] all the attributes that have changed since the model was retrieved
+    def dirty
+      potential = attributes.slice(*self.class.attributes)
       return potential unless old
 
-      potential.select { |k, v| old.attributes[k] != v }
+      potential.reject { |k, v| old.attributes[k] == v }.keys
     end
 
     # Get the VM this model is attached to
@@ -84,22 +86,29 @@ module Fog::Hyperv
       service.logger
     end
 
-    # Has
+    # Has any of the listed attributes been modified
+    # @param attrs [Symbol] the attributes to check for modification
+    # @param all [Boolean] check if all listed attributes have changed, instead of any
+    # @return [Boolean] are any/all of the listed attributes modified
     def changed?(*attrs, all: false)
       return false unless old
 
-      changed = dirty!
+      changed = dirty
       if all
-        attrs.all? { |attr| changed.key? attr }
+        attrs.all? { |attr| changed.include? attr }
       else
-        attrs.any? { |attr| changed.key? attr }
+        attrs.any? { |attr| changed.include? attr }
       end
     end
 
+    # Return the modified value of the given attribute - if any
+    # @return [Object,nil] the modified value of the attribute, or nil if it's unmodified
     def changed!(attr)
       changed?(attr) ? attributes[attr] : nil
     end
 
+    # Return the old values of the model - i.e. what's stored in Hyper-V
+    # @return [Object,nil] the old copy of the model, or nil if there's no older version available
     def old
       @old ||= (persisted? ? dup.reload : nil)
     end

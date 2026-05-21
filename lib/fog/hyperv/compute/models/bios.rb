@@ -5,7 +5,6 @@ class Fog::Hyperv::Compute
   #
   # @see https://learn.microsoft.com/en-us/powershell/module/hyper-v/set-vmbios for set-request
   class Bios < Fog::Hyperv::Model
-
     # @!attribute [r] vm_id
     #   @return [String] the GUID of the VM this BIOS configuration is attached to
     identity :vm_id, type: :string

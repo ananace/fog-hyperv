@@ -39,8 +39,6 @@ class Fog::Hyperv::Compute
     #   @return [Array<Integer>] the list of secondary VLAN IDs to use for private_vlan_mode +:Promiscuous+
     attribute :secondary_vlan_id_list
 
-    # rubocop:disable Metrics/MethodLength -- Argument handling takes some space
-
     # @!attribute parent_adapter
     #   @return [NetworkAdapter] the network adapter this VLAN configuration applies to
     has_one :parent_adapter, :network_adapters
@@ -66,7 +64,6 @@ class Fog::Hyperv::Compute
         ) || {} # Unmodified object returns nothing
       )
     end
-    # rubocop:enable Metrics/MethodLength
 
     def reload
       requires :parent_adapter
@@ -111,9 +108,9 @@ class Fog::Hyperv::Compute
 
     def merge_attributes(new_attributes = {})
       new_attributes[:allowed_vlan_id_list] = [] \
-        if new_attributes[:allowed_vlan_id_list].nil? || new_attributes[:allowed_vlan_id_list] == ""
+        if new_attributes[:allowed_vlan_id_list].nil? || new_attributes[:allowed_vlan_id_list] == ''
       new_attributes[:secondary_vlan_id_list] = [] \
-        if new_attributes[:secondary_vlan_id_list].nil? || new_attributes[:secondary_vlan_id_list] == ""
+        if new_attributes[:secondary_vlan_id_list].nil? || new_attributes[:secondary_vlan_id_list] == ''
 
       super
     end

@@ -46,7 +46,7 @@ class Fog::Hyperv::Compute
         secure_boot_template: changed!(:secure_boot_template),
         preferred_network_boot_protocol: changed!(:preferred_network_boot_protocol),
         console_mode: changed!(:console_mode),
-        pause_after_boot_failure: changed!(:pause_after_boot_failure),
+        pause_after_boot_failure: changed!(:pause_after_boot_failure)
       }.compact
       return self unless changes.any?
 
@@ -54,7 +54,6 @@ class Fog::Hyperv::Compute
         service.set_vm_firmware(
           computer_name:,
           vm_id:,
-
 
           _return_fields: self.class.attributes
         )

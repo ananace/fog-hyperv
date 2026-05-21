@@ -74,7 +74,7 @@ class Fog::Hyperv::Compute
       changes = {
         resource_pool_name: changed!(:pool_name),
         to_controller_number: changed!(:controller_number),
-        to_controller_location: changed!(:controller_location),
+        to_controller_location: changed!(:controller_location)
       }.compact
       # Ensure path: nil is sent
       changes[:path] = path if changed? :path

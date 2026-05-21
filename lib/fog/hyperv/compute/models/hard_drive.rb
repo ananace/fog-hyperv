@@ -127,7 +127,7 @@ class Fog::Hyperv::Compute
         support_persistent_reservations: changed!(:support_persistent_reservations),
         to_controller_location: changed!(:controller_location),
         to_controller_number: changed!(:controller_number),
-        to_controller_type: changed!(:controller_type),
+        to_controller_type: changed!(:controller_type)
       }.compact
       changes[:path] = path if changed?(:path)
 

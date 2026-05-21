@@ -37,8 +37,7 @@ module Fog::Hyperv
       data ||= []
       # Hyper-V will either return an array or a single value depending on the number of entries found
       data = [data].flatten
-
-      return self.clone.load(data) if filters.any?
+      return clone.load(data) if filters.any?
 
       load data
       @loaded = true

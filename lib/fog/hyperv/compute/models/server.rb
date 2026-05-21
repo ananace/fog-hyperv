@@ -323,12 +323,17 @@ class Fog::Hyperv::Compute
 
       # Attributes that can't be set as part of the New-VM call
       post_create_attributes = {
-        processor_count:,
-        notes:,
-        dynamic_memory_enabled:,
-        memory_minimum_bytes: memory_minimum,
-        memory_maximum_bytes: memory_maximum,
-      }.compact
+        processor_count: processor_count > 1 ? processor_count : nil,
+        notes: notes.nil? || notes == '' ? nil : notes
+      }
+      if dynamic_memory_enabled
+        post_create_attributes.merge!(
+          dynamic_memory_enabled: true,
+          memory_minimum_bytes: memory_minimum,
+          memory_maximum_bytes: memory_maximum
+        )
+      end
+      post_create_attributes.compact!
 
       merge_attributes(
         service.new_vm(
@@ -345,21 +350,10 @@ class Fog::Hyperv::Compute
           _return_fields: self.class.attributes
         )
       )
-      if post_create_attributes.any?
-        attributes.merge! post_create_attributes
-        save if dirty?
-      end
+      attributes.merge! post_create_attributes if post_create_attributes.any?
+      save if dirty?
 
-      associations[:vhds]&.each do |vhd|
-        if !vhd.persisted?
-          vhd.computer_name = computer_name
-          vhd.save
-        end
-        next if hard_drives.find { |hdd| hdd.path == vhd.path }
-
-        hard_drives.create(path: vhd.path)
-      end
-
+      # Save any associations that have been manually assigned before VM creation
       self.class.associations.each_key do |assoc|
         next unless associations.key? assoc
 
@@ -368,6 +362,9 @@ class Fog::Hyperv::Compute
           obj.vm_id = id if obj.respond_to?(:vm_id=)
 
           obj.save if obj.dirty? || !obj.persisted?
+          next if assoc != :vhd || hard_drives.none? { |hdd| hdd.path == vhd.path }
+
+          hard_drives.create(path: vhd.path)
         end
         associations[assoc].clear
       end
@@ -387,8 +384,8 @@ class Fog::Hyperv::Compute
         changes[:dynamic_memory] = true if changed?(:dynamic_memory_enabled)
         changes[:memory_minimum_bytes] = memory_minimum if changed?(:dynamic_memory_enabled, :memory_minimum)
         changes[:memory_maximum_bytes] = memory_maximum if changed?(:dynamic_memory_enabled, :memory_maximum)
-      else
-        changes[:static_memory] = true if changed?(:dynamic_memory_enabled)
+      elsif changed?(:dynamic_memory_enabled)
+        changes[:static_memory] = true
       end
       changes.compact!
 
@@ -406,13 +403,6 @@ class Fog::Hyperv::Compute
           _return_fields: self.class.attributes
         )
       )
-
-      # %i[network_adapters dvd_drives floppy_drives hard_drives vhds].each do |attr|
-      #   next unless attributes.key? attr
-      #
-      #   attributes[attr].each { |vhd| hard_drives.new(path: vhd.path).save } if attr == :vhds
-      #   attributes[attr].select(&:dirty?).each(&:save)
-      # end
     end
 
     # Reload the VM attributes from the Hyper-V server
@@ -451,7 +441,7 @@ class Fog::Hyperv::Compute
 
     # @return [Array<String>] the MAC addresses of all attached network adapters
     def mac_addresses
-      network_adapters.map &:mac_address
+      network_adapters.map(&:mac_address)
     end
 
     # @return [Array<String>] the IP addresses of all attached network adapters
@@ -467,6 +457,7 @@ class Fog::Hyperv::Compute
         .map(&:to_s)
     end
 
+    # @return [String,nil] the first public IP address of the VM - if any
     def public_ip_address
       public_ip_addresses.first
     end

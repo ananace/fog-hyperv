@@ -74,7 +74,7 @@ class Fog::Hyperv::Compute
       changes = {
         allow_management_os: changed!(:allow_management_os),
         default_flow_minimum_bandwidth_absolute: changed!(:default_flow_minimum_bandwidth_absolute),
-        default_flow_minimum_bandwidth_weight: changed!(:default_flow_minimum_bandwidth_weight),
+        default_flow_minimum_bandwidth_weight: changed!(:default_flow_minimum_bandwidth_weight)
       }.compact
       changes[:notes] = notes || '' if changed? :notes
       return self unless changes.any?
