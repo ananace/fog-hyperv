@@ -43,14 +43,26 @@ module Fog
           @stderr = output.stderr
           @exitcode = output.exitcode
           @info = info
-          @message = @stderr.split("\n").first
+          extract_message
+
           super(@message)
         end
 
-        def to_s
-          ret = [super]
-          ret << info unless info.nil? || info.empty?
-          ret.join "\n"
+        # def to_s
+        #   ret = [super]
+        #   ret << info unless info.nil? || info.empty?
+        #   ret.join "\n"
+        # end
+
+        private
+
+        def extract_message
+          stderr = @stderr.split("\n").map(&:strip)
+
+          # Find a line ending in an error ID
+          @message = stderr.find { |line| line =~ /\(0x[0-9a-f]+\)\.?$/}
+          # Find the last line that isn't include error class information
+          @message ||= stderr.take_while { |line| !line.start_with? '+' }.last
         end
       end
     end
