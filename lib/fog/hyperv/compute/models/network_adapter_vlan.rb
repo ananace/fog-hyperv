@@ -50,39 +50,8 @@ class Fog::Hyperv::Compute
     def update
       requires :parent_adapter
 
-      args = {}
-      case operation_mode
-      when :Untagged
-        args[:untagged] = true
-      when :Access
-        requires :access_vlan_id
-        args[:access] = true
-        args[:access_vlan_id] = access_vlan_id
-      when :Trunk
-        requires :allowed_vlan_id_list, :native_vlan_id
-        args[:trunk] = true
-        args[:allowed_vlan_id_list] = render_vlan_list(allowed_vlan_id_list)
-        args[:native_vlan_id] = native_vlan_id
-      when :Private
-        requires :private_vlan_mode, :primary_vlan_id
-        case private_vlan_mode
-        when :Isolated
-          requires :secondary_vlan_id
-          args[:isolated] = true
-          args[:primary_vlan_id] = primary_vlan_id
-          args[:secondary_vlan_id] = secondary_vlan_id
-        when :Community
-          requires :secondary_vlan_id
-          args[:community] = true
-          args[:primary_vlan_id] = primary_vlan_id
-          args[:secondary_vlan_id] = secondary_vlan_id
-        when :Promiscuous
-          requires :secondary_vlan_id_list
-          args[:promiscuous] = true
-          args[:primary_vlan_id] = primary_vlan_id
-          args[:secondary_vlan_id_list] = render_vlan_list(secondary_vlan_id_list)
-        end
-      end
+      changes = build_changelist
+      return self unless changes.any?
 
       merge_attributes(
         service.set_vm_network_adapter_vlan(
@@ -90,9 +59,9 @@ class Fog::Hyperv::Compute
           vm_id: parent_adapter.vm_id,
           id: parent_adapter.id,
 
-          **args,
+          **changes,
 
-          _always_include: args.keys,
+          _always_include: changes.keys,
           _return_fields: self.class.attributes
         ) || {} # Unmodified object returns nothing
       )
@@ -147,6 +116,56 @@ class Fog::Hyperv::Compute
         if new_attributes[:secondary_vlan_id_list].nil? || new_attributes[:secondary_vlan_id_list] == ""
 
       super
+    end
+
+    # VLAN changes require providing the full new configuration on any update, so build that list when necessary
+    def build_changelist
+      changes = {}
+      case operation_mode
+      when :Untagged
+        return changes unless changed?(:operation_mode)
+
+        changes[:untagged] = true
+      when :Access
+        requires :access_vlan_id
+        return changes unless changed?(:operation_mode, :access_vlan_id)
+
+        changes[:access] = true
+        changes[:access_vlan_id] = access_vlan_id
+      when :Trunk
+        requires :allowed_vlan_id_list, :native_vlan_id
+        return changes unless changed?(:operation_mode, :allowed_vlan_id_list, :native_vlan_id)
+
+        changes[:trunk] = true
+        changes[:allowed_vlan_id_list] = render_vlan_list(allowed_vlan_id_list)
+        changes[:native_vlan_id] = native_vlan_id
+      when :Private
+        requires :private_vlan_mode, :primary_vlan_id
+        case private_vlan_mode
+        when :Isolated
+          requires :secondary_vlan_id
+          return changes unless changed?(:operation_mode, :private_vlan_mode, :primary_vlan_id, :secondary_vlan_id)
+
+          changes[:isolated] = true
+          changes[:primary_vlan_id] = primary_vlan_id
+          changes[:secondary_vlan_id] = secondary_vlan_id
+        when :Community
+          requires :secondary_vlan_id
+          return changes unless changed?(:operation_mode, :private_vlan_mode, :primary_vlan_id, :secondary_vlan_id)
+
+          changes[:community] = true
+          changes[:primary_vlan_id] = primary_vlan_id
+          changes[:secondary_vlan_id] = secondary_vlan_id
+        when :Promiscuous
+          requires :secondary_vlan_id_list
+          return changes unless changed?(:operation_mode, :private_vlan_mode, :primary_vlan_id, :secondary_vlan_id_list)
+
+          changes[:promiscuous] = true
+          changes[:primary_vlan_id] = primary_vlan_id
+          changes[:secondary_vlan_id_list] = render_vlan_list(secondary_vlan_id_list)
+        end
+      end
+      changes
     end
 
     def render_vlan_list(list)
