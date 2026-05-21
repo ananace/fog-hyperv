@@ -31,9 +31,10 @@ module Fog::Hyperv::Utils::Winrm
   # @param commands [Array<Array(String,Hash)>] a list of commands with their arguments to run
   # @param skip_json [Boolean] should the return value be given as-is, instead of being sent as JSON
   # @param target_computer [String,nil] the computer to execute the command on, in case of clustering
+  # @param separate_calls [Boolean] should the commands be run separately
   # @param options [Hash] additional options for the call
   # @option options [Integer] json_depth (1) the depth to limit the JSON object to on return
-  def run_cmdlist(commands, skip_json: false, target_computer: nil, **options)
+  def run_cmdlist(commands, skip_json: false, target_computer: nil, separate_calls: false, **options)
     target_computer = [target_computer].flatten.compact
     target_computer << '.' if target_computer.empty?
 
@@ -44,25 +45,30 @@ module Fog::Hyperv::Utils::Winrm
     out = nil
     target_computer.each do |computer|
       connection(computer).shell(:powershell) do |shell|
-        shell.run "$ConfirmPreference = 'None'"
-        shell.run "$ErrorActionPreference = 'Stop'"
-        shell.run '$PSNativeCommandUseErrorActionPreference = $true'
+        # Avoid confirmation questions, abort early on errors
+        setup = [
+          "$ConfirmPreference = 'None'",
+          "$ErrorActionPreference = 'Stop'",
+          '$PSNativeCommandUseErrorActionPreference = $true'
+        ].join('; ')
+        shell.run setup
 
-        commands.each.with_index do |(command, args), idx|
+        pscalls = commands.map.with_index do |(command, args), idx|
           last = idx == commands.size - 1
-          ps_cmd = build_pscall(command, _to_json: last && !skip_json, _json_depth: json_depth, **args)
+          build_pscall(command, _to_json: last && !skip_json, _json_depth: json_depth, **args)
+        end
+        pscalls = [pscalls.join("\n")] unless separate_calls
 
-          ps_cmd.each do |cmd|
-            Fog::Logger.debug "PS; >>> #{cmd.inspect}"
-            out = shell.run cmd
-            Fog::Logger.debug "PS; <<< OUT=[#{out.stdout.inspect}] ERR=[#{out.stderr.inspect}] EXIT=[#{out.exitcode}]"
+        pscalls.each do |cmd|
+          Fog::Logger.debug "PS; >>> \"#{cmd.split("\n").join("\n\t")}\""
+          out = shell.run cmd
+          Fog::Logger.debug "PS; <<< OUT=[#{out.stdout.inspect}] ERR=[#{out.stderr.inspect}] EXIT=[#{out.exitcode}]"
 
-            is_success = true
-            is_success = shell.run('$?').stdout.strip.downcase == 'true' if out.stderr.include? 'FullyQualifiedErrorId'
+          is_success = true
+          is_success = shell.run('$?').stdout.strip.downcase == 'true' if out.stderr.include? 'FullyQualifiedErrorId'
 
-            raise Fog::Hyperv::Errors::PSError.new(out, "When executing #{cmd}") if
-              out.exitcode != 0 || !is_success
-          end
+          raise Fog::Hyperv::Errors::PSError.new(out, "When executing #{cmd}") if
+            out.exitcode != 0 || !is_success
         end
       end
     end
