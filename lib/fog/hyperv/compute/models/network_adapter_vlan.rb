@@ -116,7 +116,7 @@ class Fog::Hyperv::Compute
 
     def self.render_vlan_list(list)
       ret = []
-      list = list.sort.map(&:to_i)
+      list = list.map(&:to_i).reject(&:zero?).sort.uniq
 
       render_tuple = proc do |from, to|
         next from if from == to
