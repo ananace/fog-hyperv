@@ -1,4 +1,4 @@
-## v0.1.0 Unreleased
+## v0.1.0 2026-05-21
 
 - Major rewrite of the codebase, moving to handling objects by GUID as far as possible
 - Add support for renaming of VMs, NICs, and Switches
