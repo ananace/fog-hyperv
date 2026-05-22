@@ -53,13 +53,13 @@ class Fog::Hyperv::Compute
 
       merge_attributes(
         service.add_vm_dvd_drive(
-          computer_name:,
-          vm_id:,
+          computer_name: computer_name,
+          vm_id: vm_id,
 
-          allow_unverified_paths:,
-          controller_number:,
-          controller_location:,
-          path:,
+          allow_unverified_paths: allow_unverified_paths,
+          controller_number: controller_numbere,
+          controller_location: controller_location,
+          path: path,
           resource_pool_name: pool_name,
 
           _return_fields: self.class.attributes
@@ -86,7 +86,7 @@ class Fog::Hyperv::Compute
           vm_id: old.vm_id,
           id: old.id,
 
-          allow_unverified_paths:,
+          allow_unverified_paths: allow_unverified_paths,
           **changes,
 
           _always_include: changes.keys,
@@ -100,9 +100,9 @@ class Fog::Hyperv::Compute
       requires :id, :vm_id
 
       service.remove_vm_dvd_drive(
-        computer_name:,
-        vm_id:,
-        id:
+        computer_name: computer_name,
+        vm_id: vm_id,
+        id: id
       )
       true
     end
@@ -112,9 +112,9 @@ class Fog::Hyperv::Compute
       requires :id, :vm_id
 
       data = service.get_vm_dvd_drive(
-        computer_name:,
-        vm_id:,
-        id:,
+        computer_name: computer_name,
+        vm_id: vm_id,
+        id: id,
 
         _return_fields: self.class.attributes
       )

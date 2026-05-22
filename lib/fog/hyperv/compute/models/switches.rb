@@ -14,7 +14,7 @@ class Fog::Hyperv::Compute
 
       raise ArgumentError, 'Must provide a name or GUID' if (id.nil? || id.empty?) && (name.nil? || name.empty?)
 
-      super(name:, id:, **filter)
+      super(name: name, id: id, **filter)
     end
   end
 end

@@ -118,10 +118,10 @@ class Fog::Hyperv::Compute
 
         associations[:vlan_setting] = Fog::Hyperv::Compute::NetworkAdapterVlan.new(
           **service.get_vm_network_adapter_vlan(
-            computer_name:,
+            computer_name: computer_name,
             management_os: is_management_os,
-            vm_id:,
-            id:,
+            vm_id: vm_id,
+            id: id,
 
             _return_fields: Fog::Hyperv::Compute::NetworkAdapterVlan.attributes
           ),
@@ -147,9 +147,9 @@ class Fog::Hyperv::Compute
       options[:management_os] = true if is_management_os
 
       service.connect_vm_network_adapter(
-        computer_name:,
-        vm_id:,
-        id:,
+        computer_name: computer_name,
+        vm_id: vm_id,
+        id: id,
 
         switch_id: new_switch_id,
         switch_name: new_switch_name,
@@ -168,9 +168,9 @@ class Fog::Hyperv::Compute
 
       options[:management_os] = true if is_management_os
       service.disconnect_vm_network_adapter(
-        computer_name:,
-        vm_id:,
-        id:,
+        computer_name: computer_name,
+        vm_id: vm_id,
+        id: id,
 
         **options
       )
@@ -185,7 +185,13 @@ class Fog::Hyperv::Compute
     # @see connect
     # @see disconnect
     def switch
-      service.switches.get(switch_id:, switch_name:, computer_name:) if switch_name.any? || switch_id.any?
+      return unless switch_name.any? || switch_id.any?
+
+      service.switches.get(
+        switch_id: switch_id,
+        switch_name: switch_name,
+        computer_name: computer_name
+      )
     end
 
     def switch=(new_switch)
@@ -212,7 +218,7 @@ class Fog::Hyperv::Compute
         selector[:vm_id] = vm_id
       end
 
-      args = { name:, switch_name: }
+      args = attributes.slice(:name, :switch_name)
       args[:is_legacy] = true if is_legacy
       if !dynamic_mac_address_enabled && mac_address != NIC_FALLBACK_MAC
         args[:static_mac_address] = mac_address
@@ -221,7 +227,7 @@ class Fog::Hyperv::Compute
       end
       data = service.add_vm_network_adapter(
         **selector,
-        computer_name:,
+        computer_name: computer_name,
 
         **args,
 
@@ -293,9 +299,9 @@ class Fog::Hyperv::Compute
       requires :vm_id unless is_management_os
 
       service.remove_vm_network_adapter(
-        computer_name:,
-        vm_id:,
-        id:,
+        computer_name: computer_name,
+        vm_id: vm_id,
+        id: id,
         management_os: is_management_os
       )
       true
@@ -306,9 +312,9 @@ class Fog::Hyperv::Compute
       requires :vm_id unless is_management_os
 
       data = service.get_vm_network_adapter(
-        computer_name:,
-        vm_id:,
-        id:,
+        computer_name: computer_name,
+        vm_id: vm_id,
+        id: id,
         management_os: is_management_os,
 
         _return_fields: self.class.attributes
@@ -348,11 +354,11 @@ class Fog::Hyperv::Compute
     end
 
     def save_switch
-      selector = { computer_name:, vm_id:, id: }.compact
+      selector = attributes.slice(:computer_name, :vm_id, :id).compact
       selector[:management_os] = true if is_management_os
 
       if switch_name || switch_id
-        service.connect_vm_network_adapter(**selector, switch_name:, switch_id:)
+        service.connect_vm_network_adapter(**selector, switch_name: switch_name, switch_id: switch_id)
       else
         service.disconnect_vm_network_adapter(**selector)
       end

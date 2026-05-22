@@ -5,7 +5,7 @@ class Fog::Hyperv::Compute
     def get_vm_host_cluster(cluster_name:, computer_name: nil, **options)
       requires_version '10.0'
 
-      run_cmd 'Get-VMHostCluster', _target_computer: computer_name, cluster_name:, **options
+      run_cmd 'Get-VMHostCluster', _target_computer: computer_name, cluster_name: cluster_name, **options
     end
   end
 

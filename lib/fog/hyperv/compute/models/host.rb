@@ -54,10 +54,7 @@ class Fog::Hyperv::Compute
     def reload
       requires :name
 
-      data = service.get_vm_host(
-        computer_name:,
-        name:
-      )
+      data = service.get_vm_host computer_name: computer_name, name: name
       return unless data
 
       merge_attributes(data)

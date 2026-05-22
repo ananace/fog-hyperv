@@ -28,7 +28,7 @@ class Fog::Hyperv::Compute
       else
         switch_name = options.delete :switch_name
         options.delete :switch_id
-        cmdlist << ['$NIC | Connect-VMNetworkAdapter', { switch_name:, **options }]
+        cmdlist << ['$NIC | Connect-VMNetworkAdapter', { switch_name: switch_name, **options }]
       end
 
       run_cmdlist(cmdlist, skip_json: true, target_computer: computer_name)

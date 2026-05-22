@@ -44,13 +44,13 @@ class Fog::Hyperv::Compute
 
       merge_attributes(
         service.new_vm_switch(
-          computer_name:,
-          name:,
+          computer_name: computer_name,
+          name: name,
 
-          allow_management_os:,
-          net_adapter_interface_description:,
-          net_adapter_name:,
-          notes:,
+          allow_management_os: allow_management_os,
+          net_adapter_interface_description: net_adapter_interface_description,
+          net_adapter_name: net_adapter_name,
+          notes: notes,
           switch_type: !net_adapter_interface_description && switch_type,
 
           _return_fields: self.class.attributes
@@ -96,8 +96,8 @@ class Fog::Hyperv::Compute
       requires :id
 
       service.remove_vm_switch(
-        computer_name:,
-        id:
+        computer_name: computer_name,
+        id: id
       )
       true
     end
@@ -106,8 +106,8 @@ class Fog::Hyperv::Compute
       requires :id
 
       data = service.get_vm_switch(
-        computer_name:,
-        id:
+        computer_name: computer_name,
+        id: id
       )
       return unless data
 

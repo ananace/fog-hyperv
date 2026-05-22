@@ -5,8 +5,8 @@ class Fog::Hyperv::Compute
     def rename_vm(id:, new_name:, computer_name: nil, **options)
       run_cmdlist(
         [
-          ['$VM = Get-VM', { id: }],
-          ['$VM | Rename-VM', { new_name:, **options }]
+          ['$VM = Get-VM', { id: id }],
+          ['$VM | Rename-VM', { new_name: new_name, **options }]
         ],
         target_computer: computer_name,
         skip_json: true

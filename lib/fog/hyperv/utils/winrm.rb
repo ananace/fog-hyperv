@@ -151,7 +151,7 @@ module Fog::Hyperv::Utils::Winrm
 
     command += ' @Args' unless command.include? '@Args'
     pipeline = [command] + pipeline
-    Fog::Hyperv::Utils::Powershell.build_call(pipeline.join(' | '), options, _ps_version:)
+    Fog::Hyperv::Utils::Powershell.build_call(pipeline.join(' | '), options, _ps_version: _ps_version)
   end
 
   def connection(host)

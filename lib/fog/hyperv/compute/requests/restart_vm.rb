@@ -5,7 +5,7 @@ class Fog::Hyperv::Compute
     def restart_vm(id:, computer_name: nil, **options)
       run_cmdlist(
         [
-          ['$VM = Get-VM', { id: }],
+          ['$VM = Get-VM', { id: id }],
           ['$VM | Restart-VM', { force: true, **options }]
         ],
         skip_json: true,

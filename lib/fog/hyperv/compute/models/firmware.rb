@@ -52,8 +52,8 @@ class Fog::Hyperv::Compute
 
       merge_attributes(
         service.set_vm_firmware(
-          computer_name:,
-          vm_id:,
+          computer_name: computer_name,
+          vm_id: vm_id,
 
           _return_fields: self.class.attributes
         )
@@ -65,8 +65,8 @@ class Fog::Hyperv::Compute
       requires :vm_id
 
       data = service.get_vm_firmware(
-        computer_name:,
-        vm_id:,
+        computer_name: computer_name,
+        vm_id: vm_id,
 
         _return_fields: self.class.attributes
       )

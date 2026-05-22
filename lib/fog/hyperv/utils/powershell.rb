@@ -45,7 +45,7 @@ module Fog::Hyperv::Utils::Powershell
     optmap = "Fog#{id}"
 
     commands = []
-    commands += build_optmap(_optmap_name: optmap, _ps_version:, **args)
+    commands += build_optmap(_optmap_name: optmap, _ps_version: _ps_version, **args)
     commands << if cmdlet.include? '@Args'
                   cmdlet.gsub('@Args', "@#{optmap}")
                 else

@@ -5,7 +5,7 @@ class Fog::Hyperv::Compute
     def save_vm(id:, computer_name: nil, **options)
       run_cmdlist(
         [
-          ['$VM = Get-VM', { id: }],
+          ['$VM = Get-VM', { id: id }],
           ['$VM | Save-VM', options]
         ],
         skip_json: true,

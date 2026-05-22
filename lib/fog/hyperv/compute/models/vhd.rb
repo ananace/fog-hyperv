@@ -121,9 +121,9 @@ class Fog::Hyperv::Compute
 
       merge_attributes(
         service.new_vhd(
-          computer_name:,
+          computer_name: computer_name,
 
-          path:,
+          path: path,
           block_size_bytes: block_size,
           size_bytes: size,
           **attrs,
@@ -154,9 +154,9 @@ class Fog::Hyperv::Compute
       requires_one :path, :disk_number
 
       data = service.get_vhd(
-        computer_name:,
-        path:,
-        disk_number:,
+        computer_name: computer_name,
+        path: path,
+        disk_number: disk_number,
 
         _return_fields: self.class.attributes - %i[basename]
       )
@@ -170,8 +170,8 @@ class Fog::Hyperv::Compute
       requires :path
 
       service.remove_item(
-        computer_name:,
-        path:
+        computer_name: computer_name,
+        path: path
       )
       true
     end
@@ -184,9 +184,9 @@ class Fog::Hyperv::Compute
       requires :path
 
       service.optimize_vhd(
-        computer_name:,
-        path:,
-        mode:
+        computer_name: computer_name,
+        path: path,
+        mode: mode
       )
       true
     end

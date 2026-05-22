@@ -56,14 +56,16 @@ module Fog
 
         private
 
+        # rubocop:disable Naming/MemoizedInstanceVariableName -- Extracting message, not reading it
         def extract_message
           stderr = @stderr.split("\n").map(&:strip)
 
           # Find a line ending in an error ID
-          @message = stderr.find { |line| line =~ /\(0x[0-9a-f]+\)\.?$/}
+          @message = stderr.find { |line| line =~ /\(0x[0-9a-f]+\)\.?$/ }
           # Find the last line that isn't include error class information
           @message ||= stderr.take_while { |line| !line.start_with? '+' }.last
         end
+        # rubocop:enable Naming/MemoizedInstanceVariableName
       end
     end
 

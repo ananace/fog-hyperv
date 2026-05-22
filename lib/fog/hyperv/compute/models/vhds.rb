@@ -14,7 +14,7 @@ class Fog::Hyperv::Compute
 
       raise ArgumentError, 'Must provide a path or GUID' if (id.nil? || id.empty?) && (path.nil? || path.empty?)
 
-      super(disk_identifier: id, path:, **filters)
+      super(disk_identifier: id, path: path, **filters)
     end
 
     protected

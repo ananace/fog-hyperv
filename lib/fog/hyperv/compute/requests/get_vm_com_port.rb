@@ -3,12 +3,12 @@
 class Fog::Hyperv::Compute
   class Real
     def get_vm_com_port(vm_id:, computer_name: nil, **options)
-      _by_id = options.delete :id
+      by_id = options.delete :id
 
       run_cmdlist(
         [
           ['$VM = Get-VM', { id: vm_id }],
-          ['$VM | Get-VMComPort', { _by_id:, **options }]
+          ['$VM | Get-VMComPort', { _by_id: by_id, **options }]
         ],
         target_computer: computer_name
       )

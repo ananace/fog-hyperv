@@ -41,8 +41,8 @@ class Fog::Hyperv::Compute
       return self unless changes.any?
 
       data = service.set_vm_bios(
-        computer_name:,
-        vm_id:,
+        computer_name: computer_name,
+        vm_id: vm_id,
 
         **changes,
 
@@ -57,8 +57,8 @@ class Fog::Hyperv::Compute
       requires :vm_id
 
       data = service.get_vm_bios(
-        computer_name:,
-        vm_id:,
+        computer_name: computer_name,
+        vm_id: vm_id,
 
         _return_fields: self.class.attributes
       )

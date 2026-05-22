@@ -194,8 +194,8 @@ class Fog::Hyperv::Compute
         klass.new(
           **service.public_send(
             method,
-            computer_name:,
-            vm_id:,
+            computer_name: computer_name,
+            vm_id: vm_id,
 
             _return_fields: klass.attributes
           ),
@@ -217,8 +217,8 @@ class Fog::Hyperv::Compute
 
       associations[:security] ||= Fog::Hyperv::Compute::Security.new(
         **service.get_vm_security(
-          computer_name:,
-          vm_id:,
+          computer_name: computer_name,
+          vm_id: vm_id,
 
           _return_fields: Fog::Hyperv::Compute::Security.attributes
         ),
@@ -249,7 +249,7 @@ class Fog::Hyperv::Compute
     def start
       requires :id
 
-      service.start_vm(computer_name:, id:)
+      service.start_vm(computer_name: computer_name, id: id)
       true
     end
 
@@ -258,7 +258,7 @@ class Fog::Hyperv::Compute
     def stop(turn_off: false)
       requires :id
 
-      service.stop_vm(computer_name:, id:, turn_off:)
+      service.stop_vm(computer_name: computer_name, id: id, turn_off: turn_off)
       true
     end
 
@@ -266,7 +266,7 @@ class Fog::Hyperv::Compute
     def suspend
       requires :id
 
-      service.suspend_vm(computer_name:, id:)
+      service.suspend_vm(computer_name: computer_name, id: id)
       true
     end
 
@@ -274,7 +274,7 @@ class Fog::Hyperv::Compute
     def resume
       requires :id
 
-      service.resume_vm(computer_name:, id:)
+      service.resume_vm(computer_name: computer_name, id: id)
       true
     end
 
@@ -282,7 +282,7 @@ class Fog::Hyperv::Compute
     def hibernate
       requires :id
 
-      service.save_vm(computer_name:, id:)
+      service.save_vm(computer_name: computer_name, id: id)
       true
     end
 
@@ -291,7 +291,7 @@ class Fog::Hyperv::Compute
     def restart
       requires :id
 
-      service.restart_vm(computer_name:, id:, force:)
+      service.restart_vm(computer_name: computer_name, id: id)
       true
     end
     alias reboot :restart
@@ -300,7 +300,7 @@ class Fog::Hyperv::Compute
     def update_version
       requires :id
 
-      service.update_vm(computer_name:, id:)
+      service.update_vm(computer_name: computer_name, id: id)
       true
     end
 
@@ -311,7 +311,7 @@ class Fog::Hyperv::Compute
       requires :id
       stop turn_off: true if ready?
 
-      service.remove_vm(computer_name:, id:)
+      service.remove_vm(computer_name: computer_name, id: id)
       true
     end
 
@@ -337,13 +337,13 @@ class Fog::Hyperv::Compute
 
       merge_attributes(
         service.new_vm(
-          computer_name:,
-          name:,
+          computer_name: computer_name,
+          name: name,
 
           generation: generation_num,
           memory_startup_bytes: memory_startup,
-          boot_device:,
-          switch_name:,
+          boot_device: boot_device,
+          switch_name: switch_name,
 
           **attrs,
 
@@ -411,7 +411,7 @@ class Fog::Hyperv::Compute
     def reload
       requires :id
 
-      data = service.get_vm computer_name:, id:, _return_fields: self.class.attributes
+      data = service.get_vm computer_name: computer_name, id: id, _return_fields: self.class.attributes
       return unless data
 
       merge_attributes(data)

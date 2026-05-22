@@ -67,7 +67,7 @@ class Fog::Hyperv::Compute
       return associations[:vhd] if associations[:vhd]
       return unless path
 
-      associations[:vhd] = service.vhds.get(path, computer_name:)
+      associations[:vhd] = service.vhds.get(path, computer_name: computer_name)
     end
 
     def vhd=(new_vhd)
@@ -99,17 +99,17 @@ class Fog::Hyperv::Compute
 
       merge_attributes(
         service.add_vm_hard_disk_drive(
-          computer_name:,
-          vm_id:,
-
-          allow_unverified_paths:,
-          controller_location:,
-          controller_number:,
-          controller_type:,
-          # disk_number: disk&.number,
-          maximum_iops:,
-          minimum_iops:,
-          path:,
+          **attributes.slice(
+            :computer_name,
+            :vm_id,
+            :allow_unverified_paths,
+            :controller_location,
+            :controller_number,
+            :controller_type,
+            :maximum_iops,
+            :minimum_iops,
+            :path
+          ),
           resource_pool_name: pool_name,
 
           _return_fields: self.class.attributes - %i[allow_unverified_paths vhd]
@@ -139,7 +139,7 @@ class Fog::Hyperv::Compute
             id: old.id,
 
             **changes,
-            allow_unverified_paths:,
+            allow_unverified_paths: allow_unverified_paths,
 
             _always_include: changes.keys,
             _return_fields: self.class.attributes - %i[allow_unverified_paths vhd]
@@ -159,9 +159,9 @@ class Fog::Hyperv::Compute
       requires :id, :vm_id
 
       data = service.get_vm_hard_disk_drive(
-        computer_name:,
-        vm_id:,
-        id:,
+        computer_name: computer_name,
+        vm_id: vm_id,
+        id: id,
 
         _return_fields: self.class.attributes - %i[allow_unverified_paths vhd]
       )
@@ -175,11 +175,7 @@ class Fog::Hyperv::Compute
 
       requires :id, :vm_id
 
-      service.remove_vm_hard_disk_drive(
-        computer_name:,
-        vm_id:,
-        id:
-      )
+      service.remove_vm_hard_disk_drive computer_name: computer_name, vm_id: vm_id, id: id
       vhd.destroy if underlying && vhd?
       true
     end

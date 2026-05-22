@@ -3,9 +3,9 @@
 class Fog::Hyperv::Compute
   class Real
     def get_cluster(**options)
-      _by_id = options.delete(:id)
+      by_id = options.delete(:id)
 
-      run_cmd 'Get-Cluster', _by_id:, **options
+      run_cmd 'Get-Cluster', _by_id: by_id, **options
     end
   end
 end

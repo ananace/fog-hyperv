@@ -5,7 +5,7 @@ class Fog::Hyperv::Compute
     def resume_vm(id:, computer_name: nil, **options)
       run_cmdlist(
         [
-          ['$VM = Get-VM', { id: }],
+          ['$VM = Get-VM', { id: id }],
           ['$VM | Resume-VM', options]
         ],
         skip_json: true,

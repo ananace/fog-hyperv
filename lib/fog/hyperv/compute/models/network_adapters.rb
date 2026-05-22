@@ -18,7 +18,7 @@ class Fog::Hyperv::Compute
 
       raise ArgumentError, 'Must provide a name or combined GUID' if id.nil? && name.nil?
 
-      super(name:, _by_id: id, **filters)
+      super(name: name, _by_id: id, **filters)
     end
 
     protected

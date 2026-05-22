@@ -14,11 +14,11 @@ module Fog::Hyperv
       case to_s
       when 'Fog::Hyperv::Compute::Server'
         define_method name do
-          associations[name] ||= service.send(collection_name, vm: self, computer_name:, vm_id: id)
+          associations[name] ||= service.send(collection_name, vm: self, computer_name: computer_name, vm_id: id)
         end
       when 'Fog::Hyperv::Compute::Host'
         define_method name do
-          associations[name] ||= service.send(collection_name, computer: self, computer_name:)
+          associations[name] ||= service.send(collection_name, computer: self, computer_name: computer_name)
         end
       else
         raise "Unknown class #{self}"

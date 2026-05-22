@@ -31,11 +31,7 @@ class Fog::Hyperv::Compute
     def reload
       requires :id
 
-      data = service.get_cluster(
-        id:,
-
-        _return_fields: self.class.attributes
-      )
+      data = service.get_cluster id: id, _return_fields: self.class.attributes
       return unless data
 
       merge_attributes(data.attributes)
@@ -48,13 +44,7 @@ class Fog::Hyperv::Compute
 
       requires :id
 
-      [
-        service.get_cluster_node(
-          id:,
-
-          _return_fields: %i[name]
-        )
-      ].flatten
+      [service.get_cluster_node(id: id, _return_fields: %i[name])].flatten
     end
   end
 end

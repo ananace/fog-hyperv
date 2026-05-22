@@ -34,9 +34,9 @@ class Fog::Hyperv::Compute
 
       merge_attributes(
         service.set_vm_floppy_disk_drive(
-          computer_name:,
-          vm_id:,
-          id:,
+          computer_name: computer_name,
+          vm_id: vm_id,
+          id: id,
 
           **changes,
 
@@ -50,9 +50,9 @@ class Fog::Hyperv::Compute
       requires :vm_id, :id
 
       data = service.get_vm_floppy_disk_drive(
-        computer_name:,
-        vm_id:,
-        id:,
+        computer_name: computer_name,
+        vm_id: vm_id,
+        id: id,
 
         _return_fields: self.class.attributes
       )
