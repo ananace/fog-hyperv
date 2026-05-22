@@ -212,16 +212,21 @@ class Fog::Hyperv::Compute
     # @!attribute [r] security
     # @return [Security] UEFI security configuration, if #generation is +:UEFI+
     def security
-      requires :generation, :id
-      return nil unless generation == :UEFI
+      return unless persisted?
+
+      requires :generation
+      return unless generation == :UEFI
+
+      security = service.get_vm_security(
+        computer_name: computer_name,
+        vm_id: vm_id,
+
+        _return_fields: Fog::Hyperv::Compute::Security.attributes
+      )
+      return unless security.is_a? Hash
 
       associations[:security] ||= Fog::Hyperv::Compute::Security.new(
-        **service.get_vm_security(
-          computer_name: computer_name,
-          vm_id: vm_id,
-
-          _return_fields: Fog::Hyperv::Compute::Security.attributes
-        ),
+        **security,
 
         vm: self,
         service: @service,
