@@ -25,6 +25,8 @@ module Fog::Hyperv
     collection :hard_drives
     model :host
     collection :hosts
+    model :integration_service
+    collection :integration_services
     model :network_adapter
     model :network_adapter_vlan
     collection :network_adapters
@@ -41,8 +43,10 @@ module Fog::Hyperv
     request :add_vm_hard_disk_drive
     request :add_vm_network_adapter
     request :connect_vm_network_adapter
+    request :disable_vm_integration_service
     request :disable_vm_tpm
     request :disconnect_vm_network_adapter
+    request :enable_vm_integration_service
     request :enable_vm_tpm
     request :get_cluster
     request :get_cluster_node
@@ -58,6 +62,7 @@ module Fog::Hyperv
     request :get_vm_host
     request :get_vm_host_cluster
     request :get_vm_host_sbt
+    request :get_vm_integration_service
     request :get_vm_key_protector
     request :get_vm_network_adapter
     request :get_vm_network_adapter_vlan

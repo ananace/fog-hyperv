@@ -161,6 +161,9 @@ class Fog::Hyperv::Compute
     # @!attribute hard_drives
     #   @return [Array<HardDrive>] the hard drives on the VM
     collection :hard_drives
+    # @!attribute integration_services
+    #   @return [Array<IntegrationService>] the integration services on the VM
+    collection :integration_services
     # @!attribute network_adapters
     #   @return [Array<NetworkAdapter>] the network adapters on the VM
     collection :network_adapters
