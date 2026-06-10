@@ -55,6 +55,8 @@ class Fog::Hyperv::Compute
           computer_name: computer_name,
           vm_id: vm_id,
 
+          **changes,
+
           _return_fields: self.class.attributes
         )
       )

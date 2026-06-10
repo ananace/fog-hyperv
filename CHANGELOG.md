@@ -1,6 +1,7 @@
 ## **Unreleased**
 
 - Add support for managing integration services
+- Fix modification of Firmware
 
 ## v0.1.1 2026-05-22
 
