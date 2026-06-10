@@ -3,6 +3,7 @@
 - Add support for managing integration services
 - Fix modification of Firmware
 - Remove empty VHD directory on destroy
+- Fix detection of empty key protector
 
 ## v0.1.1 2026-05-22
 

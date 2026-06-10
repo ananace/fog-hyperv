@@ -36,10 +36,14 @@ class Fog::Hyperv::Compute
     def key_protector
       requires :vm
 
-      @key_protector ||= service.get_vm_key_protector(
-        computer_name: vm.computer_name,
-        vm_id: vm.id
-      )[:value]
+      @key_protector ||= begin
+        value = service.get_vm_key_protector(
+          computer_name: vm.computer_name,
+          vm_id: vm.id
+        )[:value]
+        value = nil if value == [0, 0, 0, 4]
+        value
+      end
     end
 
     # Change the key protector for a VM
