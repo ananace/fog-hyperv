@@ -4,6 +4,7 @@
 - Fix modification of Firmware
 - Remove empty VHD directory on destroy
 - Fix detection of empty key protector
+- Remove VM-specific config directory on destroy
 
 ## v0.1.1 2026-05-22
 

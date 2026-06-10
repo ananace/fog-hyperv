@@ -141,6 +141,9 @@ class Fog::Hyperv::Compute
     # @!attribute notes
     #   @return [String] user-specified notes for the VM
     attribute :notes, type: :string
+    # @!attribute path
+    #   @return [String] the path on disk where the VM configuration is stored
+    attribute :path, type: :string
     # @!attribute processor_count
     #   @return [Integer] the number of processors in the VM
     attribute :processor_count, type: :integer, default: 1
@@ -313,21 +316,31 @@ class Fog::Hyperv::Compute
     end
 
     # Remove the VM object from Hyper-V
+    # @param [Boolean] underlying remove the underlying configuration directory from disk on the Hyper-V host
     #
     # @note if the VM has VHDs, make sure to remove them first to not leave the VM data remaining on disk
-    def destroy
+    # @note underlying will remove the +full+ path of the VM, make sure this is what you want before using it
+    def destroy(underlying = nil)
+      underlying = true if underlying.nil? && attributes[:path]&.end_with?(attributes[:name])
+
       requires :id
+      requires :path if underlying
       stop turn_off: true if ready?
 
       service.remove_vm(computer_name: computer_name, id: id)
+      service.remove_item(path: path, computer_name: computer_name, recurse: true) if underlying
       true
     end
 
     # Create the VM object if it doesn't exist
     # @param [Symbol] boot_device the default boot device to configure the VM with, one of BOOT_DEVICE
     # @param [String] switch_name the name of a Switch to connect the VM to on creation
+    # @option attrs [String] :path
+    #   a custom path to store the VM configuration under - will use a subdir under the default config path if relative
     def create(boot_device: nil, switch_name: nil, **attrs)
       attrs[:no_vhd] = true unless attrs[:new_vhd_path]
+      attrs[:path] = [computer.virtual_machine_path, attrs[:path]].join('\\') \
+        if attrs[:path] && attrs[:path] !~ %r{^(\w:[\\/]|[\\/]{2}\w+[\\/])}i
 
       # Attributes that can't be set as part of the New-VM call
       post_create_attributes = {
@@ -430,10 +443,18 @@ class Fog::Hyperv::Compute
 
     # Build a path for where to store a VHD of a given name
     # @return [String] the absolute path for the VHD
-    def build_vhd_path(filename)
+    def build_vhd_path(filename = nil)
       requires :name
 
-      [computer.virtual_hard_disk_path, '\\', name, '\\', filename].join
+      [computer.virtual_hard_disk_path, name, filename].compact.join('\\')
+    end
+
+    # Build a path for where to store configuration files
+    # @return [String] the absolute path for the configuration store
+    def build_config_path(subdir = nil)
+      requires :name
+
+      [computer.virtual_machine_path, name, subdir].compact.join('\\')
     end
 
     # Get the username of the main system account
