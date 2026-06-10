@@ -171,7 +171,7 @@ class Fog::Hyperv::Compute
 
       service.remove_item(
         computer_name: computer_name,
-        path: path
+        path: [path, "#{path}.*"],
       )
       true
     end
