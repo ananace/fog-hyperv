@@ -67,7 +67,7 @@ class Fog::Hyperv::Compute
       return associations[:vhd] if associations[:vhd]
       return unless path
 
-      associations[:vhd] = service.vhds.get(path, computer_name: computer_name)
+      associations[:vhd] = (vm || service).vhds.get(path, computer_name: computer_name)
     end
 
     def vhd=(new_vhd)

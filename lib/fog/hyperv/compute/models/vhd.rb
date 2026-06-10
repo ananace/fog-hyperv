@@ -173,6 +173,19 @@ class Fog::Hyperv::Compute
         computer_name: computer_name,
         path: [path, "#{path}.*"],
       )
+      components = path.split('\\')
+      if components[-2] == vm.name
+        # if (!Test-Path -Path ...\*) { Remove-Item -Path ... -Recurse -Force }
+        vmpath = components[0..-2].join '\\'
+        service.run_cmdlist(
+          [
+            ["$anyFiles = Test-Path", { path: [vmpath, '*'].join('\\') }],
+            ['if (-not $anyFiles) { Remove-Item @Args }', { path: vmpath, recurse: true, force: true }]
+          ],
+          skip_json: true,
+          target_computer: computer_name,
+        )
+      end
       true
     end
 

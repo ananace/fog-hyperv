@@ -4,6 +4,8 @@ class Fog::Hyperv::Compute
   class Real
     def get_vhd(computer_name: nil, **options)
       requires_one options, :path, :disk_number unless options[:vm_id]
+      options.delete :vm_id if options[:path] || options[:disk_number]
+
       run_cmd 'Get-VHD', _target_computer: computer_name, **options
     end
   end
